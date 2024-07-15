@@ -49,11 +49,19 @@ cmake_ninja_workdir = C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/
 
 build cmake_object_order_depends_target_PathTracer_CPP: phony || CMakeFiles/PathTracer_CPP.dir
 
-build CMakeFiles/PathTracer_CPP.dir/main.cpp.obj: CXX_COMPILER__PathTracer_CPP_unscanned_Debug C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/main.cpp || cmake_object_order_depends_target_PathTracer_CPP
-  DEP_FILE = CMakeFiles\PathTracer_CPP.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
+build CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj: CXX_COMPILER__PathTracer_CPP_unscanned_Debug C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/src/main.cpp || cmake_object_order_depends_target_PathTracer_CPP
+  DEP_FILE = CMakeFiles\PathTracer_CPP.dir\src\main.cpp.obj.d
+  FLAGS = -mfma -mavx2 -O3 -march=native -g -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I"C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/include"
   OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
-  OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir
+  OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir\src
+
+build CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj: CXX_COMPILER__PathTracer_CPP_unscanned_Debug C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/src/Vector3.cpp || cmake_object_order_depends_target_PathTracer_CPP
+  DEP_FILE = CMakeFiles\PathTracer_CPP.dir\src\Vector3.cpp.obj.d
+  FLAGS = -mfma -mavx2 -O3 -march=native -g -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I"C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/include"
+  OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
+  OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir\src
 
 
 # =============================================================================
@@ -63,8 +71,8 @@ build CMakeFiles/PathTracer_CPP.dir/main.cpp.obj: CXX_COMPILER__PathTracer_CPP_u
 #############################################
 # Link the executable PathTracer_CPP.exe
 
-build PathTracer_CPP.exe: CXX_EXECUTABLE_LINKER__PathTracer_CPP_Debug CMakeFiles/PathTracer_CPP.dir/main.cpp.obj
-  FLAGS = -g
+build PathTracer_CPP.exe: CXX_EXECUTABLE_LINKER__PathTracer_CPP_Debug CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj
+  FLAGS = -mfma -mavx2 -O3 -march=native -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
   POST_BUILD = cd .
