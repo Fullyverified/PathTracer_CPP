@@ -12,4 +12,10 @@ add_executable(PathTracer_CPP src/main.cpp
         src/main.cpp
         src/Vector3.cpp
         include/Vector3.h
-        src/main.cpp)
+        src/main.cpp
+        include/Sphere.h
+        src/Sphere.cpp
+        include/SceneObject.h
+        src/SceneObject.cpp
+        include/Ray.h
+        src/Ray.cpp)
