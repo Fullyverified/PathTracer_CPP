@@ -18,4 +18,13 @@ add_executable(PathTracer_CPP src/main.cpp
         include/SceneObject.h
         src/SceneObject.cpp
         include/Ray.h
-        src/Ray.cpp)
+        src/Ray.cpp
+        src/AABCubeCenter.cpp
+        include/AABCubeCenter.h
+        include/AABCubeCenter.h
+        include/AABCubeBounds.h
+        src/AABCubeBounds.cpp
+        src/BoundingBox.cpp
+        include/BoundingBox.h
+        src/BVHNode.cpp
+        include/BVHNode.h)
