@@ -64,9 +64,21 @@ public:
         z /= magnitude;
     }
 
-    void setX(float const newX) {x = newX;}
-    void setY(float const newY) {x = newY;}
-    void setZ(float const newZ) {x = newZ;}
+    void set(const float &newX, const float &newY, const float &newZ) {
+        x = newX;
+        y = newY;
+        z = newZ;
+    }
+
+    void setV(const Vector3 &other) {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+    }
+
+    void setX(float const &newX) {x = newX;}
+    void setY(float const &newY) {x = newY;}
+    void setZ(float const &newZ) {x = newZ;}
 
 
 
