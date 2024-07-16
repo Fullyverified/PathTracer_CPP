@@ -10,6 +10,8 @@ public:
 
     void marchRay(float& distance);
 
+    void updateOrigin(float& distance);
+
 };
 
 

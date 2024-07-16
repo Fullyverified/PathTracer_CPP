@@ -8,3 +8,10 @@ void Ray::marchRay(float& distance) {
     pos.y = origin.y + (dir.y * distance);
     pos.z = origin.z + (dir.z * distance);
 }
+
+void Ray::updateOrigin(float &distance) {
+    origin.x = origin.x + (dir.x * distance);
+    origin.y = origin.y + (dir.y * distance);
+    origin.z = origin.z + (dir.z * distance);
+    pos.setV(origin);
+}
