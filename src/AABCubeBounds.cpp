@@ -10,7 +10,7 @@ AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, floa
                                                               B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac) {
 }
 
-bool AABCubeBounds::objectCulling(const Ray &ray) const override {
+bool AABCubeBounds::objectCulling(const Ray &ray) const {
     // pre calculate inverse
     float invDirX = 1.0f / ray.pos.x;
     float invDirY = 1.0f / ray.pos.y;
@@ -77,7 +77,7 @@ bool AABCubeBounds::objectCulling(const Ray &ray) const override {
     return tNear <= tFar && tFar >= 0;
 }
 
-bool AABCubeBounds::intersectionCheck(const Ray &ray) const override {
+bool AABCubeBounds::intersectionCheck(const Ray &ray) const {
     return minBounds.x <= ray.pos.x && maxBounds.x >= ray.pos.x && minBounds.y <= ray.pos.y && maxBounds.y >= ray.pos.y
            && minBounds.z <= ray.pos.z && maxBounds.z >= ray.pos.z;
 }
@@ -107,6 +107,10 @@ void AABCubeBounds::getNormal(Ray ray) const {
     }
 }
 
-std::pair<Vector3, Vector3> AABCubeBounds::getBounds(const Ray &ray) const {
+std::pair<Vector3, Vector3> AABCubeBounds::getBounds() const {
     return std::make_pair(minBounds, maxBounds);
+}
+
+Vector3 AABCubeBounds::getPos() const {
+    return pos;
 }

@@ -1,13 +1,19 @@
 #include <BoundingBox.h>
 #include <Vector3.h>
 #include <Ray.h>
+#include "BVHNode.h"
 
 #include <utility>
 #include <limits>
 
-BoundingBox::BoundingBox(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL,
-                             float BL, float roughness, float refrac) : minBounds(minBounds), maxBounds(maxBounds), R(R), G(G),
-                                                              B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac) {
+BoundingBox::BoundingBox(const Vector3& minBounds, const Vector3& maxBounds) : minBounds(minBounds), maxBounds(maxBounds) {}
+BoundingBox::BoundingBox(const BoundingBox& left, const BoundingBox& right) {
+    minBounds.x = std::min(left.minBounds.x, right.minBounds.x);
+    maxBounds.x = std::max(left.maxBounds.x, right.maxBounds.x);
+    minBounds.y = std::min(left.minBounds.y, right.minBounds.y);
+    maxBounds.y = std::max(left.maxBounds.y, right.maxBounds.y);
+    minBounds.z = std::min(left.minBounds.z, right.minBounds.z);
+    maxBounds.z = std::max(left.maxBounds.z, right.maxBounds.z);
 }
 
 bool BoundingBox::objectCulling(const Ray &ray) const {
@@ -185,6 +191,6 @@ float BoundingBox::getArea() const {
 }
 
 
-std::pair<Vector3, Vector3> BoundingBox::getBounds(const Ray &ray) const {
+std::pair<Vector3, Vector3> BoundingBox::getBounds() const {
     return std::make_pair(minBounds, maxBounds);
 }

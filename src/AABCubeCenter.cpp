@@ -14,7 +14,7 @@ AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, floa
                                                                         pos.z + length.z / 2) {
 }
 
-bool AABCubeCenter::objectCulling(const Ray &ray) const override {
+bool AABCubeCenter::objectCulling(const Ray &ray) const {
     // pre calculate inverse
     float invDirX = 1.0f / ray.pos.x;
     float invDirY = 1.0f / ray.pos.y;
@@ -81,7 +81,7 @@ bool AABCubeCenter::objectCulling(const Ray &ray) const override {
     return tNear <= tFar && tFar >= 0;
 }
 
-bool AABCubeCenter::intersectionCheck(const Ray &ray) const override {
+bool AABCubeCenter::intersectionCheck(const Ray &ray) const {
     return minBounds.x <= ray.pos.x && maxBounds.x >= ray.pos.x && minBounds.y <= ray.pos.y && maxBounds.y >= ray.pos.y
            && minBounds.z <= ray.pos.z && maxBounds.z >= ray.pos.z;
 }
@@ -111,6 +111,10 @@ void AABCubeCenter::getNormal(Ray ray) const {
     }
 }
 
-std::pair<Vector3, Vector3> AABCubeCenter::getBounds(const Ray &ray) const {
+std::pair<Vector3, Vector3> AABCubeCenter::getBounds() const {
     return std::make_pair(minBounds, maxBounds);
+    }
+
+Vector3 AABCubeCenter::getPos() const {
+    return pos;
 }

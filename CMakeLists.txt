@@ -27,4 +27,8 @@ add_executable(PathTracer_CPP src/main.cpp
         src/BoundingBox.cpp
         include/BoundingBox.h
         src/BVHNode.cpp
-        include/BVHNode.h)
+        include/BVHNode.h
+        src/RenderSingleThreadedBVH.cpp
+        include/RenderSingleThreadedBVH.h
+        include/Camera.h
+        src/Camera.cpp)

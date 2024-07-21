@@ -112,6 +112,20 @@ build CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj: CXX_COMPILER__PathTrace
   OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
   OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir\src
 
+build CMakeFiles/PathTracer_CPP.dir/src/RenderSingleThreadedBVH.cpp.obj: CXX_COMPILER__PathTracer_CPP_unscanned_Debug C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/src/RenderSingleThreadedBVH.cpp || cmake_object_order_depends_target_PathTracer_CPP
+  DEP_FILE = CMakeFiles\PathTracer_CPP.dir\src\RenderSingleThreadedBVH.cpp.obj.d
+  FLAGS = -mfma -mavx2 -O3 -march=native -g -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I"C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/include"
+  OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
+  OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir\src
+
+build CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj: CXX_COMPILER__PathTracer_CPP_unscanned_Debug C$:/Users/hazza/Downloads/C++$ Programming/PathTracer_CPP/src/Camera.cpp || cmake_object_order_depends_target_PathTracer_CPP
+  DEP_FILE = CMakeFiles\PathTracer_CPP.dir\src\Camera.cpp.obj.d
+  FLAGS = -mfma -mavx2 -O3 -march=native -g -std=gnu++23 -fdiagnostics-color=always
+  INCLUDES = -I"C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/include"
+  OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir
+  OBJECT_FILE_DIR = CMakeFiles\PathTracer_CPP.dir\src
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target PathTracer_CPP
@@ -120,7 +134,7 @@ build CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj: CXX_COMPILER__PathTrace
 #############################################
 # Link the executable PathTracer_CPP.exe
 
-build PathTracer_CPP.exe: CXX_EXECUTABLE_LINKER__PathTracer_CPP_Debug CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj
+build PathTracer_CPP.exe: CXX_EXECUTABLE_LINKER__PathTracer_CPP_Debug CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/RenderSingleThreadedBVH.cpp.obj CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj
   FLAGS = -mfma -mavx2 -O3 -march=native -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\PathTracer_CPP.dir

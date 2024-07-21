@@ -8,7 +8,7 @@ class Vector3 {
 
 public:
     float x, y, z;
-
+    Vector3() : x(0), y(0), z(0) {} // default constructor
     Vector3(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
     // adding

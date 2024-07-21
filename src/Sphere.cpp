@@ -9,7 +9,7 @@ pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B)
 
 }
 
-bool Sphere::objectCulling(const Ray &ray) const override {
+bool Sphere::objectCulling(const Ray &ray) const {
     const Vector3 centerOrigin = ray.pos.subtractNew(pos);
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
@@ -40,7 +40,7 @@ bool Sphere::objectCulling(const Ray &ray) const override {
     return false;
 }
 
-bool Sphere::intersectionCheck(const Ray &ray) const override {
+bool Sphere::intersectionCheck(const Ray &ray) const {
     const float sradius = 1;
     const Vector3 centerOrigin = ray.pos.subtractNew(pos);
     const float scaledX = centerOrigin.x / radiusx; // swap to xradius etc for ellipsoid
@@ -66,13 +66,16 @@ void Sphere::getNormal(Ray ray) const {
 
 }
 
-std::pair<Vector3, Vector3> Sphere::getBounds(const Ray &ray) const {
+std::pair<Vector3, Vector3> Sphere::getBounds() const {
 
     Vector3 min(pos.x-radiusx,pos.y-radiusy,pos.z-radiusz);
     Vector3 max(pos.x+radiusx,pos.y+radiusy,pos.z+radiusz);
 
     return std::make_pair(min, max);
+}
 
+Vector3 Sphere::getPos() const {
+    return pos;
 }
 
 
