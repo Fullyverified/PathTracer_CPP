@@ -187,7 +187,7 @@ float BoundingBox::getIntersectionDistance(const Ray &ray) const {
 }
 
 float BoundingBox::getArea() const {
-    return (maxBounds.x - minBounds.x) * (maxBounds.y - minBounds.y) * (maxBounds.z - minBounds.z);
+    return std::abs((maxBounds.x - minBounds.x) * (maxBounds.y - minBounds.y) * (maxBounds.z - minBounds.z));
 }
 
 

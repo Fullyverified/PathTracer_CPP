@@ -58,19 +58,15 @@ void Sphere::getNormal(Ray ray) const {
         ray.normal.z = -ray.pos.z / (radiusz * radiusz);
         return;
     }
-
     ray.normal.x = 2 * (ray.pos.x - pos.x) / (radiusx * radiusx);
     ray.normal.y = 2 * (ray.pos.y - pos.y) / (radiusy * radiusy);
     ray.normal.z = 2 * (ray.pos.z - pos.z) / (radiusz * radiusz);
     ray.normal.normalise();
-
 }
 
 std::pair<Vector3, Vector3> Sphere::getBounds() const {
-
     Vector3 min(pos.x-radiusx,pos.y-radiusy,pos.z-radiusz);
     Vector3 max(pos.x+radiusx,pos.y+radiusy,pos.z+radiusz);
-
     return std::make_pair(min, max);
 }
 
