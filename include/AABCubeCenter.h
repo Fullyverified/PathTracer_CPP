@@ -10,15 +10,19 @@ public:
     [[nodiscard]] bool objectCulling(const Ray &ray) const override;
     [[nodiscard]] bool intersectionCheck(const Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
-    void getNormal(Ray ray) const override;
+    void getNormal(Ray &ray) const override;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const override;
+    [[nodiscard]] std::vector<float> getCol() const override;
+    [[nodiscard]] std::vector<float> getLum() const override;
+    [[nodiscard]] float getRough() const override;
+    [[nodiscard]] float getRefrac() const override;
 
     AABCubeCenter(const AABCubeCenter& other) = delete; // disable copy constructor
     AABCubeCenter& operator=(const AABCubeCenter& other) = delete; // disable copy assignment
 
+private:
     Vector3 pos, length, minBounds, maxBounds;
     float roughness, refrac, R, G, B, RL, GL, BL;
-
 };
 
 

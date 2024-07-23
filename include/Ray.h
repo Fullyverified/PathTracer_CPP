@@ -5,13 +5,18 @@
 class Ray {
 
 public:
-    Vector3 origin, pos, dir, hitpoint, normal;
     Ray(Vector3 origin, Vector3 dir);
 
-    void marchRay(float& distance);
+    void marchRay(const float& distance);
+    void updateOrigin(const float& distance);
+    [[nodiscard]] Vector3 getPos() const;
+    [[nodiscard]] Vector3 getOrigin() const;
+    [[nodiscard]] Vector3 getDir() const;
+    [[nodiscard]] Vector3 getHitPoint() const;
+    [[nodiscard]] Vector3 getNormal() const;
 
-    void updateOrigin(float& distance);
-
+private:
+    Vector3 origin, pos, dir, hitpoint, normal;
 };
 
 

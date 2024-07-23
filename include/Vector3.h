@@ -3,11 +3,11 @@
 
 #include <cmath>
 #include <immintrin.h>
+#include <iostream>
 
 class Vector3 {
 
 public:
-    float x, y, z;
     Vector3() : x(0), y(0), z(0) {} // default constructor
     Vector3(const float x, const float y, const float z) : x(x), y(y), z(z) {}
 
@@ -76,14 +76,20 @@ public:
         z = other.z;
     }
 
+    void printPos() const {
+        std::cout<<"x: "<<x<<", y: "<<y<<", z: "<<z<<std::endl;
+    }
+
     void setX(float const &newX) {x = newX;}
-    void setY(float const &newY) {x = newY;}
-    void setZ(float const &newZ) {x = newZ;}
+    void setY(float const &newY) {y = newY;}
+    void setZ(float const &newZ) {z = newZ;}
 
-
+    [[nodiscard]] float getX() const {return x;}
+    [[nodiscard]] float getY() const {return y;}
+    [[nodiscard]] float getZ() const {return z;}
 
 private:
-
+    float x, y, z;
 };
 
 #endif //VECTOR3_H

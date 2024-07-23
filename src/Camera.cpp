@@ -12,18 +12,18 @@ planeWidth(0), planeHeight(0), right(0,0,0) {
 }
 
 void Camera::upVector() {
-    if (dir.y == 1 || dir.y == -1 && dir.x == 0 && dir.z == 0) {
-        up.x = 1;
-        up.y = 0;
-        up.z = 0;
+    if ((dir.getY() == 1 || dir.getY() == -1) && dir.getX() == 0 && dir.getZ() == 0) {
+        up.setX(1);
+        up.setY(0);
+        up.setZ(0);
     }
 }
 
 void Camera::rightVector() {
     // calculate right vector
-    right.x = (up.y * dir.z) - (up.z * dir.y);
-    right.y = (up.z * dir.x) - (up.x * dir.z);
-    right.z = (up.x * dir.y) - (up.y * dir.x);
+    right.setX((up.getY() * dir.getZ()) - (up.getZ() * dir.getY()));
+    right.setY((up.getZ() * dir.getX()) - (up.getX() * dir.getZ()));
+    right.setZ((up.getX() * dir.getY()) - (up.getY() * dir.getX()));
     right.normalise();
 }
 

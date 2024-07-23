@@ -10,18 +10,17 @@ pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B)
 }
 
 bool Sphere::objectCulling(const Ray &ray) const {
-    const Vector3 centerOrigin = ray.pos.subtractNew(pos);
+    const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
     const float invZR = 1.0f / (radiusz * radiusz);
 
     // a should always = 1
-    const float a = (ray.dir.x * ray.dir.x * invXR) + (ray.dir.y * ray.dir.y * invYR) + (ray.dir.z * ray.dir.z * invZR);
-    // b = 2 * (the dot product of the centerorigin vector by the direction vector)
-    const float intermediary = (centerOrigin.x * ray.dir.x * invXR) + (centerOrigin.y * ray.dir.y * invYR) +(centerOrigin.z * ray.dir.z * invZR);
-    const float b = 2 * intermediary;
-    // c = the dot product of centerorigin by itself, - the radius^2 of the sphere
-    const float c = intermediary - 1;
+    const float a = (ray.getDir().getX() * ray.getDir().getX() * invXR) + (ray.getDir().getY() * ray.getDir().getY() * invYR) + (ray.getDir().getZ() * ray.getDir().getZ() * invZR);
+    // b = 2 * (the dot product of the centerOrigin vector by the direction vector)
+    const float b = 2 * ((centerOrigin.getX() * ray.getDir().getX() * invXR) + (centerOrigin.getY() * ray.getDir().getY() * invYR) + (centerOrigin.getZ() * ray.getDir().getZ() * invZR));
+    // c = the dot product of centerOrigin by itself, - the radius^2 of the sphere
+    const float c = (centerOrigin.getX() * centerOrigin.getX() * invXR) + (centerOrigin.getY() * centerOrigin.getY() * invYR) + (centerOrigin.getZ() * centerOrigin.getZ() * invZR) - 1;
 
     float discriminant = (b * b) - (4 * (a * c));
 
@@ -42,37 +41,51 @@ bool Sphere::objectCulling(const Ray &ray) const {
 
 bool Sphere::intersectionCheck(const Ray &ray) const {
     const float sradius = 1;
-    const Vector3 centerOrigin = ray.pos.subtractNew(pos);
-    const float scaledX = centerOrigin.x / radiusx; // swap to xradius etc for ellipsoid
-    const float scaledY = centerOrigin.y / radiusy;
-    const float scaledZ = centerOrigin.z / radiusz;
+    const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
+    const float scaledX = centerOrigin.getX() / radiusx; // swap to xradius etc for ellipsoid
+    const float scaledY = centerOrigin.getY() / radiusy;
+    const float scaledZ = centerOrigin.getZ() / radiusz;
 
     const float distanceToC = std::sqrt(scaledX * scaledX + scaledY * scaledY + scaledZ * scaledZ);
     return distanceToC <= sradius;
 }
 
-void Sphere::getNormal(Ray ray) const {
-    if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
-        ray.normal.x = -ray.pos.x / (radiusx * radiusx);
-        ray.normal.y = -ray.pos.y / (radiusy * radiusy);
-        ray.normal.z = -ray.pos.z / (radiusz * radiusz);
+void Sphere::getNormal(Ray &ray) const {
+    if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) {
+        ray.getNormal().set(-ray.getPos().getX() / (radiusx * radiusx),
+                            -ray.getPos().getY() / (radiusy * radiusy),
+                            -ray.getPos().getZ() / (radiusz * radiusz));
         return;
     }
-    ray.normal.x = 2 * (ray.pos.x - pos.x) / (radiusx * radiusx);
-    ray.normal.y = 2 * (ray.pos.y - pos.y) / (radiusy * radiusy);
-    ray.normal.z = 2 * (ray.pos.z - pos.z) / (radiusz * radiusz);
-    ray.normal.normalise();
+    ray.getNormal().set(2 * (ray.getPos().getX() - pos.getX()) / (radiusx * radiusx),
+                        2 * (ray.getPos().getY() - pos.getY()) / (radiusy * radiusy),
+                        2 * (ray.getPos().getZ() - pos.getZ()) / (radiusz * radiusz));
+    ray.getNormal().normalise();
 }
 
 std::pair<Vector3, Vector3> Sphere::getBounds() const {
-    Vector3 min(pos.x-radiusx,pos.y-radiusy,pos.z-radiusz);
-    Vector3 max(pos.x+radiusx,pos.y+radiusy,pos.z+radiusz);
+    Vector3 min(pos.getX() - radiusx, pos.getY() - radiusy, pos.getZ() - radiusz);
+    Vector3 max(pos.getX() + radiusx, pos.getY() + radiusy, pos.getZ() + radiusz);
     return std::make_pair(min, max);
 }
+
 
 Vector3 Sphere::getPos() const {
     return pos;
 }
 
+std::vector<float> Sphere::getCol() const {
+    return std::vector<float> {R, G, B};
+}
 
+std::vector<float> Sphere::getLum() const {
+    return std::vector<float> {RL, GL, BL};
+}
 
+float Sphere::getRough() const {
+    return roughness;
+}
+
+float Sphere::getRefrac() const {
+    return refrac;
+}

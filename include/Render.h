@@ -13,10 +13,14 @@ public:
 
 Render();
 
-    void constructBVH(const std::vector<SceneObject*> &sceneObjectsList);
-
-    void constructBVHMultiThreaded(const std::vector<SceneObject*> &sceneObjectsList);
+    // bvh construction
+    void constructBVHST(const std::vector<SceneObject*> &sceneObjectsList);
+    void constructBVHMT(const std::vector<SceneObject*> &sceneObjectsList);
     void findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex);
+
+    //bvh traversal
+    void traverseBVH();
+
 
     std::vector<BVHNode*> BVHNodes;
 
