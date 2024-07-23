@@ -40,7 +40,7 @@ int main() {
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,1,1,1,1,1));
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,1,1,1,0,1));
-    Camera *cam = new Camera(0.075, RenderResolutionX, fov, aspectX, aspectY, Vector3(-2, 0, 0), Vector3(1, 0, 0));
+    Camera *cam = new Camera(1, RenderResolutionX, fov, aspectX, aspectY, Vector3(-2, 0, 0), Vector3(1, 0, 0));
 
     Render render;
     render.constructBVHST(SceneObjectsList);

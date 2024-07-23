@@ -11,6 +11,11 @@
 
 Render::Render() = default;
 
+void Render::computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam, int &numRays, int &numBounces) {
+
+
+}
+
 void Render::BVHProilfing() {
     Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(1, 0.1, 0.1));
     ray1.getDir().normalise();
