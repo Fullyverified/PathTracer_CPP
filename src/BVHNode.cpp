@@ -2,7 +2,7 @@
 #include <Boundingbox.h>
 
 // leaf node
-BVHNode::BVHNode(BoundingBox *boundingBox, SceneObject& sceneObject) :
+BVHNode::BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject) :
 boundingBox(boundingBox), sceneObject(&sceneObject),
 nodeLeft(nullptr), nodeRight(nullptr){}
 
@@ -20,7 +20,6 @@ BVHNode::~BVHNode() {
 }
 
 int BVHNode::getNumChildren() const {
-
     if (sceneObject != nullptr) {
         return 1;
     }

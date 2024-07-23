@@ -11,7 +11,7 @@
 
 Render::Render() = default;
 
-void Render::traverseBVH() {
+void Render::BVHProilfing() {
     Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(1, 0.1, 0.1));
     ray1.getDir().normalise();
     bool hit = true;
@@ -27,7 +27,8 @@ void Render::traverseBVH() {
     std::cout << "Hit: " << hit << std::endl;
 }
 
-void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
+void Render::constructBVHST(const std::vector<SceneObject*> &sceneObjectsList) {
+
     // create leaf nodes
     for (SceneObject *sceneObject: sceneObjectsList) {
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
@@ -43,12 +44,12 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         int indexLeft = 0, indexRight = 0;
         BVHNode *bestLeft = nullptr;
         BVHNode *bestRight = nullptr;
+        BoundingBox combinedBox;
 
         for (int i = 0; i < BVHNodes.size(); i++) {
             for (int j = i + 1; j < BVHNodes.size(); j++) {
-                BoundingBox *combinedBox = new BoundingBox(*BVHNodes.at(i)->getBoundingBox(),
-                                                           *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox->getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
+                combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
+                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -57,7 +58,6 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
                     indexLeft = i;
                     indexRight = j;
                 }
-                delete combinedBox;
             }
         }
         // create a new BVHNode that has the smallest combined area
@@ -156,8 +156,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost,
-                          int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
+void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost,int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
     int localIndexLeft = 0, localIndexRight = 0;
@@ -165,8 +164,7 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
     for (int i = start; i < end; i++) {
         for (int j = i + 1; j < nodes.size(); j++) {
             BoundingBox *combinedBox = new BoundingBox(*nodes[i]->getBoundingBox(), *nodes[j]->getBoundingBox());
-            float cost = (combinedBox->getArea() / (nodes[i]->getArea() + nodes[j]->getArea())) * (
-                             nodes[i]->getNumChildren() + nodes[j]->getNumChildren());
+            float cost = (combinedBox->getArea() / (nodes[i]->getArea() + nodes[j]->getArea())) * (nodes[i]->getNumChildren() + nodes[j]->getNumChildren());
             if (cost < localBestCost) {
                 localBestCost = cost;
                 localBestLeft = nodes[i];
