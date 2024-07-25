@@ -87,9 +87,9 @@ public:
     [[nodiscard]] float getX() const {return x;}
     [[nodiscard]] float getY() const {return y;}
     [[nodiscard]] float getZ() const {return z;}
-    float x, y, z;
-private:
 
+private:
+    float x, y, z;
 };
 
 #endif //VECTOR3_H

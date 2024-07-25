@@ -9,22 +9,11 @@
 #include <AABCubeCenter.h>
 
 #include "Render.h"
-
+#include "Config.h"
 
 int main() {
-    static int RenderResolutionX = 500;
-    static int aspectX = 4;
-    static int aspectY = 3;
-    static int fov = 30;
-    static int frameTime = 100; // Milliseconds
-    static int raysPerPixel = 25;
-    static int bouncesPerRay = 5;
-    static bool ASCIIMode = false;
-    static double primaryRayStep = 0.01;
-    static double secondaryRayStep = 0.01;
-    static bool denoise = false;
-    static double denoiseWeight = 0.75;
-    static double ISO = 35; // up and down keys to modify
+
+    Config config;
 
     std::vector<SceneObject*> SceneObjectsList;
 
@@ -40,16 +29,17 @@ int main() {
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,1,1,1,1,1));
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,1,1,1,0,1));
-    Camera *cam = new Camera(1, RenderResolutionX, fov, aspectX, aspectY, Vector3(-2, 0, 0), Vector3(1, 0, 0));
 
-    Render render;
-    render.constructBVHST(SceneObjectsList);
-    render.BVHProilfing();
+    Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
+    Render render(config, *cam);
+    //render.constructBVHST(SceneObjectsList);
+    //render.BVHProilfing();
+    render.computePixels(SceneObjectsList, *cam);
 
+    std::cout<<"Deleting Scene Objects"<<std::endl;
     for (SceneObject *obj: SceneObjectsList) {
         delete obj; // delete sceneObjects from heap
     }
     delete cam; // delete cam
-
     return 0;
 }

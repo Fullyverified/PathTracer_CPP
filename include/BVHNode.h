@@ -1,7 +1,8 @@
 #ifndef BVHNODE_H
 #define BVHNODE_H
-#include "SceneObject.h"
+
 #include "BoundingBox.h"
+#include "SceneObject.h"
 
 class BVHNode {
 public:
@@ -12,7 +13,7 @@ public:
     ~BVHNode(); // deconstructor
 
     [[nodiscard]] int getNumChildren() const;
-    [[nodiscard]] float getIntersectionDistance(const Ray &ray) const;
+    [[nodiscard]] std::pair<float, float> getIntersectionDistance(const Ray &ray) const;
     [[nodiscard]] BVHNode* searchBVHTree(const Ray &ray);
     [[nodiscard]] float getArea() const;
     [[nodiscard]] BoundingBox* getBoundingBox() const;

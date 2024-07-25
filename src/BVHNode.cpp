@@ -1,5 +1,6 @@
 #include <BVHNode.h>
 #include <Boundingbox.h>
+#include <SceneObject.h>
 
 // leaf node
 BVHNode::BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject) :
@@ -13,10 +14,18 @@ nodeLeft(left), nodeRight(right){}
 
 // deconstructor
 BVHNode::~BVHNode() {
-    delete nodeLeft;
-    delete nodeRight;
-    delete boundingBox;
-    delete sceneObject;
+    if (nodeLeft != nullptr) {
+        delete nodeLeft;
+        nodeLeft = nullptr;
+    }
+    if (nodeRight != nullptr) {
+        delete nodeRight;
+        nodeRight = nullptr;
+    }
+    if (boundingBox != nullptr) {
+        delete boundingBox;
+        boundingBox = nullptr;
+    }
 }
 
 int BVHNode::getNumChildren() const {
@@ -28,7 +37,7 @@ int BVHNode::getNumChildren() const {
     return leftChildren + rightChildren;
 }
 
-float BVHNode::getIntersectionDistance(const Ray &ray) const {
+std::pair<float, float> BVHNode::getIntersectionDistance(const Ray &ray) const {
     return boundingBox->getIntersectionDistance(ray);
 }
 
@@ -53,30 +62,23 @@ BVHNode* BVHNode::getNodeRight() const {
 }
 
 BVHNode* BVHNode::searchBVHTree(const Ray &ray) {
-    //std::cout<<"Checking if Ray intersects BoundingBox of node"<<std::endl;
     if (!boundingBox->objectCulling(ray)) {
         return nullptr; // ray does not intersect at all
     }
-    //std::cout<<"Checking if this node is a leaf node"<<std::endl;
-    if (sceneObject != nullptr && sceneObject->objectCulling(ray)) {
+    if (sceneObject != nullptr && sceneObject->objectCulling(ray)) { // only return the node if the ray actually points at the object itself
         return this;
     }
 
-    //std::cout<<"Recursive search left"<<std::endl;
     BVHNode* hitLeft = nodeLeft == nullptr ? nullptr : nodeLeft->searchBVHTree(ray);
-    //std::cout<<"Recursive search right"<<std::endl;
     BVHNode* hitRight = nodeRight == nullptr ? nullptr : nodeRight->searchBVHTree(ray);
 
-    //std::cout<<"Returning left or right node for whichever one the ray hits"<<std::endl;
     if (hitLeft != nullptr && hitRight != nullptr) {
         return hitLeft->getIntersectionDistance(ray) < hitRight->getIntersectionDistance(ray) ? hitLeft : hitRight;
     }
 
-    //std::cout<<"Returning null if ray hits neither node"<<std::endl;
     if (hitLeft == nullptr && hitRight == nullptr) {
         return nullptr;
     }
 
-    //std::cout<<"Returning the other node, of whichever is null"<<std::endl;
     return (hitLeft != nullptr) ? hitLeft : hitRight;
 }

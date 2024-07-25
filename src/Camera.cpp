@@ -1,10 +1,10 @@
 #include <Camera.h>
 #include <numbers>
 
-Camera::Camera(float ISO, float resX, float fOV, float aspectX, float aspectY, Vector3 pos, Vector3 dir) :
-ISO(ISO), resX(resX), fOV(fOV), aspectX(aspectX), aspectY(aspectY), pos(pos), dir(dir), resY(resX / (aspectX / aspectY)), up(0,0,0),
+Camera::Camera(Config& config, Vector3 pos, Vector3 dir) :
+ISO(config.ISO), resX(config.resX), fOV(config.fOV), aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), resY(0), up(0,0,0),
 planeWidth(0), planeHeight(0), right(0,0,0) {
-
+    resY = resX / (aspectX / aspectY);
     dir.normalise();
     upVector();
     up.normalise();
@@ -30,6 +30,39 @@ void Camera::rightVector() {
 void Camera::imagePlane() {
     planeWidth = 2 * std::tan(toRadians(fOV) / 2) * 1;
     planeHeight = planeWidth / (aspectX / aspectY);
+}
+
+
+float Camera::getResX() const {
+    return resX;
+}
+
+float Camera::getResY() const {
+    return resY;
+}
+
+Vector3 Camera::getPos() const {
+    return pos;
+}
+
+Vector3 Camera::getDir() const {
+    return dir;
+}
+
+Vector3 Camera::getRight() const {
+    return right;
+}
+
+Vector3 Camera::getUp() const {
+    return up;
+}
+
+float Camera::getPlaneWidth() const {
+    return planeWidth;
+}
+
+float Camera::getPlaneHeight() const {
+    return planeWidth;
 }
 
 float Camera::toRadians(float &degrees) const{

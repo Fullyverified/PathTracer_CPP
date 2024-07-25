@@ -31,4 +31,5 @@ add_executable(PathTracer_CPP src/main.cpp
         src/Render.cpp
         include/Render.h
         include/Camera.h
-        src/Camera.cpp)
+        src/Camera.cpp
+        include/Config.h)
