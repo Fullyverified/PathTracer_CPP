@@ -1,0 +1,23 @@
+ninja_dyndep_version = 1.0
+build CMakeFiles\PathTracer_CPP.dir\src\main.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\Vector3.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\Sphere.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\SceneObject.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\Ray.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\AABCubeCenter.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\AABCubeBounds.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\BoundingBox.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\BVHNode.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\Render.cpp.obj: dyndep
+
+build CMakeFiles\PathTracer_CPP.dir\src\Camera.cpp.obj: dyndep
+

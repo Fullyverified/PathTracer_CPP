@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "CMakeFiles\\PathTracer_CPP.dir\\src\\Ray.cpp.obj",
+            "outputs": [
+                "CMakeFiles\\PathTracer_CPP.dir\\src\\Ray.cpp.obj.ddi"
+            ],
+            "requires": []
+        }
+    ]
+}

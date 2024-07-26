@@ -1,0 +1,13 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "CMakeFiles\\PathTracer_CPP.dir\\src\\Camera.cpp.obj",
+            "outputs": [
+                "CMakeFiles\\PathTracer_CPP.dir\\src\\Camera.cpp.obj.ddi"
+            ],
+            "requires": []
+        }
+    ]
+}

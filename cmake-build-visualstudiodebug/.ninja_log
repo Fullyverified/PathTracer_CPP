@@ -1,0 +1,37 @@
+# ninja log v6
+31	216	7436107211334344	CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj.ddi	924b95b4b9db3549
+18	219	7436107211204315	CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj.ddi	4257804d4758ef97
+49	221	7436107211524385	CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj.ddi	af3c15fc7d8fdbde
+40	222	7436107211424366	CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj.ddi	49a362d8a30c31c5
+35	223	7436107211384354	CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj.ddi	b0aca77ed04bc428
+8	224	7436107211114296	CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj.ddi	85d64e89927f8d9e
+2	224	7436107211044277	CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj.ddi	4e501def2bf787b7
+27	225	7436107211294335	CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj.ddi	fdedf0da276df1c4
+13	229	7436107211154303	CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj.ddi	47f53da004aa180c
+22	230	7436107211244319	CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj.ddi	ea78dafaee119e26
+45	255	7436107211474373	CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.obj.ddi	c950f8d636255ed3
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/CXX.dd	4dbdad8bb4cc763f
+255	293	7436107213574854	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-visualstudiodebug/CMakeFiles/PathTracer_CPP.dir/CXXModules.json	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.obj.modmap	4dbdad8bb4cc763f
+255	293	7436107213574854	CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj.modmap	4dbdad8bb4cc763f
+300	1528	7436107214024953	CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj	df39670dfa450a14
+340	1535	7436107214435042	CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj	f476f0a11315c859
+314	1555	7436107214164986	CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj	620dd9e15e8d7b6e
+309	1568	7436107214114970	CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj	60dbf2bfbfadeae4
+328	1608	7436107214305019	CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj	adca6ae422a759ba
+332	1623	7436107214345025	CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj	27e6c556f6f91ca8
+319	1625	7436107214214995	CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj	2c1fa6815ae4f40c
+305	1638	7436107214074965	CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj	5944acb7e8bfa2c5
+323	1639	7436107214255006	CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj	ebbee0ccde3993d5
+294	1766	7436107213964940	CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj	d9fad5f42369da5f
+336	2735	7436107214385051	CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.obj	163e82851a07de5a
+2739	2833	7436107238420489	PathTracer_CPP.exe	6ae93a40e0711873

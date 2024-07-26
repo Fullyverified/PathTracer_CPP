@@ -1,0 +1,3 @@
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-visualstudiodebug/CMakeFiles/PathTracer_CPP.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-visualstudiodebug/CMakeFiles/edit_cache.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-visualstudiodebug/CMakeFiles/rebuild_cache.dir
