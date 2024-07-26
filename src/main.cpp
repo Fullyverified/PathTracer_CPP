@@ -32,11 +32,10 @@ int main() {
 
     Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
     Render render(config, *cam);
-    render.constructBVHST(SceneObjectsList);
-    render.BVHProilfing();
-    //render.computePixels(SceneObjectsList, *cam);
+    //render.constructBVHST(SceneObjectsList);
+    //render.BVHProilfing();
+    render.computePixels(SceneObjectsList, *cam);
 
-    std::cout<<"Deleting Scene Objects"<<std::endl;
     for (SceneObject *obj: SceneObjectsList) {
         delete obj; // delete sceneObjects from heap
     }

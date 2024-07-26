@@ -65,7 +65,7 @@ void Render::computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &
 
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-    std::cout<<"Primary Ray time: "<<durationTime<<std::endl;
+    std::cout<<"Primary Ray time: "<<durationTime.count()<<std::endl;
 
     std::cout<<"Deleting Objects"<<std::endl;
     deleteObjects(); // delete all ray and luminance vectors
@@ -175,7 +175,7 @@ void Render::constructBVHST(const std::vector<SceneObject*> &sceneObjectsList) {
     }
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout<<"Finished tree creation: "<<durationTime<<std::endl;
+    std::cout<<"Finished tree creation: "<<durationTime.count()<<std::endl;
     //std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
     std::cout<<"RootNode numChildren: "<<BVHNodes.at(0)->getNumChildren() << std::endl;
 }
@@ -247,7 +247,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
 
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout << "Finished tree creation: " << durationTime << std::endl;
+    std::cout << "Finished tree creation: "<<durationTime.count()<<std::endl;
     std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
@@ -293,7 +293,7 @@ void Render::BVHProilfing() {
     } else {hit = false;}
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stopTime - startTime);
-    std::cout << "Finished tree traversal: " << durationTime << std::endl;
+    std::cout << "Finished tree traversal: "<<durationTime.count()<<std::endl;
     std::cout << "Hit: " << hit << std::endl;
 }
 
