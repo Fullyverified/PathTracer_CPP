@@ -1,9 +1,15 @@
 #include <Ray.h>
+#include "Config.h"
 
-Ray::Ray(Vector3 origin, Vector3 dir):origin(origin), dir(dir), pos(origin), hitpoint(0,0,0), normal(0,0,0), hit(false)/*, sceneObject(nullptr)*/ {
+class SceneObject;
+
+Ray::Ray(Vector3 origin, Vector3 dir):origin(origin), dir(dir), pos(origin), hitpoint(0,0,0), normal(0,0,0), hit(false), sceneObject(nullptr) {
+    luminanceRed.resize(config.bouncesPerRay+1, std::vector<float*>(4, nullptr));
+    luminanceGreen.resize(config.bouncesPerRay+1, std::vector<float*>(4, nullptr));
+    luminanceBlue.resize(config.bouncesPerRay+1, std::vector<float*>(4, nullptr));
 }
 
-Ray::Ray(Vector3 origin):origin(origin), dir(0,0,0), pos(origin), hitpoint(0,0,0), normal(0,0,0), hit(false)/*, sceneObject(nullptr)*/ {
+Ray::Ray(Vector3 origin):origin(origin), dir(0,0,0), pos(origin), hitpoint(0,0,0), normal(0,0,0), hit(false), sceneObject(nullptr) {
 }
 
 void Ray::march(const float& distance) {
@@ -43,6 +49,6 @@ void Ray::setHit(bool hit) {this->hit = hit;}
 
 bool Ray::getHit() const {return hit;}
 
-//void Ray::setHitObject(SceneObject* hitObject) {this->sceneObject = hitObject;}
+void Ray::setHitObject(SceneObject* hitObject) {this->sceneObject = hitObject;}
 
-//SceneObject* Ray::getHitObject() const {return sceneObject;}
+SceneObject* Ray::getHitObject() const {return sceneObject;}

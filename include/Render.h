@@ -18,7 +18,9 @@ public:
     Render(const Config& config, const Camera& cam);
     ~Render() = default;
 
-    // bvh construction
+    void computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam);
+
+    // bvh logic
     void constructBVHST(const std::vector<SceneObject*> &sceneObjectsList);
 
     void constructBVHMT(const std::vector<SceneObject*> &sceneObjectsList);
@@ -26,21 +28,23 @@ public:
 
     void BVHProilfing();
 
-    // render logic
-    void computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam);
-
+    // traversal logic
     void computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
-    void computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, BVHNode &rootNode) const;
+    void computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode) const;
 
+    // bounce logic
     void cosineWeightedHemisphereImportanceSampling(Ray &ray, SceneObject* &sceneObject, bool flipNormal);
     void refractionDirection(Ray &ray, SceneObject* &sceneObject);
-
     float lambertCosineLaw(Ray &ray, SceneObject* sceneObject);
 
+    // multithreading logic
     std::pair<int, int> threadedRenderSegmentation(float resI, int &numThreads, std::pair<int, int>, int i);
 
+    // cleanup
     void intialiseObjects();
     void deleteObjects();
+
+    void clearArray(std::vector<std::vector<float*>> vector);
 
 private:
     std::vector<BVHNode*> BVHNodes;
@@ -50,6 +54,8 @@ private:
     float primaryRayStep, secondaryRayStep;
     int numRays, numBounces, resX, resY, frameTime;
     Camera cam;
+    std::pair<int, int> boundsX;
+    std::pair<int, int> boundsY;
 };
 
 #endif //RENDER_H

@@ -1,10 +1,11 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "Vector3.h"
 #include <vector>
+#include "Vector3.h"
+#include "Config.h"
 
-//#include <SceneObject.h>
+class SceneObject;
 
 class Ray {
 
@@ -21,13 +22,16 @@ public:
     [[nodiscard]] Vector3 getNormal() const;
     void setHit(bool hit);
     [[nodiscard]] bool getHit() const;
-    //void setHitObject(SceneObject* sceneObject);
-    //[[nodiscard]] SceneObject* getHitObject() const;
+    void setHitObject(SceneObject* sceneObject);
+    [[nodiscard]] SceneObject* getHitObject() const;
 
 private:
     Vector3 origin, pos, dir, hitpoint, normal;
     bool hit;
-    //SceneObject* sceneObject;
+    SceneObject* sceneObject;
+    Config config;
+
+    std::vector<std::vector<float*>> luminanceRed, luminanceGreen, luminanceBlue; // for storing hit data as a ray bounces through the scene
 };
 
 

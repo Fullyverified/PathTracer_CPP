@@ -13,7 +13,7 @@
 
 Render::Render(const Config& config, const Camera& cam) : config(config), primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep), numRays(config.raysPerPixel),
 numBounces(config.bouncesPerRay), frameTime(config.frameTime), cam(cam),
-resX(cam.getResX()), resY(cam.getResY()) {
+resX(cam.getResX()), resY(cam.getResY()), boundsX(0,0), boundsY(0,0) {
     primaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
     secondaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
     avgR.resize(resX, std::vector<float*>(resY, nullptr));
@@ -26,48 +26,33 @@ resX(cam.getResX()), resY(cam.getResY()) {
 
 void Render::computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam) {
     int numThreads = std::thread::hardware_concurrency();
-    //numThreads = 1;
+    numThreads = 1;
     std::cout<<"Avaliable Threads: "<<numThreads<<std::endl;
-    intialiseObjects(); // create all ray and luminance objects
+    // create all ray and luminance vector objects
+    intialiseObjects();
     // construct BVH
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
-    auto startTime = std::chrono::high_resolution_clock::now();
     // primary rays
+    auto startTimeMT = std::chrono::high_resolution_clock::now();
     std::mutex mutex;
-    int x1, x2, y1, y2;
-    std::pair<int, int> boundsX = std::pair(x1, x2);
-    std::pair<int, int> boundsY = std::pair(y1, y2);
-
     std::vector<std::future<void>> threads;
 
-    for (int j = 0; j < numThreads; j++) {
-        for (int i = 0; i < numThreads; i++) {
-            boundsX = threadedRenderSegmentation(cam.getResX(), numThreads, boundsX, i);
-            boundsY = threadedRenderSegmentation(cam.getResY(), numThreads, boundsY, j);
-            /*std::cout<<"Starting Thread:"<<std::endl;
-            std::cout<<"X"<<boundsX.first<<"->"<<boundsX.second<<std::endl;
-            std::cout<<"Y"<<boundsY.first<<"->"<<boundsY.second<<std::endl;*/
+    int segments = std::round(std::sqrt(numThreads));
+    for (int j = 0; j < segments; j++) {
+        for (int i = 0; i < segments; i++) {
+            boundsX = threadedRenderSegmentation(cam.getResX(), segments, boundsX, i);
+            boundsY = threadedRenderSegmentation(cam.getResY(), segments, boundsY, j);
             threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second, std::ref(*BVHrootNode), std::ref(mutex)));
         }
     }
-
-    //std::cout<<"Thread finished"<<std::endl;
     for (std::future<void> &thread : threads) {
         thread.get(); // Blocks until the thread completes its task
     }
     threads.clear();
-
-    auto stopTime = std::chrono::high_resolution_clock::now();
-    auto durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-    std::cout<<"Multithreaded PrimaryRay Time: "<<durationTime.count()<<"ms"<<std::endl;
-
-    computePrimaryRay(cam, primaryRay, 0, cam.getResX(), 0, cam.getResY(), *BVHrootNode, std::ref(mutex));
-
-    stopTime = std::chrono::high_resolution_clock::now();
-    durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-    std::cout<<"Singlethreaded Primary Ray time: "<<durationTime.count()<<"ms"<<std::endl;
+    auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
+    std::cout<<"Multithreaded PrimaryRay Time: "<<durationTimeMT.count()<<"ms"<<std::endl;
 
     std::cout<<"Deleting Objects"<<std::endl;
     deleteObjects(); // delete all ray and luminance vectors
@@ -97,22 +82,25 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
                 ray->march(distance - 0.05f); // march the ray to the objects bounding volume
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     if (BVHSceneObject->intersectionCheck(*ray)) {
-                        //ray->getHitPoint().setV(ray->getPos());
+                        ray->getHitPoint().setV(ray->getPos());
                         ray->setHit(true);
-                        //ray.setHitObject(&BVHSceneObject);
+                        ray->setHitObject(BVHSceneObject);
                     }
                     distance += config.primaryRayStep;
                 }
             }
-            //std::cout<<"X: "<<x<<", Y: "<<y<<::std::endl;
         }
     }
 }
 
-void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, BVHNode &rootNode) const {
-    for (int y = 0; y < cam.getResY(); y++) {
-        for (int x = 0; x < cam.getResX(); x++) {
+void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode) const {
+    for (int y = ystart; y < yend; y++) {
+        for (int x = xstart; x < xend; x++) {
             Ray primaryRay = primaryRayV[x][y];
+            if (primaryRay.getHit()) {
+            }
+
+
         }
     }
 }
@@ -331,13 +319,20 @@ void Render::deleteObjects() {
     BVHNodes.clear();
 }
 
-std::pair<int, int> Render::threadedRenderSegmentation(float resI, int &numThreads, std::pair<int, int>, int i) {
-    int res = resI;
-    int pixelsPerThread = res / numThreads; // basic number of nodes per thread
-    int remainder = res % numThreads; // remaining nodes after even distribution
+std::pair<int, int> Render::threadedRenderSegmentation(float resInput, int &numThreads, std::pair<int, int>, int step) {
+    int res = resInput;
+    int pixelsPerThread = res / numThreads; // number of pixels per thread
+    int remainder = res % numThreads;      // remaining pixels after division
 
-    int start = i * pixelsPerThread + std::min(i, remainder);
-    int end = start + pixelsPerThread + (i < remainder ? 1 : 0);
-    end = std::min(end, res); // ensure last thread does not exceed size of nodes vector
+    int start = step * pixelsPerThread + std::min(step, remainder);
+    int end = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
     return std::make_pair(start, end);
+}
+
+void Render::clearArray(std::vector<std::vector<float*>> vector) {
+    for (int j = 0; j < config.bouncesPerRay + 1; j++) {
+        for (int i = 0; i < 4; i++) {
+            vector[i][j] = 0;
+        }
+    }
 }

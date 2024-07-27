@@ -7,7 +7,7 @@
 
 struct Config {
 
-        int resX = 3440;
+        int resX = 800;
         int aspectX = 4;
         int aspectY = 4;
         int fOV = 52;
