@@ -5,3 +5,4 @@ BVH creation is 220x faster and traversal is 34x faster :D
 
 ![image](https://github.com/user-attachments/assets/5cf3b88a-d116-4c41-ab02-28f2350935b9)  
 Resolution 3440x3440. 7.1x speed up. For 8 physical threads that seems reasonable.
+Cinebench has a 9.7x speed up so I think thats not bad.
