@@ -19,6 +19,8 @@ BoundingBox::BoundingBox(const BoundingBox &left, const BoundingBox &right) {
     maxBounds.setZ(std::max(left.maxBounds.getZ(), right.maxBounds.getZ()));
 }
 
+BoundingBox::~BoundingBox() = default;
+
 bool BoundingBox::objectCulling(const Ray &ray) const {
     // pre calculate inverse
     float invDirX = 1.0f / ray.getDir().getX();

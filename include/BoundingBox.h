@@ -11,7 +11,7 @@ public:
     BoundingBox() = default;
     BoundingBox(const Vector3& minBounds, const Vector3& maxBounds);
     BoundingBox(const BoundingBox& left, const BoundingBox& right);
-    ~BoundingBox() = default;
+    ~BoundingBox();
 
     void updateBounds(const BoundingBox& left, const BoundingBox& right);
     [[nodiscard]] bool objectCulling(const Ray &ray) const;

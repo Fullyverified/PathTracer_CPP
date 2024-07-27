@@ -14,9 +14,18 @@ nodeLeft(left), nodeRight(right){}
 
 // deconstructor
 BVHNode::~BVHNode() {
-    delete nodeLeft;
-    delete nodeRight;
-    delete boundingBox;
+    if (nodeLeft) {
+        delete nodeLeft;
+        nodeLeft = nullptr;
+    }
+    if (nodeRight) {
+        delete nodeRight;
+        nodeRight;
+    }
+    if (boundingBox) {
+        delete boundingBox;
+        boundingBox = nullptr;
+    }
 }
 
 int BVHNode::getNumChildren() const {

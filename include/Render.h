@@ -29,7 +29,7 @@ public:
     // render logic
     void computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam);
 
-    void computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode rootNode, std::mutex &mutex) const;
+    void computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
     void computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, BVHNode &rootNode) const;
 
     void cosineWeightedHemisphereImportanceSampling(Ray &ray, SceneObject* &sceneObject, bool flipNormal);

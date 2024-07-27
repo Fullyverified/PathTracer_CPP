@@ -26,53 +26,54 @@ resX(cam.getResX()), resY(cam.getResY()) {
 
 void Render::computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam) {
     int numThreads = std::thread::hardware_concurrency();
-    numThreads = 1;
+    //numThreads = 1;
     std::cout<<"Avaliable Threads: "<<numThreads<<std::endl;
     intialiseObjects(); // create all ray and luminance objects
     // construct BVH
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
-    std::mutex mutex;
     auto startTime = std::chrono::high_resolution_clock::now();
     // primary rays
-    /*int x1, x2, y1, y2;
+    std::mutex mutex;
+    int x1, x2, y1, y2;
     std::pair<int, int> boundsX = std::pair(x1, x2);
     std::pair<int, int> boundsY = std::pair(y1, y2);
 
     std::vector<std::future<void>> threads;
 
-
-    for (int i = 0; i < numThreads; i++) {
-        boundsX = threadedRenderSegmentation(cam.getResX(), numThreads, boundsX, i);
-        boundsY = threadedRenderSegmentation(cam.getResY(), numThreads, boundsY, i);
-        std::cout<<"Starting Thread:"<<std::endl;
-        std::cout<<"X"<<boundsX.first<<"->"<<boundsX.second<<std::endl;
-        std::cout<<"Y"<<boundsY.first<<"->"<<boundsY.second<<std::endl;
-        computePrimaryRay(cam, primaryRay, boundsX.first, boundsX.second, boundsY.first, boundsY.second, *BVHrootNode, std::ref(mutex));
-        threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second, *BVHrootNode, std::ref(mutex)));
+    for (int j = 0; j < numThreads; j++) {
+        for (int i = 0; i < numThreads; i++) {
+            boundsX = threadedRenderSegmentation(cam.getResX(), numThreads, boundsX, i);
+            boundsY = threadedRenderSegmentation(cam.getResY(), numThreads, boundsY, j);
+            /*std::cout<<"Starting Thread:"<<std::endl;
+            std::cout<<"X"<<boundsX.first<<"->"<<boundsX.second<<std::endl;
+            std::cout<<"Y"<<boundsY.first<<"->"<<boundsY.second<<std::endl;*/
+            threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second, std::ref(*BVHrootNode), std::ref(mutex)));
+        }
     }
 
-    std::cout<<"Thread finished"<<std::endl;
+    //std::cout<<"Thread finished"<<std::endl;
     for (std::future<void> &thread : threads) {
         thread.get(); // Blocks until the thread completes its task
     }
-    threads.clear();*/
-
-    computePrimaryRay(cam, primaryRay, 0, cam.getResX(), 0, cam.getResY(), *BVHrootNode, std::ref(mutex));
-
-
+    threads.clear();
 
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-    std::cout<<"Primary Ray time: "<<durationTime.count()<<std::endl;
+    std::cout<<"Multithreaded PrimaryRay Time: "<<durationTime.count()<<"ms"<<std::endl;
+
+    computePrimaryRay(cam, primaryRay, 0, cam.getResX(), 0, cam.getResY(), *BVHrootNode, std::ref(mutex));
+
+    stopTime = std::chrono::high_resolution_clock::now();
+    durationTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+    std::cout<<"Singlethreaded Primary Ray time: "<<durationTime.count()<<"ms"<<std::endl;
 
     std::cout<<"Deleting Objects"<<std::endl;
     deleteObjects(); // delete all ray and luminance vectors
-    std::cout<<"Finished Deleting Objects"<<std::endl;
 }
 
-void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode rootNode, std::mutex &mutex) const {
+void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     for (int y = ystart; y < yend; y++) {
         for (int x = xstart; x < xend; x++) {
             Ray* ray = primaryRay[x][y];
@@ -112,7 +113,6 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &pri
     for (int y = 0; y < cam.getResY(); y++) {
         for (int x = 0; x < cam.getResX(); x++) {
             Ray primaryRay = primaryRayV[x][y];
-
         }
     }
 }
@@ -175,7 +175,7 @@ void Render::constructBVHST(const std::vector<SceneObject*> &sceneObjectsList) {
     }
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout<<"Finished tree creation: "<<durationTime.count()<<std::endl;
+    std::cout<<"Finished tree creation: "<<durationTime.count()<<"us"<<std::endl;
     //std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
     std::cout<<"RootNode numChildren: "<<BVHNodes.at(0)->getNumChildren() << std::endl;
 }
@@ -247,7 +247,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
 
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout << "Finished tree creation: "<<durationTime.count()<<std::endl;
+    std::cout << "Finished tree creation: "<<durationTime.count()<<"us"<<std::endl;
     std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
@@ -293,7 +293,7 @@ void Render::BVHProilfing() {
     } else {hit = false;}
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stopTime - startTime);
-    std::cout << "Finished tree traversal: "<<durationTime.count()<<std::endl;
+    std::cout << "Finished tree traversal: "<<durationTime.count()<<"ns"<<std::endl;
     std::cout << "Hit: " << hit << std::endl;
 }
 
