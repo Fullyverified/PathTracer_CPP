@@ -13,7 +13,7 @@ public:
     ~BVHNode(); // deconstructor
 
     [[nodiscard]] int getNumChildren() const;
-    [[nodiscard]] std::pair<float, float> getIntersectionDistance(const Ray &ray) const;
+    [[nodiscard]] std::vector<float> getIntersectionDistance(const Ray &ray) const;
     [[nodiscard]] BVHNode* searchBVHTree(const Ray &ray);
     [[nodiscard]] float getArea() const;
     [[nodiscard]] BoundingBox* getBoundingBox() const;

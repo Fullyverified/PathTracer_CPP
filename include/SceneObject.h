@@ -18,6 +18,8 @@ public:
     [[nodiscard]] virtual std::vector<float> getLum() const = 0;
     [[nodiscard]] virtual float getRough() const = 0;
     [[nodiscard]] virtual float getRefrac() const = 0;
+    [[nodiscard]] virtual float getTransp() const = 0;
+    [[nodiscard]] virtual std::vector<float> getIntersectionDistance(const Ray &ray) const = 0;
 
     virtual ~SceneObject() = default; // deconstructor
 

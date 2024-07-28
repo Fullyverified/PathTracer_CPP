@@ -120,7 +120,7 @@ void BoundingBox::getNormal(Ray &ray) const {
     }
 }
 
-std::pair<float, float> BoundingBox::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> BoundingBox::getIntersectionDistance(const Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
@@ -188,15 +188,14 @@ std::pair<float, float> BoundingBox::getIntersectionDistance(const Ray &ray) con
     const float tFar = std::max(tMax.getZ(), std::max(tMax.getX(), tMax.getY()));
 
     if (tNear > tFar || tFar > 0) {
-        return std::make_pair(-1, -1);;
+        return {-1, -1};
     }
-    return std::make_pair(tNear, tFar);
+    return {tNear, tFar};
 }
 
 float BoundingBox::getArea() const {
     return std::abs(
-        (maxBounds.getX() - minBounds.getX()) * (maxBounds.getY() - minBounds.getY()) * (
-            maxBounds.getZ() - minBounds.getZ()));
+        (maxBounds.getX() - minBounds.getX()) * (maxBounds.getY() - minBounds.getY()) * (maxBounds.getZ() - minBounds.getZ()));
 }
 
 std::pair<Vector3, Vector3> BoundingBox::getBounds() const {

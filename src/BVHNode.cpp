@@ -37,7 +37,7 @@ int BVHNode::getNumChildren() const {
     return leftChildren + rightChildren;
 }
 
-std::pair<float, float> BVHNode::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> BVHNode::getIntersectionDistance(const Ray &ray) const {
     return boundingBox->getIntersectionDistance(ray);
 }
 

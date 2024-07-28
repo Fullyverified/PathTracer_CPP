@@ -11,58 +11,84 @@
 
 #include <Config.h>
 
-Render::Render(const Config& config, const Camera& cam) : config(config), primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep), numRays(config.raysPerPixel),
-numBounces(config.bouncesPerRay), frameTime(config.frameTime), cam(cam),
-resX(cam.getResX()), resY(cam.getResY()), boundsX(0,0), boundsY(0,0) {
-    primaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
-    secondaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
+Render::Render(const Config &config, Camera &cam) : config(config), primaryRayStep(config.primaryRayStep),
+                                                    secondaryRayStep(config.secondaryRayStep), numRays(config.raysPerPixel), numBounces(config.bouncesPerRay),
+                                                    frameTime(config.frameTime),
+cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f) {
+
+    primaryRay.resize(resY, std::vector<Ray*>(resX, nullptr));
+    secondaryRay.resize(resY, std::vector<Ray*>(resX, nullptr));
     avgR.resize(resX, std::vector<float*>(resY, nullptr));
     avgG.resize(resX, std::vector<float*>(resY, nullptr));
     avgB.resize(resX, std::vector<float*>(resY, nullptr));
     absR.resize(resX, std::vector<float*>(resY, nullptr));
     absG.resize(resX, std::vector<float*>(resY, nullptr));
     absB.resize(resX, std::vector<float*>(resY, nullptr));
+
 }
 
-void Render::computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam) {
+void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
     int numThreads = std::thread::hardware_concurrency();
-    numThreads = 1;
-    std::cout<<"Avaliable Threads: "<<numThreads<<std::endl;
+    numThreads = 16;
+    std::cout << "Avaliable Threads: " << numThreads << std::endl;
+    std::cout << "Constructing Objects: " << std::endl;
     // create all ray and luminance vector objects
     intialiseObjects();
     // construct BVH
+    std::cout << "Constructing BVH: " << std::endl;
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
     // primary rays
     auto startTimeMT = std::chrono::high_resolution_clock::now();
     std::mutex mutex;
-    std::vector<std::future<void>> threads;
+    std::vector<std::future<void> > threads;
 
     int segments = std::round(std::sqrt(numThreads));
     for (int j = 0; j < segments; j++) {
         for (int i = 0; i < segments; i++) {
             boundsX = threadedRenderSegmentation(cam.getResX(), segments, boundsX, i);
             boundsY = threadedRenderSegmentation(cam.getResY(), segments, boundsY, j);
-            threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second, std::ref(*BVHrootNode), std::ref(mutex)));
+            threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this,
+                                            std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                                            std::ref(*BVHrootNode), std::ref(mutex)));
         }
     }
-    for (std::future<void> &thread : threads) {
+    for (std::future<void> &thread: threads) {
         thread.get(); // Blocks until the thread completes its task
     }
     threads.clear();
     auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
-    std::cout<<"Multithreaded PrimaryRay Time: "<<durationTimeMT.count()<<"ms"<<std::endl;
+    std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
+
+    /*// secondary rays
+    startTimeMT = std::chrono::high_resolution_clock::now();
+
+    for (int j = 0; j < segments; j++) {
+        for (int i = 0; i < segments; i++) {
+            boundsX = threadedRenderSegmentation(cam.getResX(), segments, boundsX, i);
+            boundsY = threadedRenderSegmentation(cam.getResY(), segments, boundsY, j);
+            threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
+                                            std::ref(cam), std::ref(primaryRay), std::ref(secondaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                                            std::ref(*BVHrootNode), std::ref(mutex)));
+        }
+    }
+    for (std::future<void> &thread: threads) {
+        thread.get(); // Blocks until the thread completes its task
+    }
+    threads.clear();
+    durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
+    std::cout<<config.raysPerPixel<<" Secondary Ray Time: "<<durationTimeMT.count()<<"ms"<<std::endl;*/
 
     std::cout<<"Deleting Objects"<<std::endl;
     deleteObjects(); // delete all ray and luminance vectors
 }
 
-void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*> > &primaryRay, int xstart, int xend,int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     for (int y = ystart; y < yend; y++) {
         for (int x = xstart; x < xend; x++) {
             Ray* ray = primaryRay[x][y];
-            ray->getPos().setV(cam.getPos());
+            ray->getPos().set(cam.getPos());
             // calculate position of pixel on image plane
             Vector3 pixelPosPlane(((x + 0.5f) / cam.getResX() * 2) - 1, 1 - ((x + 0.5f) / cam.getResX() * 2), 0);
             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth(), pixelPosPlane.getY() * cam.getPlaneHeight(), 0);
@@ -75,14 +101,15 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
             ray->march(0);
 
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
-            if (leafNode != nullptr) { // did we make it to a leaf node?
-                SceneObject* BVHSceneObject = leafNode->getSceneObject();
-                float distance = leafNode->getIntersectionDistance(*ray).first;
-                float distanceFar = leafNode->getIntersectionDistance(*ray).second;
+            if (leafNode != nullptr) {
+                // did we make it to a leaf node?
+                SceneObject *BVHSceneObject = leafNode->getSceneObject();
+                float distance = leafNode->getIntersectionDistance(*ray)[0];
+                float distanceFar = leafNode->getIntersectionDistance(*ray)[1];
                 ray->march(distance - 0.05f); // march the ray to the objects bounding volume
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     if (BVHSceneObject->intersectionCheck(*ray)) {
-                        ray->getHitPoint().setV(ray->getPos());
+                        ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
                         ray->setHitObject(BVHSceneObject);
                     }
@@ -93,30 +120,185 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
     }
 }
 
-void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray>> &primaryRayV, std::vector<std::vector<Ray>> &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode) const {
-    for (int y = ystart; y < yend; y++) {
-        for (int x = xstart; x < xend; x++) {
-            Ray primaryRay = primaryRayV[x][y];
-            if (primaryRay.getHit()) {
+void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &primaryRayV, std::vector<std::vector<Ray *> > &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+    for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
+        for (int y = ystart; y < yend; y++) {
+            for (int x = xstart; x < xend; x++) {
+                Ray *primaryRay = primaryRayV[x][y];
+                if (primaryRay->getHit()) {
+                    Ray *nthRay = secondaryRayV[x][y];
+                    nthRay->clearArray();
+                    nthRay->initialize(*primaryRay);
+                    // BOUNCES PER RAY
+                    // initialize ray starting conditions
+                    nthRay->storeHitData(-1, 1);
+                    for (int currentBounce = 0; currentBounce <= config.bouncesPerRay; currentBounce++) {
+                        float randomSample = dist(rng); // monte carlo sampling
+                        if (randomSample >= primaryRay->getHitObject()->getTransp()) {
+                            sampleReflectionDirection(*nthRay, *primaryRay->getHitObject(), false);
+                        } else {
+                            sampleRefractionDirection(*nthRay, *primaryRay->getHitObject(), false);
+                        }
+
+                        BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
+                        if (leafNode != nullptr) {
+                            // did we make it to a leaf node?
+                            SceneObject *BVHSceneObject = leafNode->getSceneObject();
+                            float distance = leafNode->getIntersectionDistance(*nthRay)[0];
+                            float distanceFar = leafNode->getIntersectionDistance(*nthRay)[1];
+                            nthRay->march(distance - 0.05f); // march the ray to the objects bounding volume
+                            while (distance <= distanceFar && !primaryRay->getHit()) {
+                                if (BVHSceneObject->intersectionCheck(*nthRay)) {
+                                    nthRay->getHitPoint().set(nthRay->getPos());
+                                    nthRay->setHit(true);
+                                    nthRay->setHitObject(BVHSceneObject);
+                                    nthRay->storeHitData(currentBounce, 1);
+                                }
+                                distance += config.secondaryRayStep;
+                            }
+                        }
+                    }
+                    nthRay->sumHitData();
+                }
             }
-
-
         }
     }
 }
 
-void Render::cosineWeightedHemisphereImportanceSampling(Ray &ray, SceneObject *&sceneObject, bool flipNormal) {
+thread_local std::mt19937 Render::rng(std::random_device{}());
+
+void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
+    sceneObject.getNormal(ray);
+    // refraction
+    float n1 = 1.0003f; // refractive index of air
+    float n2 = sceneObject.getRefrac();
+    // cosine of incient angle
+    float cosTheta1 = -(ray.getNormal().dot(ray.getDir())); // negative of the dot product because normal may be pointing inwards
+    float sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+    float sinTheta2 = (n1 / n2) * sinTheta1;
+
+    if (sinTheta2 >= 1) {
+        // total internal reflection - bounce off object
+        sampleReflectionDirection(ray, sceneObject, false);
+    } else {
+        // valid refreaction into next medium
+        float cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
+        sceneObject.getNormal(ray); // update normal
+        Vector3 refraction(
+            ray.getDir().getX() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getX(),
+            ray.getDir().getY() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getY(),
+            ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
+        ray.getDir().set(refraction);
+        ray.getDir().normalise();
+        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
+        n1 = sceneObject.getRefrac();
+        n2 = 1.0003;
+        // cosine of incident angle
+        sceneObject.getNormal(ray); // update normal
+        cosTheta1 = -(ray.getNormal().dot(ray.getDir()));
+        sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+        sinTheta2 = (n1 / n2) * sinTheta1;
+        while (sinTheta2 >= 1) {
+            sampleReflectionDirection(ray, sceneObject, true); // inside object so flipped normal
+            ray.updateOrigin(-0.1); // undo the march from the previous method
+            ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
+            // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
+            sceneObject.getNormal(ray); // update normal
+            cosTheta1 = -(ray.getNormal().dot(ray.getDir()));
+            sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+            sinTheta2 = (n1 / n2) * sinTheta1;
+        }
+        cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
+        sceneObject.getNormal(ray); // update normal
+        refraction.set(
+            ray.getDir().getX() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getX(),
+            ray.getDir().getY() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getY(),
+            ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
+        ray.getDir().normalise();
+        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.1f);
+    }
 }
 
-void Render::refractionDirection(Ray &ray, SceneObject *&sceneObject) {
+void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
+    sceneObject.getNormal(ray); // update normal
+    if (flipNormal) {
+        ray.getNormal().flip();
+    }
+    // reflection direction
+    float dotProduct = ray.getDir().dot(ray.getNormal());
+    Vector3 reflection(
+        ray.getDir().getX() - 2 * dotProduct * ray.getNormal().getX(),
+        ray.getDir().getY() - 2 * dotProduct * ray.getNormal().getY(),
+        ray.getDir().getZ() - 2 * dotProduct * ray.getNormal().getZ());
+
+    // generate random direction
+    // two randoms between 0 and 1
+    float alpha = dist(rng);
+    float gamma = dist(rng);
+    // convert to sphereical coodinates
+    alpha = std::acos(std::sqrt(alpha)); // polar angle - sqrt more likely to be near the pole (z axis)
+    gamma = 2 * pi * gamma; // azimuthal angle
+
+    // convert random direction in spherical coordinates to vector coordinates
+    Vector3 random(
+        std::sin(alpha) * std::cos(gamma),
+        std::sin(alpha) * std::sin(gamma),
+        std::cos(alpha));
+    random.normalise();
+
+    // convert to tangent space (a coordinate system defined by the normal of the surface)
+    // calculate Tangent and Bitangnet vectors using arbitrary vector a
+    Vector3 arbitraryA;
+    // if the normals are exactly 0 there are problems... if statement to catch that
+    if (std::abs(ray.getNormal().getX() > 0.0001) || std::abs(ray.getNormal().getZ() > 0.0001)) {
+        arbitraryA.set(0, 1, 0);
+    } else { arbitraryA.set(1, 0, 0); }
+    // tangent vector T equals cross product of normal N and arbitrary vector a
+    Vector3 tangentT(arbitraryA.cross(ray.getNormal()));
+    tangentT.normalise();
+
+    // bitangnet vector B equals cross product of tangent and normal
+    Vector3 bitangent(tangentT.cross(ray.getNormal()));
+    bitangent.normalise();
+
+    // set final sampled direction
+    // x = randomX * tangentX + randomY * bitangentX + randomZ * normalX
+    Vector3 sampledD(
+        random.getX() * tangentT.getX() + random.getY() * bitangent.getX() + random.getZ() * ray.getNormal().getX(),
+        random.getX() * tangentT.getY() + random.getY() * bitangent.getY() + random.getZ() * ray.getNormal().getY(),
+        random.getX() * tangentT.getZ() + random.getY() * bitangent.getZ() + random.getZ() * ray.getNormal().getZ());
+
+    // bias the reflection direction with the random direction
+    // biasedDirection = (1 - roughness) * reflectionDirection + roughness * randomDirection
+    float roughness = sceneObject.getRough();
+    ray.getDir().set(
+        ((1 - roughness) * reflection.getX()) + roughness * sampledD.getX(),
+        ((1 - roughness) * reflection.getY()) + roughness * sampledD.getY(),
+        ((1 - roughness) * reflection.getZ()) + roughness * sampledD.getZ());
+    ray.getDir().normalise();
+    if (ray.getDir().dot(ray.getNormal()) < 0) {
+        ray.getDir().flip();
+    }
+    ray.updateOrigin(0.1); // march the ray a tiny amount to move it off the object
 }
 
-float Render::lambertCosineLaw(Ray &ray, SceneObject *sceneObject) {
-    return 0;
+float Render::lambertCosineLaw(Ray &ray, SceneObject *sceneObject) const {
+    sceneObject->getNormal(ray);
+    ray.getDir().normalise();
+    return ray.getNormal().dot(ray.getDir());
 }
 
-void Render::constructBVHST(const std::vector<SceneObject*> &sceneObjectsList) {
+float Render::sumHitDataRGB(std::vector<std::vector<float> > vector, int &currentBounce, float &dotProduct, float &objectBrightness, float &objectReflectivity, float &boolHit) const {
+    float amplitude = 0.0f;
+    for (int index = vector.size() - 1; index >= 0; index--) {
+        if (vector[index][3] == 1.0f) {
+            amplitude = ((vector[index][0] + amplitude) * vector[index][1]) * vector[index][2];
+        }
+    }
+    return amplitude;
+}
 
+void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
     // create leaf nodes
     for (SceneObject *sceneObject: sceneObjectsList) {
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
@@ -163,9 +345,9 @@ void Render::constructBVHST(const std::vector<SceneObject*> &sceneObjectsList) {
     }
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout<<"Finished tree creation: "<<durationTime.count()<<"us"<<std::endl;
+    std::cout << "Finished tree creation: " << durationTime.count() << "us" << std::endl;
     //std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
-    std::cout<<"RootNode numChildren: "<<BVHNodes.at(0)->getNumChildren() << std::endl;
+    std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
 void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) {
@@ -182,7 +364,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
     size_t numThreads = std::thread::hardware_concurrency();
     std::cout << "Threads avaliable: " << numThreads << std::endl;
     //std::vector<std::thread> threads;
-    std::vector<std::future<void>> threads;
+    std::vector<std::future<void> > threads;
     std::mutex mutex;
 
     while (BVHNodes.size() > 1) {
@@ -199,22 +381,20 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
                 size_t end = start + nodesPerThread + (i < remainder ? 1 : 0);
 
                 end = std::min(end, numNodes); // ensure last thread does not exceed size of nodes vector
-                //threads.emplace_back(&Render::findBestPair, this, std::ref(BVHNodes), start, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight), std::ref(bestLeft), std::ref(bestRight), std::ref(mutex));
-                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this, std::ref(BVHNodes), start, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight), std::ref(bestLeft), std::ref(bestRight), std::ref(mutex)));
+                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this,
+                                                std::ref(BVHNodes), start, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight),
+                                                std::ref(bestLeft), std::ref(bestRight), std::ref(mutex)));
             }
         } else {
             for (int i = 0; i < BVHNodes.size(); i++) {
                 int end = i + 1;
-                //threads.emplace_back(&Render::findBestPair, this, std::ref(BVHNodes), i, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight), std::ref(bestLeft), std::ref(bestRight), std::ref(mutex));
-                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this, std::ref(BVHNodes), i, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight), std::ref(bestLeft), std::ref(bestRight), std::ref(mutex)));
+                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this,
+                                                std::ref(BVHNodes), i, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight), std::ref(bestLeft),
+                                                std::ref(bestRight), std::ref(mutex)));
             }
         }
 
-        /*for (std::thread &thread: threads) {
-            thread.join();
-        }
-        threads.clear();*/
-        for (std::future<void> &thread : threads) {
+        for (std::future<void> &thread: threads) {
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
@@ -235,12 +415,13 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
 
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout << "Finished tree creation: "<<durationTime.count()<<"us"<<std::endl;
+    std::cout << "Finished tree creation: " << durationTime.count() << "us" << std::endl;
     std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost,int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
+void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
+                          BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
     int localIndexLeft = 0, localIndexRight = 0;
@@ -278,24 +459,24 @@ void Render::BVHProilfing() {
     BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
     if (leafNode != nullptr) {
         hit = leafNode->getSceneObject()->objectCulling(ray1);
-    } else {hit = false;}
+    } else { hit = false; }
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(stopTime - startTime);
-    std::cout << "Finished tree traversal: "<<durationTime.count()<<"ns"<<std::endl;
+    std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
     std::cout << "Hit: " << hit << std::endl;
 }
 
 void Render::intialiseObjects() {
     for (int i = 0; i < resX; ++i) {
         for (int j = 0; j < resY; ++j) {
-            primaryRay[i][j] = new Ray(Vector3(0,0,0)); // allocate new Ray
-            secondaryRay[i][j] = new Ray(Vector3(0,0,0));
+            /*primaryRay[i][j] = new Ray(Vector3()); // allocate new Ray
+            secondaryRay[i][j] = new Ray(Vector3());
             avgR[i][j] = new float;
             avgG[i][j] = new float;
             avgB[i][j] = new float;
             absR[i][j] = new float;
             absG[i][j] = new float;
-            absB[i][j] = new float;
+            absB[i][j] = new float;*/
         }
     }
 }
@@ -303,17 +484,17 @@ void Render::intialiseObjects() {
 void Render::deleteObjects() {
     for (int i = 0; i < resX; ++i) {
         for (int j = 0; j < resY; ++j) {
-            delete primaryRay[i][j];
+            /*delete primaryRay[i][j];
             delete secondaryRay[i][j];
             delete avgR[i][j];
             delete avgG[i][j];
             delete avgB[i][j];
             delete absR[i][j];
             delete absG[i][j];
-            delete absB[i][j];
+            delete absB[i][j];*/
         }
     }
-    for (auto node : BVHNodes) {
+    for (auto node: BVHNodes) {
         delete node;
     }
     BVHNodes.clear();
@@ -322,17 +503,9 @@ void Render::deleteObjects() {
 std::pair<int, int> Render::threadedRenderSegmentation(float resInput, int &numThreads, std::pair<int, int>, int step) {
     int res = resInput;
     int pixelsPerThread = res / numThreads; // number of pixels per thread
-    int remainder = res % numThreads;      // remaining pixels after division
+    int remainder = res % numThreads; // remaining pixels after division
 
     int start = step * pixelsPerThread + std::min(step, remainder);
     int end = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
     return std::make_pair(start, end);
-}
-
-void Render::clearArray(std::vector<std::vector<float*>> vector) {
-    for (int j = 0; j < config.bouncesPerRay + 1; j++) {
-        for (int i = 0; i < 4; i++) {
-            vector[i][j] = 0;
-        }
-    }
 }

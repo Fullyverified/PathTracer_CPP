@@ -4,8 +4,8 @@
 
 #include <utility>
 
-Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac) :
-pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac) {
+Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
+pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp) {
 
 }
 
@@ -28,14 +28,13 @@ bool Sphere::objectCulling(const Ray &ray) const {
         return false;
     }
 
-    double sqrtDiscriminant = std::sqrt(discriminant);
-    double sqrt1 = (-b - sqrtDiscriminant) / (2 * a);
-    double sqrt2 = (-b + sqrtDiscriminant) / (2 * a);
+    float sqrtDiscriminant = std::sqrt(discriminant);
+    float sqrt1 = (-b - sqrtDiscriminant) / (2 * a);
+    float sqrt2 = (-b + sqrtDiscriminant) / (2 * a);
 
     if (sqrt1 >= 0 || sqrt2 >= 0) {
         return true;
     }
-
     return false;
 }
 
@@ -69,6 +68,38 @@ std::pair<Vector3, Vector3> Sphere::getBounds() const {
     return std::make_pair(min, max);
 }
 
+std::vector<float> Sphere::getIntersectionDistance(const Ray &ray) const {
+    const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
+    const float invXR = 1.0f / (radiusx * radiusx);
+    const float invYR = 1.0f / (radiusy * radiusy);
+    const float invZR = 1.0f / (radiusz * radiusz);
+
+    // a should always = 1
+    const float a = (ray.getDir().getX() * ray.getDir().getX() * invXR) + (ray.getDir().getY() * ray.getDir().getY() * invYR) + (ray.getDir().getZ() * ray.getDir().getZ() * invZR);
+    // b = 2 * (the dot product of the centerOrigin vector by the direction vector)
+    const float b = 2 * ((centerOrigin.getX() * ray.getDir().getX() * invXR) + (centerOrigin.getY() * ray.getDir().getY() * invYR) + (centerOrigin.getZ() * ray.getDir().getZ() * invZR));
+    // c = the dot product of centerOrigin by itself, - the radius^2 of the sphere
+    const float c = (centerOrigin.getX() * centerOrigin.getX() * invXR) + (centerOrigin.getY() * centerOrigin.getY() * invYR) + (centerOrigin.getZ() * centerOrigin.getZ() * invZR) - 1;
+
+    float discriminant = (b * b) - (4 * (a * c));
+
+    if (discriminant < 0) {
+        return {-1,-1};
+    }
+
+    float sqrtDiscriminant = std::sqrt(discriminant);
+    float sqrt1 = (-b - sqrtDiscriminant) / (2 * a);
+    float sqrt2 = (-b + sqrtDiscriminant) / (2 * a);
+
+    if (sqrt1 > sqrt2) {
+        float temp = sqrt1;
+        sqrt1 = sqrt2;
+        sqrt2 = temp;
+    }
+
+    return {sqrt1, sqrt2};
+}
+
 
 Vector3 Sphere::getPos() const {
     return pos;
@@ -88,4 +119,8 @@ float Sphere::getRough() const {
 
 float Sphere::getRefrac() const {
     return refrac;
+}
+
+float Sphere::getTransp() const {
+    return transp;
 }

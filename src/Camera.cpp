@@ -9,6 +9,7 @@ planeWidth(0), planeHeight(0), right(0,0,0) {
     upVector();
     up.normalise();
     rightVector();
+    std::cout<<"ResX: "<<resX<<", ResY: "<<resY<<std::endl;
 }
 
 void Camera::upVector() {

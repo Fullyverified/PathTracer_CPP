@@ -6,7 +6,7 @@
 
 class AABCubeCenter : public SceneObject {
 public:
-    AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac);
+    AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
     [[nodiscard]] bool objectCulling(const Ray &ray) const override;
     [[nodiscard]] bool intersectionCheck(const Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
@@ -16,13 +16,15 @@ public:
     [[nodiscard]] std::vector<float> getLum() const override;
     [[nodiscard]] float getRough() const override;
     [[nodiscard]] float getRefrac() const override;
+    [[nodiscard]] float getTransp() const override;
+    std::vector<float> getIntersectionDistance(const Ray &ray) const override;
 
     AABCubeCenter(const AABCubeCenter& other) = delete; // disable copy constructor
     AABCubeCenter& operator=(const AABCubeCenter& other) = delete; // disable copy assignment
 
 private:
     Vector3 pos, length, minBounds, maxBounds;
-    float roughness, refrac, R, G, B, RL, GL, BL;
+    float roughness, refrac, transp, R, G, B, RL, GL, BL;
 };
 
 
