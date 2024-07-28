@@ -8,7 +8,7 @@
 class Vector3 {
 
 public:
-    /*Vector3() : x(0), y(0), z(0) {} // default constructor
+    Vector3() : x(0), y(0), z(0) {} // default constructor
     Vector3(const float &x, const float &y, const float &z) : x(x), y(y), z(z) {}
     Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {}
 
@@ -32,7 +32,7 @@ public:
         _mm_store_ss(&x, c);
         _mm_store_ss(&y, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 1)));
         _mm_store_ss(&z, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 2)));
-    }#1#
+    }*/
 
     [[nodiscard]] Vector3 addNew(const Vector3& second) const{
         return {x + second.x, y + second.y, z + second.z};
@@ -93,9 +93,9 @@ public:
 
     [[nodiscard]] float getX() const {return x;}
     [[nodiscard]] float getY() const {return y;}
-    [[nodiscard]] float getZ() const {return z;}*/
+    [[nodiscard]] float getZ() const {return z;}
 
-Vector3();
+/*Vector3();
     Vector3(const float &x, const float &y, const float &z);
     Vector3(const Vector3 &other);
 
@@ -115,7 +115,7 @@ Vector3();
         _mm_store_ss(&x, c);
         _mm_store_ss(&y, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 1)));
         _mm_store_ss(&z, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 2)));
-    }*/
+    }#1#
 
     [[nodiscard]] Vector3 addNew(const Vector3& second);
 
@@ -144,7 +144,7 @@ Vector3();
 
     [[nodiscard]] float getX() const;
     [[nodiscard]] float getY() const;
-    [[nodiscard]] float getZ() const;
+    [[nodiscard]] float getZ() const;*/
 
 private:
     float x, y, z;

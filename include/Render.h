@@ -40,7 +40,9 @@ public:
     float sumHitDataRGB(std::vector<std::vector<float>> vector, int &currentBounce, float &dotProduct, float &objectBrightness, float &objectReflectivity, float &boolHit) const;
 
     // multithreading logic
-    std::pair<int, int> threadedRenderSegmentation(float resI, int &numThreads, std::pair<int, int>, int i);
+    // multithreading logic
+    std::pair<int, int> primarySegments(float resI, int &numThreads, std::pair<int, int>, int i);
+    std::pair<int, int> secondarySegment(float resI, int &numThreads, std::pair<int, int>, int i);
 
     // cleanup
     void intialiseObjects();
