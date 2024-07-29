@@ -131,7 +131,7 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
             ray->march(0);
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
             if (leafNode != nullptr) {
-                std::cout<<"PR Leaf Node Found"<<std::endl;
+                //std::cout<<"PR Leaf Node Found"<<std::endl;
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
                 BVHSceneObject->printType();

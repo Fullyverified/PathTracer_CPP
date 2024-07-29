@@ -210,5 +210,5 @@ float AABCubeBounds::getTransp() const {
 }
 
 void AABCubeBounds::printType() const {
-    std::cout<<"Type:AABCubeBounds"<<std::endl;
+    std::cout<<"Type: AABCubeBounds"<<std::endl;
 }

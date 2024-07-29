@@ -212,5 +212,5 @@ float AABCubeCenter::getTransp() const {
 }
 
 void AABCubeCenter::printType() const {
-    std::cout<<"Type:AABCubeCenter"<<std::endl;
+    std::cout<<"Type: AABCubeCenter"<<std::endl;
 }
