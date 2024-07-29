@@ -8,13 +8,14 @@
 struct Config {
 
         int resX = 800;
-        int aspectX = 4;
-        int aspectY = 4;
+        int aspectX = 1;
+        int aspectY = 1;
         int fOV = 52;
         int frameTime = 100; // Milliseconds
-        int raysPerPixel = 25;
-        int bouncesPerRay = 5;
+        int raysPerPixel = 100;
+        int bounceDepth = 1;
         int rayPerSegment = 10;
+        int memory = 4.5; // gigabytes
         bool ASCIIMode = false;
         float primaryRayStep = 0.01;
         float secondaryRayStep = 0.01;
@@ -22,5 +23,7 @@ struct Config {
         float denoiseWeight = 0.75;
         float ISO = 35; // up and down keys to modify
     };
+
+extern Config config; // make config globally avaliable
 
 #endif //CONFIG_H

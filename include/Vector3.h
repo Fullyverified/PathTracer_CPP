@@ -2,7 +2,6 @@
 #define VECTOR3_H
 
 #include <cmath>
-#include <immintrin.h>
 #include <iostream>
 
 class Vector3 {

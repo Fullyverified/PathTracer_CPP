@@ -10,8 +10,6 @@
 
 int main() {
 
-    Config config;
-
     std::vector<SceneObject*> SceneObjectsList;
 
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // floor
@@ -28,7 +26,7 @@ int main() {
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,1,1,1,0,1,0));
 
     Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
-    Render render(config, *cam);
+    Render render(*cam);
     //render.constructBVHST(SceneObjectsList);
     //render.BVHProilfing();
     render.computePixels(SceneObjectsList, *cam);

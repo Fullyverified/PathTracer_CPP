@@ -2,15 +2,17 @@
 #define RAY_H
 
 #include <vector>
-#include "Vector3.h"
+#include <array>
+
 #include "Config.h"
+#include "Vector3.h"
 
 class SceneObject;
 
 class Ray {
 public:
     Ray(Vector3 origin, Vector3 dir);
-    Ray(Vector3 origin);
+    explicit Ray(Vector3 origin);
     Ray();
 
     void march(const float& distance);
@@ -27,18 +29,10 @@ public:
 
     void initialize(Ray &primaryRay);
 
-    void storeHitData(const int &currentBounce, const float &boolHit);
-
-    std::vector<float> sumHitData();
-    void clearArray();
-
 private:
     Vector3 origin, pos, dir, hitpoint, normal;
     bool hit;
     SceneObject* sceneObject;
-    Config config;
-
-    std::vector<std::vector<float>> luminanceRed, luminanceGreen, luminanceBlue; // for storing hit data as a ray bounces through the scene
 };
 
 

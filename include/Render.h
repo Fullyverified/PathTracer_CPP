@@ -3,20 +3,17 @@
 
 #include <atomic>
 #include <vector>
-#include <SceneObject.h>
-#include <BVHNode.h>
 #include <mutex>
 #include <random>
 
+#include <SceneObject.h>
+#include <BVHNode.h>
 #include "Camera.h"
-#include "Config.h"
 
 class Render {
 
 public:
-    Config config;
-
-    Render(const Config& config, Camera &cam);
+    Render(Camera &cam);
     ~Render() = default;
 
     void computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam);
@@ -36,25 +33,24 @@ public:
     // bounce logic
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
     void sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
-    float lambertCosineLaw(Ray &ray, SceneObject* sceneObject) const;
-    float sumHitDataRGB(std::vector<std::vector<float>> vector, int &currentBounce, float &dotProduct, float &objectBrightness, float &objectReflectivity, float &boolHit) const;
 
     // multithreading logic
-    // multithreading logic
-    std::pair<int, int> primarySegments(float resI, int &numThreads, std::pair<int, int>, int i);
-    std::pair<int, int> secondarySegment(float resI, int &numThreads, std::pair<int, int>, int i);
+    std::pair<int, int> secondarySegments(float resI, int &numThreads, std::pair<int, int>, int i);
 
     // cleanup
     void intialiseObjects();
     void deleteObjects();
 
+    void printScreen();
+
+
 private:
     std::vector<BVHNode*> BVHNodes;
-    std::vector<std::vector<float*>> avgR, avgG, avgB, absR, absG, absB; // avg is abs divided by number of rays for each iteration - abs is not
+    mutable std::vector<std::vector<float>> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     std::vector<std::vector<Ray*>> primaryRay, secondaryRay;
 
     float primaryRayStep, secondaryRayStep;
-    int numRays, numBounces, resX, resY, frameTime;
+    int resX, resY;
     Camera &cam;
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
