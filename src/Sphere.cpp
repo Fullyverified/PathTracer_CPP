@@ -9,7 +9,7 @@ pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B)
 
 }
 
-bool Sphere::objectCulling(const Ray &ray) const {
+bool Sphere::objectCulling(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
@@ -38,7 +38,7 @@ bool Sphere::objectCulling(const Ray &ray) const {
     return false;
 }
 
-bool Sphere::intersectionCheck(const Ray &ray) const {
+bool Sphere::intersectionCheck(Ray &ray) const {
     const float sradius = 1;
     const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
     const float scaledX = centerOrigin.getX() / radiusx; // swap to xradius etc for ellipsoid
@@ -68,7 +68,7 @@ std::pair<Vector3, Vector3> Sphere::getBounds() const {
     return std::make_pair(min, max);
 }
 
-std::vector<float> Sphere::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> Sphere::getIntersectionDistance(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
@@ -123,4 +123,8 @@ float Sphere::getRefrac() const {
 
 float Sphere::getTransp() const {
     return transp;
+}
+
+void Sphere::printType() const {
+    std::cout<<"Type: Sphere"<<std::endl;
 }

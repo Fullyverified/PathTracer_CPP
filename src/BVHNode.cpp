@@ -37,7 +37,7 @@ int BVHNode::getNumChildren() const {
     return leftChildren + rightChildren;
 }
 
-std::vector<float> BVHNode::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> BVHNode::getIntersectionDistance(Ray &ray) const {
     return boundingBox->getIntersectionDistance(ray);
 }
 
@@ -61,7 +61,7 @@ BVHNode* BVHNode::getNodeRight() const {
     return nodeRight;
 }
 
-BVHNode* BVHNode::searchBVHTree(const Ray &ray) {
+BVHNode* BVHNode::searchBVHTree(Ray &ray) {
     if (!boundingBox->objectCulling(ray)) {
         return nullptr; // ray does not intersect at all
     }

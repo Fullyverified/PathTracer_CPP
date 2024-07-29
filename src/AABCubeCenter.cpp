@@ -11,7 +11,7 @@ AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, floa
       maxBounds(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2) {
 }
 
-bool AABCubeCenter::objectCulling(const Ray &ray) const {
+bool AABCubeCenter::objectCulling(Ray &ray) const {
     // pre calculate inverse
     float invDirX = 1.0f / ray.getDir().getX();
     float invDirY = 1.0f / ray.getDir().getY();
@@ -78,7 +78,7 @@ bool AABCubeCenter::objectCulling(const Ray &ray) const {
     return tNear <= tFar && tFar >= 0;
 }
 
-bool AABCubeCenter::intersectionCheck(const Ray &ray) const {
+bool AABCubeCenter::intersectionCheck(Ray &ray) const {
     return minBounds.getX() <= ray.getPos().getX() && maxBounds.getX() >= ray.getPos().getX() &&
            minBounds.getY() <= ray.getPos().getY() && maxBounds.getY() >= ray.getPos().getY() &&
            minBounds.getZ() <= ray.getPos().getZ() && maxBounds.getZ() >= ray.getPos().getZ();
@@ -110,7 +110,7 @@ void AABCubeCenter::getNormal(Ray &ray) const {
     }
 }
 
-std::vector<float> AABCubeCenter::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
@@ -209,4 +209,8 @@ float AABCubeCenter::getRefrac() const {
 
 float AABCubeCenter::getTransp() const {
     return transp;
+}
+
+void AABCubeCenter::printType() const {
+    std::cout<<"Type:AABCubeCenter"<<std::endl;
 }

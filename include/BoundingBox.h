@@ -14,11 +14,11 @@ public:
     ~BoundingBox();
 
     void updateBounds(const BoundingBox& left, const BoundingBox& right);
-    [[nodiscard]] bool objectCulling(const Ray &ray) const;
-    [[nodiscard]] bool intersectionCheck(const Ray &ray) const;
+    [[nodiscard]] bool objectCulling(Ray &ray) const;
+    [[nodiscard]] bool intersectionCheck(Ray &ray) const;
     void getNormal(Ray &ray) const;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const;
-    [[nodiscard]] std::vector<float> getIntersectionDistance(const Ray &ray) const;
+    [[nodiscard]] std::vector<float> getIntersectionDistance(Ray &ray) const;
     [[nodiscard]] float getArea() const;
 
     Vector3 minBounds, maxBounds;

@@ -20,15 +20,15 @@ int main() {
     SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(10,3,3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // left wall
     SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(10,3,-3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // right wall wall
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // oval at ceiling
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,1,1,1,1,1,0));
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,1,1,1,0,1,0));
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,0,0,0,1,1,0));
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,0,0,0,0,1,0));
 
     Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
     Render render(*cam);
     //render.constructBVHST(SceneObjectsList);
-    //render.BVHProilfing();
+    //render.BVHProfiling();
     render.computePixels(SceneObjectsList, *cam);
 
     for (SceneObject *obj: SceneObjectsList) {

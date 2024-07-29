@@ -9,8 +9,8 @@
 class SceneObject {
 public:
 
-    [[nodiscard]] virtual bool objectCulling(const Ray& ray) const = 0;
-    [[nodiscard]] virtual bool intersectionCheck(const Ray& ray) const = 0;
+    [[nodiscard]] virtual bool objectCulling(Ray& ray) const = 0;
+    [[nodiscard]] virtual bool intersectionCheck(Ray& ray) const = 0;
     [[nodiscard]] virtual Vector3 getPos() const = 0;
     virtual void getNormal(Ray &ray) const = 0;
     [[nodiscard]] virtual std::pair<Vector3, Vector3> getBounds() const = 0;
@@ -19,7 +19,8 @@ public:
     [[nodiscard]] virtual float getRough() const = 0;
     [[nodiscard]] virtual float getRefrac() const = 0;
     [[nodiscard]] virtual float getTransp() const = 0;
-    [[nodiscard]] virtual std::vector<float> getIntersectionDistance(const Ray &ray) const = 0;
+    [[nodiscard]] virtual std::vector<float> getIntersectionDistance(Ray &ray) const = 0;
+    [[nodiscard]] virtual void printType() const = 0;
 
     virtual ~SceneObject() = default; // deconstructor
 

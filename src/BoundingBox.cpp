@@ -21,12 +21,14 @@ BoundingBox::BoundingBox(const BoundingBox &left, const BoundingBox &right) {
 
 BoundingBox::~BoundingBox() = default;
 
-bool BoundingBox::objectCulling(const Ray &ray) const {
+bool BoundingBox::objectCulling(Ray &ray) const {
     // pre calculate inverse
     float invDirX = 1.0f / ray.getDir().getX();
     float invDirY = 1.0f / ray.getDir().getY();
     float invDirZ = 1.0f / ray.getDir().getZ();
     float tmp;
+
+    // need a case to handle ray direction = 0;
 
     Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
 
@@ -88,7 +90,7 @@ bool BoundingBox::objectCulling(const Ray &ray) const {
     return tNear <= tFar && tFar >= 0;
 }
 
-bool BoundingBox::intersectionCheck(const Ray &ray) const {
+bool BoundingBox::intersectionCheck(Ray &ray) const {
     return minBounds.getX() <= ray.getPos().getX() && maxBounds.getX() >= ray.getPos().getX() &&
            minBounds.getY() <= ray.getPos().getY() && maxBounds.getY() >= ray.getPos().getY() &&
            minBounds.getZ() <= ray.getPos().getZ() && maxBounds.getZ() >= ray.getPos().getZ();
@@ -120,13 +122,13 @@ void BoundingBox::getNormal(Ray &ray) const {
     }
 }
 
-std::vector<float> BoundingBox::getIntersectionDistance(const Ray &ray) const {
+std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
-    float invDirX = 1.0f / ray.getPos().getX();
-    float invDirY = 1.0f / ray.getPos().getY();
-    float invDirZ = 1.0f / ray.getPos().getZ();
+    float invDirX = 1.0f / ray.getDir().getX();
+    float invDirY = 1.0f / ray.getDir().getY();
+    float invDirZ = 1.0f / ray.getDir().getZ();
     float tmp;
 
     Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
@@ -187,7 +189,7 @@ std::vector<float> BoundingBox::getIntersectionDistance(const Ray &ray) const {
     const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
     const float tFar = std::max(tMax.getZ(), std::max(tMax.getX(), tMax.getY()));
 
-    if (tNear > tFar || tFar > 0) {
+    if (tNear > tFar || tFar < 0 || tFar == std::numeric_limits<float>::infinity() || tFar == -std::numeric_limits<float>::infinity()) {
         return {-1, -1};
     }
     return {tNear, tFar};

@@ -2,13 +2,14 @@
 #include <numbers>
 
 Camera::Camera(Config& config, Vector3 pos, Vector3 dir) :
-ISO(config.ISO), resX(config.resX), fOV(config.fOV), aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), resY(0), up(0,0,0),
+ISO(config.ISO), resX(config.resX), fOV(config.fOV), aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), resY(0), up(0,1,0),
 planeWidth(0), planeHeight(0), right(0,0,0) {
     resY = resX / (aspectX / aspectY);
     dir.normalise();
     upVector();
     up.normalise();
     rightVector();
+    imagePlane();
     std::cout<<"Resolution: "<<resX<<" x "<<resY<<std::endl;
 }
 

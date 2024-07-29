@@ -37,15 +37,15 @@ void Ray::initialize(Ray &primaryRay) {
     getDir().set(primaryRay.getDir());
 }
 
-Vector3 Ray::getPos() const { return pos; }
+Vector3& Ray::getPos() { return pos; }
 
-Vector3 Ray::getOrigin() const { return origin; }
+Vector3& Ray::getOrigin() { return origin; }
 
-Vector3 Ray::getDir() const { return dir; }
+Vector3& Ray::getDir() { return dir; }
 
-Vector3 Ray::getHitPoint() const { return hitpoint; }
+Vector3& Ray::getHitPoint() { return hitpoint; }
 
-Vector3 Ray::getNormal() const { return normal; }
+Vector3& Ray::getNormal() { return normal; }
 
 void Ray::setHit(bool hit) { this->hit = hit; }
 

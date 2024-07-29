@@ -17,11 +17,11 @@ public:
 
     void march(const float& distance);
     void updateOrigin(const float& distance);
-    [[nodiscard]] Vector3 getPos() const;
-    [[nodiscard]] Vector3 getOrigin() const;
-    [[nodiscard]] Vector3 getDir() const;
-    [[nodiscard]] Vector3 getHitPoint() const;
-    [[nodiscard]] Vector3 getNormal() const;
+    [[nodiscard]] Vector3& getPos();
+    [[nodiscard]] Vector3& getOrigin();
+    [[nodiscard]] Vector3& getDir();
+    [[nodiscard]] Vector3& getHitPoint();
+    [[nodiscard]] Vector3& getNormal();
     void setHit(bool hit);
     [[nodiscard]] bool getHit() const;
     void setHitObject(SceneObject* sceneObject);

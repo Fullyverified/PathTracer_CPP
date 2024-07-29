@@ -18,9 +18,13 @@ cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0)
     lumR.resize(resX, std::vector<float>(resY, 0.0f));
     lumG.resize(resX, std::vector<float>(resY, 0.0f));
     lumB.resize(resX, std::vector<float>(resY, 0.0f));
+    absR.resize(resX, std::vector<float>(resY, 0.0f));
+    absG.resize(resX, std::vector<float>(resY, 0.0f));
+    absB.resize(resX, std::vector<float>(resY, 0.0f));
 }
 
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
+
     int numThreads = std::thread::hardware_concurrency();
     numThreads = 1;
     std::mutex mutex;
@@ -74,22 +78,50 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
     std::cout<<config.raysPerPixel<<" Secondary Ray Time: "<<durationTimeMT.count()<<"ms"<<std::endl;
 
+    //printScreen();
+
     std::cout<<"Deleting Objects"<<std::endl;
     deleteObjects(); // delete all ray and luminance vectors
 }
 
 void Render::printScreen() {
-
+    for (int y = 0; y < cam.getResY(); y++) {
+        for (int x = 0; x < cam.getResX(); x++) {
+            float lum = lumR[x][y] + lumG[x][y] + lumB[x][y];
+            if (lum > 40) {
+                std::cout<<"@@@";
+            }
+            if (lum > 15) {
+                std::cout<<"###";
+            }
+            if (lum > 2) {
+                std::cout<<"xxx";
+            }
+            if (lum > 1.5) {
+                std::cout<<"~~~";
+            }
+            if (lum > 1) {
+                std::cout<<";;;";
+            }
+            if (lum > 0.5) {
+                std::cout<<",,,";
+            }
+            if (lum <= 0.5) {
+                std::cout<<"   ";
+            }
+            std::cout<<"|"<<std::endl;
+        }
+    }
 }
 
 void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend,int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
-    for (int y = ystart; y < yend; y++) {
-        for (int x = xstart; x < xend; x++) {
+    for (int y = ystart; y <= yend; y++) {
+        for (int x = xstart; x <= xend; x++) {
             Ray* ray = primaryRay[x][y];
             ray->getPos().set(cam.getPos());
             // calculate position of pixel on image plane
-            Vector3 pixelPosPlane(((x + 0.5f) / cam.getResX() * 2) - 1, 1 - ((x + 0.5f) / cam.getResX() * 2), 0);
-            Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth(), pixelPosPlane.getY() * cam.getPlaneHeight(), 0);
+            Vector3 pixelPosPlane((((x + 0.5f) / cam.getResX()) * 2) - 1, 1 - (((y + 0.5f) / cam.getResX()) * 2), 0);
+            Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
             // point ray to pixel position (ray starts from camera origin)
             ray->getDir().set(
                 cam.getDir().getX() + cam.getRight().getX() * pixelPosScene.getX() + cam.getUp().getX() * pixelPosScene.getY(),
@@ -97,16 +129,19 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
                 cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
             ray->getDir().normalise();
             ray->march(0);
-
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
             if (leafNode != nullptr) {
+                std::cout<<"PR Leaf Node Found"<<std::endl;
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
                 float distance = leafNode->getIntersectionDistance(*ray)[0];
                 float distanceFar = leafNode->getIntersectionDistance(*ray)[1];
+                std::cout<<"distanceClose: "<<distance<<", distanceFar: "<<distanceFar<<std::endl;
+                BVHSceneObject->printType(); // DEBUGGING DISTANCE CLOSE AND DISTANCE FAR - wrong values?? ray never getting an intersection?? ray direction is correct.
                 ray->march(distance - 0.05f); // march the ray to the objects bounding volume
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     if (BVHSceneObject->intersectionCheck(*ray)) {
+                        std::cout<<"Primary Ray Hit"<<std::endl;
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
                         ray->setHitObject(BVHSceneObject);
@@ -125,8 +160,8 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
     std::vector<float> lum(3, 0.0f);
     std::vector<float> col(3, 0.0f);
     for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
-        for (int y = ystart; y < yend; y++) {
-            for (int x = xstart; x < xend; x++) {
+        for (int y = ystart; y <= yend; y++) {
+            for (int x = xstart; x <= xend; x++) {
                 Ray *primaryRay = primaryRayV[x][y];
                 if (primaryRay->getHit()) {
                     Ray *nthRay = secondaryRayV[x][y];
@@ -166,7 +201,9 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                         }
 
                         BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
+                        if (leafNode == nullptr) { std::cout<<"SR Leaf Node Not Found"<<std::endl;}
                         if (leafNode != nullptr) {
+                            std::cout<<"SR Leaf Node Found"<<std::endl;
                             // did we make it to a leaf node?
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
                             float distance = leafNode->getIntersectionDistance(*nthRay)[0];
@@ -174,6 +211,7 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                             nthRay->march(distance - 0.05f); // march the ray to the objects bounding volume
                             while (distance <= distanceFar && !primaryRay->getHit()) {
                                 if (BVHSceneObject->intersectionCheck(*nthRay)) {
+                                    std::cout<<"Secondary Ray Hit"<<std::endl;
                                     nthRay->getHitPoint().set(nthRay->getPos());
                                     nthRay->setHit(true);
                                     nthRay->setHitObject(BVHSceneObject);
@@ -216,9 +254,12 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                             blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
                         }
                     }
-                    lumR[y][x] = redAmplitude; // breaks because no longer const
-                    lumG[y][x] = greenAmplitude;
-                    lumB[y][x] = blueAmplitude;
+                    absR[x][y] += redAmplitude;
+                    absG[x][y] += greenAmplitude;
+                    absB[x][y] += blueAmplitude;
+                    lumR[x][y] = absR[x][y] / static_cast<float>(currentRay);
+                    lumG[x][y] = absG[x][y] / static_cast<float>(currentRay);
+                    lumB[x][y] = absB[x][y] / static_cast<float>(currentRay);
                 }
             }
         }
@@ -493,8 +534,8 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
         rightIndex = localIndexRight;
     }
 }
-void Render::BVHProilfing() {
-    Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(1, 0.1, 0.1));
+void Render::BVHProfiling() {
+    Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(1, 1, 0.1));
     ray1.getDir().normalise();
     bool hit = true;
     std::cout << "Searching BVH" << std::endl;

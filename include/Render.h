@@ -24,7 +24,7 @@ public:
     void constructBVHMT(const std::vector<SceneObject*> &sceneObjectsList);
     void findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex);
 
-    void BVHProilfing();
+    void BVHProfiling();
 
     // traversal logic
     void computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
@@ -47,6 +47,7 @@ public:
 private:
     std::vector<BVHNode*> BVHNodes;
     mutable std::vector<std::vector<float>> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
+    mutable std::vector<std::vector<float>> absR, absG, absB;
     std::vector<std::vector<Ray*>> primaryRay, secondaryRay;
 
     float primaryRayStep, secondaryRayStep;
