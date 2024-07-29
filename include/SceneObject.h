@@ -20,7 +20,7 @@ public:
     [[nodiscard]] virtual float getRefrac() const = 0;
     [[nodiscard]] virtual float getTransp() const = 0;
     [[nodiscard]] virtual std::vector<float> getIntersectionDistance(Ray &ray) const = 0;
-    [[nodiscard]] virtual void printType() const = 0;
+    virtual void printType() const = 0;
 
     virtual ~SceneObject() = default; // deconstructor
 

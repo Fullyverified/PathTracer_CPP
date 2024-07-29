@@ -98,9 +98,9 @@ bool BoundingBox::intersectionCheck(Ray &ray) const {
 
 void BoundingBox::getNormal(Ray &ray) const {
     float epsilon = 0.05;
-    float px = ray.getPos().getX();
-    float py = ray.getPos().getY();
-    float pz = ray.getPos().getZ();
+    float px = ray.getDir().getX();
+    float py = ray.getDir().getY();
+    float pz = ray.getDir().getZ();
 
     // x
     if (std::abs(px - minBounds.getX()) < epsilon) {
@@ -187,7 +187,7 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
         }
     }
     const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
-    const float tFar = std::max(tMax.getZ(), std::max(tMax.getX(), tMax.getY()));
+    const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
     if (tNear > tFar || tFar < 0 || tFar == std::numeric_limits<float>::infinity() || tFar == -std::numeric_limits<float>::infinity()) {
         return {-1, -1};

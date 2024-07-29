@@ -175,7 +175,7 @@ std::vector<float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
         }
     }
     const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
-    const float tFar = std::max(tMax.getZ(), std::max(tMax.getX(), tMax.getY()));
+    const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
     if (tNear > tFar || tFar > 0) {
         return {-1, -1};

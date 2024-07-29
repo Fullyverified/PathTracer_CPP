@@ -134,6 +134,7 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
                 std::cout<<"PR Leaf Node Found"<<std::endl;
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
+                BVHSceneObject->printType();
                 float distance = leafNode->getIntersectionDistance(*ray)[0];
                 float distanceFar = leafNode->getIntersectionDistance(*ray)[1];
                 std::cout<<"distanceClose: "<<distance<<", distanceFar: "<<distanceFar<<std::endl;
