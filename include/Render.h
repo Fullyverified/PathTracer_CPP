@@ -48,7 +48,7 @@ private:
     std::vector<BVHNode*> BVHNodes;
     mutable std::vector<std::vector<float>> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<std::vector<float>> absR, absG, absB;
-    std::vector<std::vector<Ray*>> primaryRay, secondaryRay;
+    mutable std::vector<std::vector<Ray*>> primaryRay, secondaryRay;
 
     float primaryRayStep, secondaryRayStep;
     int resX, resY;

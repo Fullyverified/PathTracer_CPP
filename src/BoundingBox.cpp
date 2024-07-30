@@ -32,7 +32,7 @@ bool BoundingBox::objectCulling(Ray &ray) const {
 
     Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
 
-    if (ray.getDir().getX() == 0) {
+     if (ray.getDir().getX() == 0) {
         if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
             tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
             tMax.setX(-std::numeric_limits<float>::infinity());
@@ -186,13 +186,17 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
             tMin.setZ(tmp);
         }
     }
+    tMin.print();
+    tMax.print();
+
     const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
     const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
     if (tNear > tFar || tFar < 0 || tFar == std::numeric_limits<float>::infinity() || tFar == -std::numeric_limits<float>::infinity()) {
         return {-1, -1};
     }
-    return {tNear, tFar};
+
+    return {std::abs(tNear), std::abs(tFar)};
 }
 
 float BoundingBox::getArea() const {

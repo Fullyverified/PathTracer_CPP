@@ -6,7 +6,7 @@
 
 class AABCubeBounds : public SceneObject {
 public:
-    AABCubeBounds(Vector3 pos, Vector3 length, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
+    AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
     [[nodiscard]] bool objectCulling(Ray &ray) const override;
     [[nodiscard]] bool intersectionCheck(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
