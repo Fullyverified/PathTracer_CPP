@@ -26,7 +26,7 @@ cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0)
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
 
     int numThreads = std::thread::hardware_concurrency();
-    numThreads = 1;
+    //numThreads = 1;
     std::mutex mutex;
     std::vector<std::future<void> > threads;
     std::cout << "Avaliable Threads: " << numThreads << std::endl;
@@ -59,7 +59,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
     std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
 
-    /*// secondary rays
+    // secondary rays
     startTimeMT = std::chrono::high_resolution_clock::now();
 
     for (int j = 0; j < segments; j++) {
@@ -76,7 +76,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     }
     threads.clear();
     durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
-    std::cout<<config.raysPerPixel<<" Secondary Ray Time: "<<durationTimeMT.count()<<"ms"<<std::endl;*/
+    std::cout<<config.raysPerPixel<<" Secondary Ray Time: "<<durationTimeMT.count()<<"ms"<<std::endl;
 
     printScreen();
 
@@ -85,8 +85,8 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 }
 
 void Render::printScreen() {
-    for (int x = 0; x < cam.getResX(); x++) {
-        for (int y = 0; y < cam.getResY(); y++) {
+    for (int y = 0; y < cam.getResX(); y++) {
+        for (int x = 0; x < cam.getResX(); x++) {
             float lum = lumR[x][y] + lumG[x][y] + lumB[x][y];
             if (lum > 40) {
                 std::cout<<"@@";
@@ -106,7 +106,10 @@ void Render::printScreen() {
             else if (lum > 0.5) {
                 std::cout<<",,";
             }
-            else if (lum <= 0.5) {
+            else if (lum > 0.0001) {
+                std::cout<<"..";
+            }
+            else if (lum <= 0.0001) {
                 std::cout<<"  ";
             }
         }
@@ -117,8 +120,6 @@ void Render::printScreen() {
 void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend,int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
-            std::cout<<"_____________"<<std::endl;
-            std::cout<<"X: "<<x<<", Y: "<<y<<std::endl;
             Ray* ray = primaryRay[x][y];
             ray->getOrigin().set(cam.getPos());
             // calculate position of pixel on image plane
@@ -130,26 +131,15 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
                 cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
                 cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
             ray->getDir().normalise();
-            ray->getDir().print();
-            ray->getPos().print();
             ray->march(0);
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
             if (leafNode != nullptr) {
-                //std::cout<<"PR Leaf Node Found"<<std::endl;
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
-                BVHSceneObject->printType();
                 std::vector<float> objectDistance = leafNode->getIntersectionDistance(*ray);
                 float distanceClose = objectDistance[0];
                 float distanceFar = objectDistance[1];
-                BVHSceneObject->getBounds().first.print();
-                BVHSceneObject->getBounds().second.print();
-                std::cout<<"BoundingBox Bounds: "<<std::endl;
-                leafNode->getBoundingBox()->getBounds().first.print();
-                leafNode->getBoundingBox()->getBounds().second.print();
-                std::cout<<"BVHdistanceClose: "<<distanceClose<<", BVHdistanceFar: "<<distanceFar<<std::endl;
                 float distance = distanceClose;
-                // DEBUGGING DISTANCE CLOSE AND DISTANCE FAR - wrong values?? ray never getting an intersection?? ray direction is correct.
                 ray->march(distance - 0.05f); // march the ray to the objects bounding volume
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     ray->march(distance);
@@ -157,12 +147,11 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
                         //std::cout<<"Primary Ray Hit"<<std::endl;
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
-                        std::cout<<"Hit"<<std::endl;
+                        //std::cout<<"Hit"<<std::endl;
                         ray->setHitObject(BVHSceneObject);
-                        //std::lock_guard<std::mutex> lock(mutex);
-                        lumR[x][y] = 10;
-                        lumG[x][y] = 10;
-                        lumB[x][y] = 10;
+                        /*lumR[x][y] = BVHSceneObject->getLum()[0];
+                        lumG[x][y] = BVHSceneObject->getLum()[1];
+                        lumB[x][y] = BVHSceneObject->getLum()[2];*/
                     }
                     distance += config.primaryRayStep;
                 }
@@ -172,9 +161,6 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
 }
 
 void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &primaryRayV, std::vector<std::vector<Ray *> > &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
-    /*std::cout<<"xtsart"<<xstart<<", xend"<<xend<<std::endl;
-    std::cout<<"ytsart"<<ystart<<", yend"<<yend<<std::endl;
-    std::cout<<"Initializing float vectors"<<std::endl;*/
     std::vector<std::vector<float>> depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float>> depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float>> depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
@@ -183,82 +169,72 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
     for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
         for (int y = ystart; y <= yend; y++) {
             for (int x = xstart; x <= xend; x++) {
-                /*std::cout<<"X: "<<x<<", Y: "<<y<<std::endl;
-                std::cout<<"Making primary Ray"<<std::endl;*/
                 Ray *primaryRay = primaryRayV[x][y];
                 if (primaryRay->getHit()) {
-                    //std::cout<<"Making secondary Ray"<<std::endl;
                     Ray *nthRay = secondaryRayV[x][y];
-                    //std::cout<<"Reset bounce depth"<<std::endl;
+                    nthRay->initialize(*primaryRay);
                     for (int i = 0; i < config.bounceDepth + 1; i++) { // reset hit bool
                       depthRed[i][3] = 0;
                       depthGreen[i][3] = 0;
                       depthBlue[i][3] = 0;
                     }
-                    nthRay->initialize(*primaryRay);
-                    // BOUNCES PER RAY
                     // store primary ray depth information
                     primaryRay->getHitObject()->getNormal(*primaryRay); // update normal vector
-                    float lambertCosineLaw = primaryRay->getNormal().dot(primaryRay->getDir()); // dot product of object normal and ray direction
+                    float lambertCosineLaw = std::abs(primaryRay->getNormal().dot(primaryRay->getDir())); // dot product of object normal and ray direction
                     lum = primaryRay->getHitObject()->getLum();
                     col = primaryRay->getHitObject()->getCol();
-                    depthRed[0][0] = lum[0]; // object brightness R
+                    depthRed[0][0] = lum[0]; // object brightness
                     depthRed[0][1] = lambertCosineLaw;
                     depthRed[0][2] = col[0];
                     depthRed[0][3] = 1; // boolean hit
-
                     depthGreen[0][0] = lum[1];
                     depthGreen[0][1] = lambertCosineLaw;
                     depthGreen[0][2] = col[1];
                     depthGreen[0][3] = 1;
-
                     depthBlue[0][0] = lum[2];
                     depthBlue[0][1] = lambertCosineLaw;
                     depthBlue[0][2] = col[2];
                     depthBlue[0][3] = 1;
-
-                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {
+                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {                     // BOUNCES PER RAY
                         float randomSample = dist(rng); // monte carlo sampling
-                        if (randomSample >= primaryRay->getHitObject()->getTransp()) {
-                            sampleReflectionDirection(*nthRay, *primaryRay->getHitObject(), false);
+                        if (randomSample >= nthRay->getHitObject()->getTransp()) {
+                            sampleReflectionDirection(*nthRay, *nthRay->getHitObject(), false);
                         } else {
-                            sampleRefractionDirection(*nthRay, *primaryRay->getHitObject(), false);
+                            sampleRefractionDirection(*nthRay, *nthRay->getHitObject(), false);
                         }
                         BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
                         if (leafNode != nullptr) {
-                            // did we make it to a leaf node?
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
                             std::vector<float> objectDistance = leafNode->getIntersectionDistance(*nthRay);
                             float distanceClose = objectDistance[0];
                             float distanceFar = objectDistance[1];
                             float distance = distanceClose;
                             nthRay->march(distanceClose - 0.05f); // march the ray to the objects bounding volume
-                            while (distance <= distanceFar && !primaryRay->getHit()) {
-                                nthRay->march(distance);
+                            nthRay->setHit(false);
+                            while (distance <= distanceFar && !nthRay->getHit()) {
                                 if (BVHSceneObject->intersectionCheck(*nthRay)) {
                                     nthRay->getHitPoint().set(nthRay->getPos());
                                     nthRay->setHit(true);
                                     nthRay->setHitObject(BVHSceneObject);
                                     // store hit data
                                     BVHSceneObject->getNormal(*nthRay); // update normal vector
-                                    float lambertCosineLaw = nthRay->getNormal().dot(nthRay->getDir());
+                                    float lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
                                     lum = BVHSceneObject->getLum();
                                     col = BVHSceneObject->getCol();
                                     depthRed[currentBounce][0] = lum[0];
                                     depthRed[currentBounce][1] = lambertCosineLaw;
                                     depthRed[currentBounce][2] = col[0];
                                     depthRed[currentBounce][3] = 1;
-
                                     depthGreen[currentBounce][0] = lum[1];
                                     depthGreen[currentBounce][1] = lambertCosineLaw;
                                     depthGreen[currentBounce][2] = col[1];
                                     depthGreen[currentBounce][3] = 1;
-
                                     depthBlue[currentBounce][0] = lum[2];
                                     depthBlue[currentBounce][1] = lambertCosineLaw;
                                     depthBlue[currentBounce][2] = col[2];
                                     depthBlue[currentBounce][3] = 1;
                                 }
+                                nthRay->march(distance);
                                 distance += config.secondaryRayStep;
                             }
                         }
@@ -278,12 +254,13 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                             blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
                         }
                     }
-                    //absR[x][y] += redAmplitude;
-                    //absG[x][y] += greenAmplitude;
-                    //absB[x][y] += blueAmplitude;
-                    //lumR[x][y] = absR[x][y] / static_cast<float>(currentRay);
-                    //lumG[x][y] = absG[x][y] / static_cast<float>(currentRay);
-                    //lumB[x][y] = absB[x][y] / static_cast<float>(currentRay);
+                    //std::cout<<"redAmplitude: "<<redAmplitude<<std::endl;
+                    absR[x][y] += redAmplitude;
+                    absG[x][y] += greenAmplitude;
+                    absB[x][y] += blueAmplitude;
+                    lumR[x][y] = absR[x][y] / static_cast<float>(currentRay);
+                    lumG[x][y] = absG[x][y] / static_cast<float>(currentRay);
+                    lumB[x][y] = absB[x][y] / static_cast<float>(currentRay);
                 }
             }
         }
@@ -341,6 +318,8 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
             ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.1f);
+        //std::cout<<"Transprent Bounce"<<std::endl;
+        //ray.getDir().print();
     }
 }
 
@@ -379,11 +358,11 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
         arbitraryA.set(0, 1, 0);
     } else { arbitraryA.set(1, 0, 0); }
     // tangent vector T equals cross product of normal N and arbitrary vector a
-    Vector3 tangentT(arbitraryA.cross(ray.getNormal()));
+    Vector3 tangentT(ray.getNormal().cross(arbitraryA));
     tangentT.normalise();
 
     // bitangnet vector B equals cross product of tangent and normal
-    Vector3 bitangent(tangentT.cross(ray.getNormal()));
+    Vector3 bitangent(ray.getNormal().cross(tangentT));
     bitangent.normalise();
 
     // set final sampled direction
@@ -405,6 +384,8 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().flip();
     }
     ray.updateOrigin(0.1); // march the ray a tiny amount to move it off the object
+    //std::cout<<"Reflection Bounce"<<std::endl;
+    //ray.getDir().print();
 }
 
 void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {

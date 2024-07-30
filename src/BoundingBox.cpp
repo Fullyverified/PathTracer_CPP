@@ -186,8 +186,6 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
             tMin.setZ(tmp);
         }
     }
-    tMin.print();
-    tMax.print();
 
     const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
     const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
