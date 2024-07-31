@@ -7,9 +7,13 @@
 #include <Render.h>
 #include <Config.h>
 
+#include "GLFW/glfw3.h"
+#include "glm.hpp"
+#include "vulkan/vulkan.h"
+
 int main() {
 
-    std::vector<SceneObject*> SceneObjectsList;
+    /*std::vector<SceneObject*> SceneObjectsList;
 
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // left wall
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // right wall wall
@@ -33,6 +37,28 @@ int main() {
     for (SceneObject *obj: SceneObjectsList) {
         delete obj; // delete sceneObjects from heap
     }
-    delete cam; // delete cam
+    delete cam; // delete cam*/
+
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
+
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    std::cout << extensionCount << " extensions supported\n";
+
+    glm::mat4 matrix;
+    glm::vec4 vec;
+    auto test = matrix * vec;
+
+    while(!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
     return 0;
 }

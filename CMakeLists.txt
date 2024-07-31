@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 message(STATUS "Using CXX Flags: ${CMAKE_CXX_FLAGS} -O3 -march=native -std=c++23")
 
 # Add GLFW
-set(GLFW_DIR ${CMAKE_SOURCE_DIR}/Libraries/glfw-3.4)
+set(GLFW_DIR ${CMAKE_SOURCE_DIR}/libraries/glfw-3.4)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -58,4 +58,4 @@ add_executable(PathTracer_CPP src/main.cpp #include all source and header files
 )
 
 # Link Vulkan library
-target_link_libraries(PathTracer_CPP ${Vulkan_LIBRARY})
+target_link_libraries(PathTracer_CPP ${Vulkan_LIBRARY} glfw)
