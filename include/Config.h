@@ -12,7 +12,7 @@ struct Config {
         int aspectY = 1;
         int fOV = 52;
         int frameTime = 100; // Milliseconds
-        int raysPerPixel = 1000;
+        int raysPerPixel = 25;
         int bounceDepth = 5;
         int rayPerSegment = 10;
         int memory = 4.5; // gigabytes

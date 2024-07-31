@@ -33,6 +33,8 @@ private:
     Vector3 origin, pos, dir, hitpoint, normal;
     bool hit;
     SceneObject* sceneObject;
+
+    Vector3 tMin, tMax; // for storing bounding box information
 };
 
 

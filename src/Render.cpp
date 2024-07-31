@@ -26,7 +26,7 @@ cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0)
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
 
     int numThreads = std::thread::hardware_concurrency();
-    //numThreads = 1;
+    numThreads = 1;
     std::mutex mutex;
     std::vector<std::future<void> > threads;
     std::cout << "Avaliable Threads: " << numThreads << std::endl;

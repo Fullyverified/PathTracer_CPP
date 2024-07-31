@@ -4,9 +4,8 @@
 #include <Sphere.h>
 #include <AABCubeBounds.h>
 #include <AABCubeCenter.h>
-
-#include "Render.h"
-#include "Config.h"
+#include <Render.h>
+#include <Config.h>
 
 int main() {
 
@@ -24,8 +23,6 @@ int main() {
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,0,0,0,1,1,0)); // left sphere on floor
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
-
-
 
     Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
     Render render(*cam);
