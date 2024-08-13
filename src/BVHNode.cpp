@@ -1,6 +1,6 @@
-#include <BVHNode.h>
-#include <Boundingbox.h>
-#include <SceneObject.h>
+#include "BVHNode.h"
+#include "BoundingBox.h"
+#include "SceneObject.h"
 
 // leaf node
 BVHNode::BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject) :

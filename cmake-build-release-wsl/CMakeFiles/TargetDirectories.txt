@@ -1,0 +1,3 @@
+/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl/CMakeFiles/PathTracer_CPP.dir
+/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl/CMakeFiles/edit_cache.dir
+/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl/CMakeFiles/rebuild_cache.dir

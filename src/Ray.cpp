@@ -1,10 +1,10 @@
-#include <Ray.h>
+#include "Ray.h"
 #include "Config.h"
 
-#include <Sceneobject.h>
+#include "SceneObject.h"
 
 Ray::Ray(Vector3 origin, Vector3 dir) : origin(origin), dir(dir), pos(origin), hitpoint(0, 0, 0), normal(0, 0, 0),
-hit(false), sceneObject(nullptr) {
+                                        hit(false), sceneObject(nullptr) {
 }
 
 Ray::Ray(Vector3 origin) : origin(origin), dir(0, 0, 0), pos(origin), hitpoint(0, 0, 0), normal(0, 0, 0), hit(false),

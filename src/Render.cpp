@@ -9,12 +9,15 @@
 #include <mutex>
 #include <vector>
 
-#include <Config.h>
+#include "Config.h"
+
+#include "Ray.h"
+#include "BVHNode.h"
 
 Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep),
-cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f) {
-    primaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
-    secondaryRay.resize(resX, std::vector<Ray*>(resY, nullptr));
+                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f) {
+    primaryRay.resize(resX, std::vector<Ray *>(resY, nullptr));
+    secondaryRay.resize(resX, std::vector<Ray *>(resY, nullptr));
     lumR.resize(resX, std::vector<float>(resY, 0.0f));
     lumG.resize(resX, std::vector<float>(resY, 0.0f));
     lumB.resize(resX, std::vector<float>(resY, 0.0f));
@@ -67,7 +70,8 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             boundsX = secondarySegments(cam.getResX(), segments, boundsX, i);
             boundsY = secondarySegments(cam.getResY(), segments, boundsY, j);
             threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
-                                            std::ref(cam), std::ref(primaryRay), std::ref(secondaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                                            std::ref(cam), std::ref(primaryRay), std::ref(secondaryRay), boundsX.first, boundsX.second, boundsY.first,
+                                            boundsY.second,
                                             std::ref(*BVHrootNode), std::ref(mutex)));
         }
     }
@@ -76,11 +80,11 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     }
     threads.clear();
     durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
-    std::cout<<config.raysPerPixel<<" Secondary Ray Time: "<<durationTimeMT.count()<<"ms"<<std::endl;
+    std::cout << config.raysPerPixel << " Secondary Ray Time: " << durationTimeMT.count() << "ms" << std::endl;
 
-    printScreen();
+    //printScreen();
 
-    std::cout<<"Deleting Objects"<<std::endl;
+    std::cout << "Deleting Objects" << std::endl;
     deleteObjects(); // delete all ray and luminance vectors
 }
 
@@ -89,38 +93,32 @@ void Render::printScreen() {
         for (int x = 0; x < cam.getResX(); x++) {
             float lum = lumR[x][y] + lumG[x][y] + lumB[x][y];
             if (lum > 40) {
-                std::cout<<"@@";
-            }
-            else if (lum > 15) {
-                std::cout<<"##";
-            }
-            else if (lum > 2) {
-                std::cout<<"xx";
-            }
-            else if (lum > 1.5) {
-                std::cout<<"~~";
-            }
-            else if (lum > 1) {
-                std::cout<<";;";
-            }
-            else if (lum > 0.5) {
-                std::cout<<",,";
-            }
-            else if (lum > 0.0001) {
-                std::cout<<"..";
-            }
-            else if (lum <= 0.0001) {
-                std::cout<<"  ";
+                std::cout << "@@";
+            } else if (lum > 15) {
+                std::cout << "##";
+            } else if (lum > 2) {
+                std::cout << "xx";
+            } else if (lum > 1.5) {
+                std::cout << "~~";
+            } else if (lum > 1) {
+                std::cout << ";;";
+            } else if (lum > 0.5) {
+                std::cout << ",,";
+            } else if (lum > 0.0001) {
+                std::cout << "..";
+            } else if (lum <= 0.0001) {
+                std::cout << "  ";
             }
         }
-        std::cout<<"|"<<std::endl;
+        std::cout << "|" << std::endl;
     }
 }
 
-void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &primaryRay, int xstart, int xend,int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
+                               std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
-            Ray* ray = primaryRay[x][y];
+            Ray *ray = primaryRay[x][y];
             ray->getOrigin().set(cam.getPos());
             // calculate position of pixel on image plane
             Vector3 pixelPosPlane((((x + 0.5f) / cam.getResX()) * 2) - 1, 1 - (((y + 0.5f) / cam.getResX()) * 2), 0);
@@ -160,10 +158,11 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray*>> &prim
     }
 }
 
-void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &primaryRayV, std::vector<std::vector<Ray *> > &secondaryRayV, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
-    std::vector<std::vector<float>> depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
-    std::vector<std::vector<float>> depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
-    std::vector<std::vector<float>> depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &primaryRayV, std::vector<std::vector<Ray *> > &secondaryRayV, int xstart,
+                                 int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+    std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+    std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+    std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<float> lum(3, 0.0f);
     std::vector<float> col(3, 0.0f);
     for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
@@ -173,10 +172,11 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                 if (primaryRay->getHit()) {
                     Ray *nthRay = secondaryRayV[x][y];
                     nthRay->initialize(*primaryRay);
-                    for (int i = 0; i < config.bounceDepth + 1; i++) { // reset hit bool
-                      depthRed[i][3] = 0;
-                      depthGreen[i][3] = 0;
-                      depthBlue[i][3] = 0;
+                    for (int i = 0; i < config.bounceDepth + 1; i++) {
+                        // reset hit bool
+                        depthRed[i][3] = 0;
+                        depthGreen[i][3] = 0;
+                        depthBlue[i][3] = 0;
                     }
                     // store primary ray depth information
                     primaryRay->getHitObject()->getNormal(*primaryRay); // update normal vector
@@ -195,7 +195,8 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                     depthBlue[0][1] = lambertCosineLaw;
                     depthBlue[0][2] = col[2];
                     depthBlue[0][3] = 1;
-                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {                     // BOUNCES PER RAY
+                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {
+                        // BOUNCES PER RAY
                         float randomSample = dist(rng); // monte carlo sampling
                         if (randomSample >= nthRay->getHitObject()->getTransp()) {
                             sampleReflectionDirection(*nthRay, *nthRay->getHitObject(), false);
@@ -248,7 +249,7 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray*> > &p
                             redAmplitude = ((depthRed[index][0] + redAmplitude) * depthRed[index][1]) * depthRed[index][2];
                         }
                         if (depthGreen[index][3] == 1) {
-                            greenAmplitude = ((depthGreen[index][0] +  greenAmplitude) * depthGreen[index][1]) * depthGreen[index][2];
+                            greenAmplitude = ((depthGreen[index][0] + greenAmplitude) * depthGreen[index][1]) * depthGreen[index][2];
                         }
                         if (depthBlue[index][3] == 1) {
                             blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
@@ -409,7 +410,8 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         for (int i = 0; i < BVHNodes.size(); i++) {
             for (int j = i + 1; j < BVHNodes.size(); j++) {
                 combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
+                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (
+                           BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -510,7 +512,8 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
+void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
+                          BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
     int localIndexLeft = 0, localIndexRight = 0;
@@ -567,7 +570,6 @@ void Render::BVHProfiling() {
     durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
     std::cout << "Hit: " << hit << std::endl;
-
 }
 
 void Render::intialiseObjects() {

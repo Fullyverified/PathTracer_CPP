@@ -223,14 +223,14 @@ If you are using the static version of the GLFW library, which is named
 `libglfw3.a`, do:
 
 ```sh
-gcc -o myprog myprog.c -I path/to/glfw/include path/to/glfw/lib-mingw-w64/libglfw3.a -lgdi32
+gcc -o myprog myprog.c -I path/to/glfw/Vulkan path/to/glfw/lib-mingw-w64/libglfw3.a -lgdi32
 ```
 
 If you are using the DLL version of the GLFW library, which is named
 `glfw3.dll`, you will need to use the `libglfw3dll.a` link library.
 
 ```sh
-gcc -o myprog myprog.c -I path/to/glfw/include path/to/glfw/lib-mingw-w64/libglfw3dll.a -lgdi32
+gcc -o myprog myprog.c -I path/to/glfw/Vulkan path/to/glfw/lib-mingw-w64/libglfw3dll.a -lgdi32
 ```
 
 The resulting executable will need to find `glfw3.dll` to run, typically by
@@ -248,7 +248,7 @@ done before including the GLFW header:
 It can also be done on the command-line:
 
 ```sh
-gcc -o myprog myprog.c -D GLFW_DLL -I path/to/glfw/include path/to/glfw/lib-mingw-w64/libglfw3dll.a -lgdi32
+gcc -o myprog myprog.c -D GLFW_DLL -I path/to/glfw/Vulkan path/to/glfw/lib-mingw-w64/libglfw3dll.a -lgdi32
 ```
 
 

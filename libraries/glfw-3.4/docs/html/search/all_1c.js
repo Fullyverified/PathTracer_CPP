@@ -28,5 +28,5 @@ var searchData=
   ['vulkan_20window_20surface_25',['Creating a Vulkan window surface',['../vulkan_guide.html#vulkan_surface',1,'']]],
   ['vulkan_20window_20surface_20hint_26',['X11 Vulkan window surface hint',['../news.html#x11_xcb_vulkan_surface',1,'']]],
   ['vulkan_20wsi_20extensions_27',['Vulkan WSI extensions',['../compat_guide.html#compat_wsi',1,'']]],
-  ['vulkan_2emd_28',['vulkan.md',['../vulkan_8md.html',1,'']]]
+  ['vulkan_2emd_28',['Vulkan.md',['../vulkan_8md.html',1,'']]]
 ];

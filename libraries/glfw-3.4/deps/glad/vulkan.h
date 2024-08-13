@@ -6,7 +6,7 @@
  * Extensions: 4
  *
  * APIs:
- *  - vulkan=1.3
+ *  - Vulkan=1.3
  *
  * Options:
  *  - ALIAS = False
@@ -18,7 +18,7 @@
  *  - ON_DEMAND = False
  *
  * Commandline:
- *    --api='vulkan=1.3' --extensions='VK_EXT_debug_report,VK_KHR_portability_enumeration,VK_KHR_surface,VK_KHR_swapchain' c --header-only
+ *    --api='Vulkan=1.3' --extensions='VK_EXT_debug_report,VK_KHR_portability_enumeration,VK_KHR_surface,VK_KHR_swapchain' c --header-only
  *
  * Online:
  *    http://glad.sh/#api=vulkan%3D1.3&extensions=VK_EXT_debug_report%2CVK_KHR_portability_enumeration%2CVK_KHR_surface%2CVK_KHR_swapchain&generator=c&options=HEADER_ONLY

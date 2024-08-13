@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="PathTracer_CPP"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="PathTracer_CPP">
+				<Option output="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/PathTracer_CPP" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/C:/VulkanSDK/1.3.290.0/Include"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/tinyobjloader"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/shaders"/>
+					<Add directory="/usr/include/c++/11"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/11"/>
+					<Add directory="/usr/include/c++/11/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/11/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 PathTracer_CPP"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="PathTracer_CPP/fast">
+				<Option output="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/PathTracer_CPP" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/C:/VulkanSDK/1.3.290.0/Include"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/tinyobjloader"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan"/>
+					<Add directory="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/shaders"/>
+					<Add directory="/usr/include/c++/11"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/11"/>
+					<Add directory="/usr/include/c++/11/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/11/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 PathTracer_CPP/fast"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/mnt/c/Users/hazza/Downloads/C++\ Programming/PathTracer_CPP/cmake-build-debug-wsl/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeBounds.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeBounds.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeCenter.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeCenter.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/BVHNode.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/BVHNode.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/BoundingBox.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/BoundingBox.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Camera.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Camera.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Config.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Config.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Ray.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Ray.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Render.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Render.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SceneObject.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SceneObject.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Sphere.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Sphere.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Vector3.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Vector3.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/main.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

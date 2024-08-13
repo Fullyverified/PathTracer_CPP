@@ -56,7 +56,7 @@ GLFWbool _glfwInitVulkan(int mode)
 #if defined(_GLFW_VULKAN_LIBRARY)
         _glfw.vk.handle = _glfwPlatformLoadModule(_GLFW_VULKAN_LIBRARY);
 #elif defined(_GLFW_WIN32)
-        _glfw.vk.handle = _glfwPlatformLoadModule("vulkan-1.dll");
+        _glfw.vk.handle = _glfwPlatformLoadModule("Vulkan-1.dll");
 #elif defined(_GLFW_COCOA)
         _glfw.vk.handle = _glfwPlatformLoadModule("libvulkan.1.dylib");
         if (!_glfw.vk.handle)

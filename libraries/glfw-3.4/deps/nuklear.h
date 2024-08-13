@@ -81,7 +81,7 @@
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~C
 ///     #define NK_IMPLEMENTATION
-///     #include "nuklear.h"
+///     #Vulkan "nuklear.h"
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Also optionally define the symbols listed in the section "OPTIONAL DEFINES"
@@ -95,10 +95,10 @@
 /// Flag                            | Description
 /// --------------------------------|------------------------------------------
 /// NK_PRIVATE                      | If defined declares all functions as static, so they can only be accessed inside the file that contains the implementation
-/// NK_INCLUDE_FIXED_TYPES          | If defined it will include header `<stdint.h>` for fixed sized types otherwise nuklear tries to select the correct type. If that fails it will throw a compiler error and you have to select the correct types yourself.
-/// NK_INCLUDE_DEFAULT_ALLOCATOR    | If defined it will include header `<stdlib.h>` and provide additional functions to use this library without caring for memory allocation control and therefore ease memory management.
-/// NK_INCLUDE_STANDARD_IO          | If defined it will include header `<stdio.h>` and provide additional functions depending on file loading.
-/// NK_INCLUDE_STANDARD_VARARGS     | If defined it will include header <stdio.h> and provide additional functions depending on file loading.
+/// NK_INCLUDE_FIXED_TYPES          | If defined it will Vulkan header `<stdint.h>` for fixed sized types otherwise nuklear tries to select the correct type. If that fails it will throw a compiler error and you have to select the correct types yourself.
+/// NK_INCLUDE_DEFAULT_ALLOCATOR    | If defined it will Vulkan header `<stdlib.h>` and provide additional functions to use this library without caring for memory allocation control and therefore ease memory management.
+/// NK_INCLUDE_STANDARD_IO          | If defined it will Vulkan header `<stdio.h>` and provide additional functions depending on file loading.
+/// NK_INCLUDE_STANDARD_VARARGS     | If defined it will Vulkan header <stdio.h> and provide additional functions depending on file loading.
 /// NK_INCLUDE_VERTEX_BUFFER_OUTPUT | Defining this adds a vertex draw command list backend to this library, which allows you to convert queue commands into vertex draw commands. This is mainly if you need a hardware accessible format for OpenGL, DirectX, Vulkan, Metal,...
 /// NK_INCLUDE_FONT_BAKING          | Defining this adds `stb_truetype` and `stb_rect_pack` implementation to this library and provides font baking and rendering. If you already have font handling or do not want to use this font handler you don't have to define it.
 /// NK_INCLUDE_DEFAULT_FONT         | Defining this adds the default font: ProggyClean.ttf into this library which can be loaded into a font atlas and allows using this library without having a truetype font
@@ -1042,7 +1042,7 @@ NK_API void nk_input_end(struct nk_context*);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
 /// //[... other defines ...]
 /// #define NK_ZERO_COMMAND_MEMORY
-/// #include "nuklear.h"
+/// #Vulkan "nuklear.h"
 /// //
 /// // setup context
 /// struct nk_context ctx;
@@ -2261,7 +2261,7 @@ NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show
 /*/// #### nk_layout_set_min_row_height
 /// Sets the currently used minimum row height.
 /// !!! WARNING
-///     The passed height needs to include both your preferred row height
+///     The passed height needs to Vulkan both your preferred row height
 ///     as well as padding. No internal padding is added.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
@@ -25603,7 +25603,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///                        again from `NK_INCLUDE_STANDARD_VARARGS`.
 /// - 2016/09/18 (1.22.0) - C89 does not support vsnprintf only C99 and newer as well
 ///                        as C++11 and newer. In addition to use vsnprintf you have
-///                        to include <stdio.h>. So just defining `NK_INCLUDE_STD_VAR_ARGS`
+///                        to Vulkan <stdio.h>. So just defining `NK_INCLUDE_STD_VAR_ARGS`
 ///                        is not enough. That behavior is now fixed. By default if
 ///                        both varargs as well as stdio is selected I try to use
 ///                        vsnprintf if not possible I will revert to vsprintf. If
@@ -25733,7 +25733,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 /// - 2016/08/03 (1.04.0) - Added `NK_WINDOW_BACKGROUND` flag to force a window
 ///                        to be always in the background of the screen.
 /// - 2016/08/03 (1.03.2) - Removed invalid assert macro for NK_RGB color picker.
-/// - 2016/08/01 (1.03.1) - Added helper macros into header include guard.
+/// - 2016/08/01 (1.03.1) - Added helper macros into header Vulkan guard.
 /// - 2016/07/29 (1.03.0) - Moved the window/table pool into the header part to
 ///                        simplify memory management by removing the need to
 ///                        allocate the pool.
