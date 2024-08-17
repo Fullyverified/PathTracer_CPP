@@ -15,13 +15,16 @@
 ########################
 
 //The ALSA (asound) include directory
-ALSA_INCLUDE_DIR:PATH=ALSA_INCLUDE_DIR-NOTFOUND
+ALSA_INCLUDE_DIR:PATH=/usr/include
 
 //The ALSA (asound) library
-ALSA_LIBRARY:FILEPATH=ALSA_LIBRARY-NOTFOUND
+ALSA_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libasound.so
 
 //Path to a program.
 ARTS_CONFIG:FILEPATH=ARTS_CONFIG-NOTFOUND
+
+//Path to a library.
+ASOUND_LIB:FILEPATH=/usr/lib/x86_64-linux-gnu/libasound.so
 
 //Path to a program.
 CCACHE_BINARY:FILEPATH=CCACHE_BINARY-NOTFOUND
@@ -335,6 +338,67 @@ FASTGLTF_USE_CUSTOM_SMALLVECTOR:BOOL=OFF
 //Use the std module when compiling using C++ modules
 FASTGLTF_USE_STD_MODULE:BOOL=OFF
 
+//Value Computed by CMake
+FMT_BINARY_DIR:STATIC=/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/fmt
+
+//Installation directory for cmake files, a relative path that
+// will be joined with /usr/local or an absolute path.
+FMT_CMAKE_DIR:STRING=lib/cmake/fmt
+
+//Generate the cuda-test target.
+FMT_CUDA_TEST:BOOL=OFF
+
+//Debug library postfix.
+FMT_DEBUG_POSTFIX:STRING=d
+
+//Generate the doc target.
+FMT_DOC:BOOL=OFF
+
+//Generate the fuzz target.
+FMT_FUZZ:BOOL=OFF
+
+//Installation directory for include files, a relative path that
+// will be joined with /usr/local or an absolute path.
+FMT_INC_DIR:STRING=include
+
+//Generate the install target.
+FMT_INSTALL:BOOL=ON
+
+//Value Computed by CMake
+FMT_IS_TOP_LEVEL:STATIC=OFF
+
+//Installation directory for libraries, a relative path that will
+// be joined to /usr/local or an absolute path.
+FMT_LIB_DIR:STRING=lib
+
+//Build a module instead of a traditional library.
+FMT_MODULE:BOOL=OFF
+
+//Include OS-specific APIs.
+FMT_OS:BOOL=ON
+
+//Enable extra warnings and expensive tests.
+FMT_PEDANTIC:BOOL=OFF
+
+//Installation directory for pkgconfig (.pc) files, a relative
+// path that will be joined with /usr/local or an absolute path.
+FMT_PKGCONFIG_DIR:STRING=lib/pkgconfig
+
+//Value Computed by CMake
+FMT_SOURCE_DIR:STATIC=/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/fmt
+
+//Expose headers with marking them as system.
+FMT_SYSTEM_HEADERS:BOOL=OFF
+
+//Generate the test target.
+FMT_TEST:BOOL=OFF
+
+//Enable Unicode support.
+FMT_UNICODE:BOOL=ON
+
+//Halt the compilation with an error on compiler warnings.
+FMT_WERROR:BOOL=OFF
+
 //Git command line client
 GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
@@ -391,6 +455,9 @@ SDL2-static_LIB_DEPENDS:STATIC=general;m;general;-pthread;
 
 //Value Computed by CMake
 SDL2_BINARY_DIR:STATIC=/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/SDL
+
+//The directory containing a CMake configuration file for SDL2.
+SDL2_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/SDL2
 
 //Disable installation of SDL2
 SDL2_DISABLE_INSTALL:BOOL=ON
@@ -1061,6 +1128,8 @@ EGL_egl_INCLUDEDIR:INTERNAL=
 EGL_egl_LIBDIR:INTERNAL=
 EGL_egl_PREFIX:INTERNAL=
 EGL_egl_VERSION:INTERNAL=
+//Details about finding ALSA
+FIND_PACKAGE_MESSAGE_DETAILS_ALSA:INTERNAL=[/usr/lib/x86_64-linux-gnu/libasound.so][/usr/include][v1.2.6.1()]
 //Details about finding Git
 FIND_PACKAGE_MESSAGE_DETAILS_Git:INTERNAL=[/usr/bin/git][v2.34.1()]
 //Details about finding PkgConfig

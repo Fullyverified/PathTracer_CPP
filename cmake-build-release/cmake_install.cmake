@@ -49,6 +49,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fastgltf/cmake_install.cmake")
 endif()
 

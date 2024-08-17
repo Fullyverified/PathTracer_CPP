@@ -175,82 +175,17 @@ PathTracer_CPP/fast:
 .PHONY : PathTracer_CPP/fast
 
 #=============================================================================
-# Target rules for targets named sdl_headers_copy
+# Target rules for targets named fmt
 
 # Build rule for target.
-sdl_headers_copy: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sdl_headers_copy
-.PHONY : sdl_headers_copy
+fmt: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 fmt
+.PHONY : fmt
 
 # fast build rule for target.
-sdl_headers_copy/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/sdl_headers_copy.dir/build.make libraries/SDL/CMakeFiles/sdl_headers_copy.dir/build
-.PHONY : sdl_headers_copy/fast
-
-#=============================================================================
-# Target rules for targets named SDL2main
-
-# Build rule for target.
-SDL2main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 SDL2main
-.PHONY : SDL2main
-
-# fast build rule for target.
-SDL2main/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/SDL2main.dir/build.make libraries/SDL/CMakeFiles/SDL2main.dir/build
-.PHONY : SDL2main/fast
-
-#=============================================================================
-# Target rules for targets named SDL2
-
-# Build rule for target.
-SDL2: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 SDL2
-.PHONY : SDL2
-
-# fast build rule for target.
-SDL2/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/SDL2.dir/build.make libraries/SDL/CMakeFiles/SDL2.dir/build
-.PHONY : SDL2/fast
-
-#=============================================================================
-# Target rules for targets named SDL2-static
-
-# Build rule for target.
-SDL2-static: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 SDL2-static
-.PHONY : SDL2-static
-
-# fast build rule for target.
-SDL2-static/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/SDL2-static.dir/build.make libraries/SDL/CMakeFiles/SDL2-static.dir/build
-.PHONY : SDL2-static/fast
-
-#=============================================================================
-# Target rules for targets named SDL2_test
-
-# Build rule for target.
-SDL2_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 SDL2_test
-.PHONY : SDL2_test
-
-# fast build rule for target.
-SDL2_test/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/SDL2_test.dir/build.make libraries/SDL/CMakeFiles/SDL2_test.dir/build
-.PHONY : SDL2_test/fast
-
-#=============================================================================
-# Target rules for targets named uninstall
-
-# Build rule for target.
-uninstall: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 uninstall
-.PHONY : uninstall
-
-# fast build rule for target.
-uninstall/fast:
-	$(MAKE) $(MAKESILENT) -f libraries/SDL/CMakeFiles/uninstall.dir/build.make libraries/SDL/CMakeFiles/uninstall.dir/build
-.PHONY : uninstall/fast
+fmt/fast:
+	$(MAKE) $(MAKESILENT) -f libraries/fmt/CMakeFiles/fmt.dir/build.make libraries/fmt/CMakeFiles/fmt.dir/build
+.PHONY : fmt/fast
 
 #=============================================================================
 # Target rules for targets named fastgltf
@@ -288,30 +223,6 @@ Vulkan/camera.s: Vulkan/camera.cpp.s
 Vulkan/camera.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.s
 .PHONY : Vulkan/camera.cpp.s
-
-Vulkan/main.o: Vulkan/main.cpp.o
-.PHONY : Vulkan/main.o
-
-# target to build an object file
-Vulkan/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o
-.PHONY : Vulkan/main.cpp.o
-
-Vulkan/main.i: Vulkan/main.cpp.i
-.PHONY : Vulkan/main.i
-
-# target to preprocess a source file
-Vulkan/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.i
-.PHONY : Vulkan/main.cpp.i
-
-Vulkan/main.s: Vulkan/main.cpp.s
-.PHONY : Vulkan/main.s
-
-# target to generate assembly for a file
-Vulkan/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.s
-.PHONY : Vulkan/main.cpp.s
 
 Vulkan/meshes.o: Vulkan/meshes.cpp.o
 .PHONY : Vulkan/meshes.o
@@ -432,6 +343,30 @@ Vulkan/vk_initializers.s: Vulkan/vk_initializers.cpp.s
 Vulkan/vk_initializers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.s
 .PHONY : Vulkan/vk_initializers.cpp.s
+
+Vulkan/vk_main.o: Vulkan/vk_main.cpp.o
+.PHONY : Vulkan/vk_main.o
+
+# target to build an object file
+Vulkan/vk_main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.o
+.PHONY : Vulkan/vk_main.cpp.o
+
+Vulkan/vk_main.i: Vulkan/vk_main.cpp.i
+.PHONY : Vulkan/vk_main.i
+
+# target to preprocess a source file
+Vulkan/vk_main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.i
+.PHONY : Vulkan/vk_main.cpp.i
+
+Vulkan/vk_main.s: Vulkan/vk_main.cpp.s
+.PHONY : Vulkan/vk_main.s
+
+# target to generate assembly for a file
+Vulkan/vk_main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.s
+.PHONY : Vulkan/vk_main.cpp.s
 
 Vulkan/vk_pipelines.o: Vulkan/vk_pipelines.cpp.o
 .PHONY : Vulkan/vk_pipelines.o
@@ -757,20 +692,12 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... sdl_headers_copy"
-	@echo "... uninstall"
 	@echo "... PathTracer_CPP"
-	@echo "... SDL2"
-	@echo "... SDL2-static"
-	@echo "... SDL2_test"
-	@echo "... SDL2main"
 	@echo "... fastgltf"
+	@echo "... fmt"
 	@echo "... Vulkan/camera.o"
 	@echo "... Vulkan/camera.i"
 	@echo "... Vulkan/camera.s"
-	@echo "... Vulkan/main.o"
-	@echo "... Vulkan/main.i"
-	@echo "... Vulkan/main.s"
 	@echo "... Vulkan/meshes.o"
 	@echo "... Vulkan/meshes.i"
 	@echo "... Vulkan/meshes.s"
@@ -786,6 +713,9 @@ help:
 	@echo "... Vulkan/vk_initializers.o"
 	@echo "... Vulkan/vk_initializers.i"
 	@echo "... Vulkan/vk_initializers.s"
+	@echo "... Vulkan/vk_main.o"
+	@echo "... Vulkan/vk_main.i"
+	@echo "... Vulkan/vk_main.s"
 	@echo "... Vulkan/vk_pipelines.o"
 	@echo "... Vulkan/vk_pipelines.i"
 	@echo "... Vulkan/vk_pipelines.s"

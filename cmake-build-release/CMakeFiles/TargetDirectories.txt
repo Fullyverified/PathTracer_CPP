@@ -30,6 +30,13 @@ C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libr
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/CMakeFiles/install.dir
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/CMakeFiles/install/local.dir
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/CMakeFiles/install/strip.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/fmt.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/edit_cache.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/rebuild_cache.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/list_install_components.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/install.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/install/local.dir
+C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fmt/CMakeFiles/install/strip.dir
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fastgltf/CMakeFiles/fastgltf.dir
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fastgltf/CMakeFiles/edit_cache.dir
 C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fastgltf/CMakeFiles/rebuild_cache.dir

@@ -1,37 +1,406 @@
 # ninja log v6
-22	1015	7454208218084249	CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj	16ac2572bbe75ffc
+675	1598	7455610052458199	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiotypecvt.c.obj	19713e17e184e2de
+37	903	7455628820562805	CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.obj	d48c020989ec2da4
+7268	9496	7455610118384752	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_video.c.obj	d0a5970664961365
+4874	6459	7455610094449141	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_triangle.c.obj	e3d34c3a75b8d1c2
+14996	16563	7455610195666685	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.obj	19fb2eff081c05d0
+424	466	7455610050175067	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_touch.h	9fd1cfc252e3c975
+13338	13726	7455610179100901	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xboxone.c.obj	747eb5ddac5eed87
+33	110	7455610046287587	Libraries/SDL/include/SDL2/SDL_atomic.h	a65f6165d4fbc9a0
+38	115	7455610046348010	Libraries/SDL/include/SDL2/SDL_audio.h	a934b2cd507abc7
+93	176	7455610046892667	Libraries/SDL/include/SDL2/SDL_filesystem.h	2e84603ff67e1d5e
 1295	2587	7452395219800024	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_joystick.c.obj	dfdb61b831fbcbc6
 47	1501	7452395207330507	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/window.c.obj	6a7699d496ab6707
-18	825	7454208218044253	CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj	4ef10031b6d62dea
-26	892	7454208218119332	CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj	b27b2090c36df5b4
-57	913	7454208218434096	CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj	3f98cb437fcc4d12
-42	987	7454208218284542	CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj	77759d41ad923716
-33	1014	7454208218199387	CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj	b62ca28f90ca69b
-38	1019	7454208218244530	CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj	5221bd4416323995
+13842	14747	7455610184138686	CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.obj	c79926b887f8f3a2
+115	198	7455610047153094	Libraries/SDL/include/SDL2/SDL_haptic.h	9f5aa2633be72757
+41	801	7455628820602809	CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.obj	b735371e82498c85
+27	4094	7455599169063511	Libraries/fastgltf/CMakeFiles/fastgltf.dir/src/io.cpp.obj	f03503dba658a2ad
+15259	19828	7455610198303427	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.obj	737e2a8d84b058fd
+73	916	7455628820922834	CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.obj	6ca0b1af9ca34a34
+58	1008	7455628820782811	CMakeFiles/PathTracer_CPP.dir/src/BoundingBox.cpp.obj	ce3ba5691e47a8b6
+71	152	7455610046681498	Libraries/SDL/include/SDL2/SDL_egl.h	69ff276d22c0302b
+15226	18059	7455610197973438	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.obj	65542894280fde8b
+49	964	7455628820682806	CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.obj	8486f5013aedfbf8
+54	913	7455628820732804	CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.obj	c830b112c4d4c7d6
+31	6864	7455599169103526	Libraries/fastgltf/CMakeFiles/fastgltf.dir/deps/simdjson/simdjson.cpp.obj	4305dd53797ded48
+59	142	7455610046570278	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_copying.h	6cffbb00dd74da7b
 84	1295	7452395207695145	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_module.c.obj	d029188e1b28046d
-47	988	7454208218338988	CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj	f7cea02e5933770
-8	1263	7454208217949170	CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj	fc7490aa06f2aa8f
+15025	16779	7455610195966706	CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.obj	e12f47b9276f3c90
+63	905	7455628820822814	CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.obj	5534ea1ef3a480d9
+26	1188	7455628820452804	CMakeFiles/PathTracer_CPP.dir/src/main.cpp.obj	9693d8cbddd1d948
 30	1413	7452395207158933	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/monitor.c.obj	305e13e4182e218
-29	923	7454208218159384	CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj	9faff34e9a60c934
-52	3595	7454208218378987	CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.obj	6cdb2f20641c563b
-3104	3205	7452395414178354	PathTracer_CPP.exe	e7fcbe33ca0519b7
+44	830	7455628820632828	CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.obj	2666d6b0b86775a7
+68	3445	7455628820872829	CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.obj	d3bec606aab3ad4c
+3446	3717	7455628854652811	PathTracer_CPP.exe	e697c9efac48cfe9
 42	1330	7452395207270065	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/vulkan.c.obj	43164a9f27096d75
-62	177	7454208218474100	CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.obj	46521347747fca74
+13674	14972	7455610182448126	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_windowshaptic.c.obj	75130d6e5473fb96
+79	196	7455628820982826	CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.obj	5b0541f211c0757d
+8041	9273	7455610126122051	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/yuv2rgb/yuv_rgb_std.c.obj	60aa93c0c73c7d01
+3280	4230	7455610078512598	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/opengl/SDL_shaders_gl.c.obj	71c84e1804711e8a
+458	484	7455610050525982	Libraries/SDL/include/SDL2/close_code.h	5d86c1065b45a097
 79	1282	7452395207644364	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/null_joystick.c.obj	b1d040468b520752
 1289	2544	7452395219740028	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_init.c.obj	3999349c459e0067
 36	1276	7452395207219605	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/platform.c.obj	ff4e21455b51bed
+4194	7630	7455610087650928	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendline.c.obj	4e2bff918444ee79
+3050	3219	7455610076213711	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/SDL_d3dmath.c.obj	20fc61d8873935d1
+524	732	7455610050955995	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_utils.c.obj	dc543a17af0cc3a2
 63	1288	7452395207482131	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/null_init.c.obj	eaefdc9b98bcc06b
+13315	13842	7455610178860907	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_wii.c.obj	ae9f56efd286ff41
+1303	2240	7455610058749871	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_dropevents.c.obj	3a580c5a28998021
 68	1351	7452395207542807	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/null_monitor.c.obj	8b45f854440e575e
+2942	3105	7455610075138396	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_scalbn.c.obj	957fed3d1ecfefcf
 21	1373	7452395207066839	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/init.c.obj	554bdd6fbe99e494
 58	1361	7452395207431621	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/osmesa_context.c.obj	112faa129281fbf0
 74	1393	7452395207593301	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/null_window.c.obj	7f3bbb3631373093
 10	1403	7452395206955403	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/context.c.obj	e01050cd020999c0
-52	1491	7452395207381118	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/egl_context.c.obj	10b7e70c77d10dbf
+15033	16843	7455610196036710	CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.obj	1209ed1a8cd3eae0
+44	123	7455610046388434	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_bits.h	68c3aa862e1e042b
 1283	2421	7452395219680014	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_thread.c.obj	e550668c36e9e961
+81	1721	7455606130711298	CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.obj	8230dc95b1745a32
+52	1491	7452395207381118	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/egl_context.c.obj	10b7e70c77d10dbf
+49	129	7455610046448948	Libraries/SDL/include/SDL2/SDL_blendmode.h	d8fd1d600da5ea77
+186	266	7455610047824816	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_misc.h	4655ea0661b55064
 25	1694	7452395207108436	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/input.c.obj	1ea6dabb8cc5261a
 1276	2415	7452395219619446	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_time.c.obj	e8ebaad0b22e49e4
 1330	2607	7452395220150027	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_monitor.c.obj	e6b06f1abdfeddcb
 1361	2695	7452395220462203	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/wgl_context.c.obj	b9bd4fb082c4279f
-3	273	7455593254275641	build.ninja	1e092b9374c7e753
-1352	2935	7452395220371695	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_window.c.obj	f38b8d4a1d60800f
 2935	3007	7452395236199373	Libraries/glfw-3.4/src/libglfw3.a	57b6c542c4febf8d
+1352	2935	7452395220371695	Libraries/glfw-3.4/src/CMakeFiles/glfw.dir/win32_window.c.obj	f38b8d4a1d60800f
+225	307	7455610048227117	Libraries/SDL/include/SDL2/SDL_opengles2.h	56fb97646c1b10dc
+3	273	7455631752759082	build.ninja	1e092b9374c7e753
+5416	5701	7455610099873969	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_string.c.obj	e3615acc6e63475c
+29	104	7455610046221804	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_assert.h	275a2a03441435f2
+11916	12883	7455610164872301	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_syssem.c.obj	6ced409cdd18a8dc
+23	3394	7455599169023516	Libraries/fastgltf/CMakeFiles/fastgltf.dir/src/base64.cpp.obj	e411fed3855a23dc
+23	2265	7455603948813129	Libraries/fmt/CMakeFiles/fmt.dir/src/os.cc.obj	7ac7cd4897f3c756
+13	10824	7455599168923508	Libraries/fastgltf/CMakeFiles/fastgltf.dir/src/fastgltf.cpp.obj	8c2a11721e814512
+335	417	7455610049321633	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test.h	3dfcba4794a279a5
+29	104	7455610046221804	Libraries/SDL/include/SDL2/SDL_assert.h	275a2a03441435f2
+153	231	7455610047504354	Libraries/SDL/include/SDL2/SDL_loadso.h	55ebffe8bc2cdd0f
+53	217	7455600289101997	Libraries/fastgltf/libfastgltf.a	f59e1b279a197243
+453	478	7455610050465656	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/begin_code.h	5006fa0ced0fb937
+15407	16916	7455610199784190	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.obj	aac135e28dc6c5a1
+15437	16968	7455610200084737	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.obj	376363713a2fe150
+15090	16908	7455610196612862	CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.obj	fa3e4e7f370ecb33
+13	4533	7455603948713121	Libraries/fmt/CMakeFiles/fmt.dir/src/format.cc.obj	7d357f1a9f21c76f
+24	90	7455604426145227	Libraries/fmt/libfmt.a	fc790fde6c734807
+23	98	7455610046181225	Libraries/SDL/include/SDL2/SDL.h	9db980055e2f6c4b
+23	98	7455610046181225	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL.h	9db980055e2f6c4b
+260	341	7455610048578821	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_platform.h	41d18803347f6fc9
+13327	13574	7455610178980915	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xbox360w.c.obj	8d5fad945d0567f7
+33	110	7455610046287587	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_atomic.h	a65f6165d4fbc9a0
+9344	10898	7455610139151744	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_immdevice.c.obj	6a22f646ad3eede4
+38	115	7455610046348010	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_audio.h	a934b2cd507abc7
+448	473	7455610050415041	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_vulkan.h	8b385ef413ba921f
+44	123	7455610046388434	Libraries/SDL/include/SDL2/SDL_bits.h	68c3aa862e1e042b
+519	1419	7455610050905990	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_log.c.obj	74284a02fb83ba
+6426	7289	7455610109974071	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_clipboard.c.obj	3f402503c71a2ae7
+49	129	7455610046448948	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_blendmode.h	d8fd1d600da5ea77
+3879	4055	7455610084500094	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/opengles2/SDL_shaders_gles2.c.obj	cf820012f74349eb
+54	135	7455610046509691	Libraries/SDL/include/SDL2/SDL_clipboard.h	4a1b8cf55478dc88
+10210	11915	7455610147811755	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsevents.c.obj	ba8460dbbb1a7b89
+54	135	7455610046509691	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_clipboard.h	4a1b8cf55478dc88
+498	1303	7455610050686008	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_dataqueue.c.obj	fb9814fd7f0e4dee
+13095	13321	7455610176658970	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_stadia.c.obj	958ee779f8e46918
+59	142	7455610046570278	Libraries/SDL/include/SDL2/SDL_copying.h	6cffbb00dd74da7b
+65	147	7455610046630877	Libraries/SDL/include/SDL2/SDL_cpuinfo.h	256660f0f3d5db37
+2647	2801	7455610072183408	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_log.c.obj	91ec0af796be6399
+65	147	7455610046630877	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_cpuinfo.h	256660f0f3d5db37
+1723	1841	7455610062941857	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/imKStoUCS.c.obj	61369464540acb6e
+738	5153	7455610053102842	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/dynapi/SDL_dynapi.c.obj	5b55b85955d7a1fd
+13470	14855	7455610180407361	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_dinputjoystick.c.obj	83c479ad45d5015f
+71	152	7455610046681498	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_egl.h	69ff276d22c0302b
+1380	2482	7455610059521569	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_gesture.c.obj	8338a9dce6f55916
+77	159	7455610046762056	Libraries/SDL/include/SDL2/SDL_endian.h	d582b5815780ca5f
+77	159	7455610046762056	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_endian.h	d582b5815780ca5f
+8354	9222	7455610129253588	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullframebuffer.c.obj	d8d2d74f24c02169
+83	164	7455610046792041	Libraries/SDL/include/SDL2/SDL_error.h	879d1a1b9bb20af2
+83	164	7455610046792041	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_error.h	879d1a1b9bb20af2
+129	209	7455610047283102	Libraries/SDL/include/SDL2/SDL_hints.h	95c2a0761f18bc08
+13404	14645	7455610179756797	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapijoystick.c.obj	d293a2044b54a047
+88	170	7455610046852639	Libraries/SDL/include/SDL2/SDL_events.h	3986123cb3924097
+98	181	7455610046973103	Libraries/SDL/include/SDL2/SDL_gamecontroller.h	c52ee76f237e9823
+13135	13491	7455610177058964	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_steam.c.obj	824938dedd3171b4
+88	170	7455610046852639	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_events.h	3986123cb3924097
+13006	13469	7455610175778705	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps5.c.obj	6a9016c6aec7c427
+93	176	7455610046892667	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_filesystem.h	2e84603ff67e1d5e
+98	181	7455610046973103	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_gamecontroller.h	c52ee76f237e9823
+231	313	7455610048287136	Libraries/SDL/include/SDL2/SDL_opengles2_gl2.h	33f9992ce8110ba8
+104	186	7455610047023125	Libraries/SDL/include/SDL2/SDL_gesture.h	4b8d680254300a42
+104	186	7455610047023125	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_gesture.h	4b8d680254300a42
+110	192	7455610047073072	Libraries/SDL/include/SDL2/SDL_guid.h	d3d55774da46f948
+110	192	7455610047073072	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_guid.h	d3d55774da46f948
+1604	2647	7455610061754915	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_touch.c.obj	1d6a734896393a26
+13574	14882	7455610181453827	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_windowsjoystick.c.obj	8a879db82c29771f
+115	198	7455610047153094	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_haptic.h	9f5aa2633be72757
+387	466	7455610049842829	Libraries/SDL/include/SDL2/SDL_test_log.h	93e3f347d3bb33d3
+124	204	7455610047213096	Libraries/SDL/include/SDL2/SDL_hidapi.h	ebf49488a240e474
+124	204	7455610047213096	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_hidapi.h	ebf49488a240e474
+129	209	7455610047283102	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_hints.h	95c2a0761f18bc08
+147	225	7455610047444380	Libraries/SDL/include/SDL2/SDL_keycode.h	c5856c65c8fb7a86
+417	466	7455610050134503	Libraries/SDL/include/SDL2/SDL_timer.h	8a7880eec043766b
+136	215	7455610047323080	Libraries/SDL/include/SDL2/SDL_joystick.h	5fbac5b12446dc45
+1420	2601	7455610059912142	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_keyboard.c.obj	7764cc2e126030c4
+136	215	7455610047323080	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_joystick.h	5fbac5b12446dc45
+142	220	7455610047383681	Libraries/SDL/include/SDL2/SDL_keyboard.h	a9eda1bca34d9772
+142	220	7455610047383681	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_keyboard.h	a9eda1bca34d9772
+147	225	7455610047444380	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_keycode.h	c5856c65c8fb7a86
+279	359	7455610048749852	Libraries/SDL/include/SDL2/SDL_rect.h	4ed91f4749a8cb9a
+153	231	7455610047504354	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_loadso.h	55ebffe8bc2cdd0f
+5318	5454	7455610098890645	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_qsort.c.obj	3bb060af1add3997
+159	237	7455610047554361	Libraries/SDL/include/SDL2/SDL_locale.h	f11c4e37fedb1f81
+159	237	7455610047554361	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_locale.h	f11c4e37fedb1f81
+12723	12938	7455610172940927	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_combined.c.obj	99d8ca28daa3824
+165	243	7455610047614366	Libraries/SDL/include/SDL2/SDL_log.h	f29b650d2b6f554f
+165	243	7455610047614366	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_log.h	f29b650d2b6f554f
+170	249	7455610047684778	Libraries/SDL/include/SDL2/SDL_main.h	a5fe08b28b201f4
+5454	6396	7455610100254560	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/SDL_thread.c.obj	192eae2350ff8e78
+170	249	7455610047684778	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_main.h	a5fe08b28b201f4
+176	255	7455610047724817	Libraries/SDL/include/SDL2/SDL_messagebox.h	c12c942460ddfc26
+354	435	7455610049492285	Libraries/SDL/include/SDL2/SDL_test_compare.h	21ada778826a8335
+176	255	7455610047724817	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_messagebox.h	c12c942460ddfc26
+13036	13327	7455610176068964	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_shield.c.obj	a2efae6f25836683
+181	260	7455610047774793	Libraries/SDL/include/SDL2/SDL_metal.h	fcbd356c718994e0
+181	260	7455610047774793	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_metal.h	fcbd356c718994e0
+186	266	7455610047824816	Libraries/SDL/include/SDL2/SDL_misc.h	4655ea0661b55064
+11499	12754	7455610160702173	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsvulkan.c.obj	5a3d21ad44607fa
+192	273	7455610047896025	Libraries/SDL/include/SDL2/SDL_mouse.h	b83e88a57dbc9357
+192	273	7455610047896025	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_mouse.h	b83e88a57dbc9357
+291	371	7455610048859847	Libraries/SDL/include/SDL2/SDL_rwops.h	4bd85bdc358f7688
+4055	4194	7455610086267977	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/psp/SDL_render_psp.c.obj	e023d57c84599e0d
+198	279	7455610047946030	Libraries/SDL/include/SDL2/SDL_mutex.h	660f300beca78f66
+198	279	7455610047946030	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_mutex.h	660f300beca78f66
+204	285	7455610048006020	Libraries/SDL/include/SDL2/SDL_name.h	44262827e40304ea
+204	285	7455610048006020	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_name.h	44262827e40304ea
+4953	5079	7455610095249141	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm.c.obj	e878c45bccb865f4
+209	291	7455610048056059	Libraries/SDL/include/SDL2/SDL_opengl.h	a94f395aeb26f971
+209	291	7455610048056059	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengl.h	a94f395aeb26f971
+5289	5422	7455610098610651	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_mslibc.c.obj	73d6d1f49a92d30f
+215	296	7455610048136554	Libraries/SDL/include/SDL2/SDL_opengl_glext.h	1200c520c85090eb
+6020	13719	7455610105915822	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_auto.c.obj	53cdd97f02e6aa25
+215	296	7455610048136554	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengl_glext.h	1200c520c85090eb
+220	302	7455610048146537	Libraries/SDL/include/SDL2/SDL_opengles.h	f47de995b01fe02b
+4230	5219	7455610088014584	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendpoint.c.obj	d756d4edbe005bab
+220	302	7455610048146537	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles.h	f47de995b01fe02b
+225	307	7455610048227117	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles2.h	56fb97646c1b10dc
+231	313	7455610048287136	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles2_gl2.h	33f9992ce8110ba8
+424	466	7455610050175067	Libraries/SDL/include/SDL2/SDL_touch.h	9fd1cfc252e3c975
+5605	8929	7455610101763655	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_1.c.obj	4173c711b117080f
+238	319	7455610048358265	Libraries/SDL/include/SDL2/SDL_opengles2_gl2ext.h	5ae60f5eb885cda8
+238	319	7455610048358265	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles2_gl2ext.h	5ae60f5eb885cda8
+2996	3158	7455610075673193	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/locale/SDL_locale.c.obj	6131829478252832
+244	324	7455610048418261	Libraries/SDL/include/SDL2/SDL_opengles2_gl2platform.h	e14991ff12f78989
+244	324	7455610048418261	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles2_gl2platform.h	e14991ff12f78989
+515	1267	7455610050865996	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_list.c.obj	a1b2caf4337c96bb
+2473	2652	7455610070445867	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/controller_type.c.obj	4f63259394f8be3d
+249	330	7455610048458266	Libraries/SDL/include/SDL2/SDL_opengles2_khrplatform.h	e0fa243c859952b5
+249	330	7455610048458266	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_opengles2_khrplatform.h	e0fa243c859952b5
+291	371	7455610048859847	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_rwops.h	4bd85bdc358f7688
+8315	9188	7455610128869761	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullevents.c.obj	86866e54a8bf0cdc
+255	335	7455610048518254	Libraries/SDL/include/SDL2/SDL_pixels.h	a2ee9d69c30f87ca
+255	335	7455610048518254	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_pixels.h	a2ee9d69c30f87ca
+260	341	7455610048578821	Libraries/SDL/include/SDL2/SDL_platform.h	41d18803347f6fc9
+266	347	7455610048639242	Libraries/SDL/include/SDL2/SDL_power.h	111593da64785025
+10899	12410	7455610154696557	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsopengl.c.obj	f1b086fdfa0cd6d
+266	347	7455610048639242	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_power.h	111593da64785025
+273	354	7455610048699274	Libraries/SDL/include/SDL2/SDL_quit.h	7753030fa97e395e
+273	354	7455610048699274	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_quit.h	7753030fa97e395e
+279	359	7455610048749852	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_rect.h	4ed91f4749a8cb9a
+341	424	7455610049382273	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_assert.h	8656996a0a55a063
+285	364	7455610048819829	Libraries/SDL/include/SDL2/SDL_render.h	4916a3c3105c7d2f
+285	364	7455610048819829	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_render.h	4916a3c3105c7d2f
+296	377	7455610048919829	Libraries/SDL/include/SDL2/SDL_scancode.h	22c47a87e03856b3
+296	377	7455610048919829	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_scancode.h	22c47a87e03856b3
+302	382	7455610048979840	Libraries/SDL/include/SDL2/SDL_sensor.h	c8ba60bcb00058db
+302	382	7455610048979840	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_sensor.h	c8ba60bcb00058db
+6481	7351	7455610110524079	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_fillrect.c.obj	d0cd760edb27bb7a
+308	387	7455610049029855	Libraries/SDL/include/SDL2/SDL_shape.h	604b455867f9eb5f
+5514	6481	7455610100857902	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit.c.obj	c2a80b13812347bd
+308	387	7455610049029855	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_shape.h	604b455867f9eb5f
+313	393	7455610049089860	Libraries/SDL/include/SDL2/SDL_stdinc.h	dba4b80a3f3835b8
+2936	3099	7455610075077668	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_floor.c.obj	1ec04ad4306383a5
+313	393	7455610049089860	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_stdinc.h	dba4b80a3f3835b8
+429	467	7455610050235079	Libraries/SDL/include/SDL2/SDL_types.h	6162638e883c285
+551	674	7455610051225989	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiodev.c.obj	56508e3132c5e602
+541	1787	7455610051116004	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_audio.c.obj	7bf50f122d1282b0
+319	398	7455610049140491	Libraries/SDL/include/SDL2/SDL_surface.h	b5e1f558c2e499be
+319	398	7455610049140491	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_surface.h	b5e1f558c2e499be
+324	405	7455610049191164	Libraries/SDL/include/SDL2/SDL_system.h	81df6853fbd9248
+12410	13338	7455610169813734	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/locale/windows/SDL_syslocale.c.obj	b199f7dc46ac7c38
+324	405	7455610049191164	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_system.h	81df6853fbd9248
+330	411	7455610049251120	Libraries/SDL/include/SDL2/SDL_syswm.h	7bc66c816f86c2b1
+330	411	7455610049251120	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_syswm.h	7bc66c816f86c2b1
+335	417	7455610049321633	Libraries/SDL/include/SDL2/SDL_test.h	3dfcba4794a279a5
+341	424	7455610049382273	Libraries/SDL/include/SDL2/SDL_test_assert.h	8656996a0a55a063
+348	429	7455610049452284	Libraries/SDL/include/SDL2/SDL_test_common.h	55fd34ecfa518a44
+348	429	7455610049452284	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_common.h	55fd34ecfa518a44
+354	435	7455610049492285	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_compare.h	21ada778826a8335
+359	440	7455610049542294	Libraries/SDL/include/SDL2/SDL_test_crc32.h	8715cc52b86a0f02
+2602	2755	7455610071729625	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_exp.c.obj	8e29b670065875ad
+359	440	7455610049542294	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_crc32.h	8715cc52b86a0f02
+1267	2197	7455610058389839	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_displayevents.c.obj	4bc73ec50e81975d
+364	448	7455610049612276	Libraries/SDL/include/SDL2/SDL_test_font.h	48b2459da0e538ae
+484	1516	7455610050555990	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL.c.obj	41ad102f8c52f537
+364	448	7455610049612276	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_font.h	48b2459da0e538ae
+371	453	7455610049662286	Libraries/SDL/include/SDL2/SDL_test_fuzzer.h	51289af66e053649
+371	453	7455610049662286	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_fuzzer.h	51289af66e053649
+377	458	7455610049732846	Libraries/SDL/include/SDL2/SDL_test_harness.h	5ed3a69225b455ef
+529	727	7455610051005999	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/atomic/SDL_atomic.c.obj	a37ea2564f3e29e1
+377	458	7455610049732846	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_harness.h	5ed3a69225b455ef
+3183	4692	7455610077548425	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d12/SDL_shaders_d3d12.c.obj	9bc4fa967bfd5da7
+382	465	7455610049772828	Libraries/SDL/include/SDL2/SDL_test_images.h	82491b0af3a56609
+382	465	7455610049772828	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_images.h	82491b0af3a56609
+387	466	7455610049842829	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_log.h	93e3f347d3bb33d3
+393	466	7455610049882810	Libraries/SDL/include/SDL2/SDL_test_md5.h	579eec81d245508e
+393	466	7455610049882810	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_md5.h	579eec81d245508e
+5008	5126	7455610095792480	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm_memory.c.obj	f90e0d61198342a
+5153	5318	7455610097239008	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_crc32.c.obj	9384bc7d7fde68f7
+399	466	7455610049943926	Libraries/SDL/include/SDL2/SDL_test_memory.h	f73691a39317ea7a
+399	466	7455610049943926	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_memory.h	f73691a39317ea7a
+405	466	7455610049993914	Libraries/SDL/include/SDL2/SDL_test_random.h	d34f9ea106526971
+405	466	7455610049993914	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_test_random.h	d34f9ea106526971
+3037	3171	7455610076083195	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/misc/SDL_url.c.obj	331c863f0fde5759
+411	466	7455610050073911	Libraries/SDL/include/SDL2/SDL_thread.h	e9274ee248381321
+411	466	7455610050073911	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_thread.h	e9274ee248381321
+417	466	7455610050134503	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_timer.h	8a7880eec043766b
+3405	5007	7455610079763891	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/opengles2/SDL_render_gles2.c.obj	896ab7451170897b
+429	467	7455610050235079	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_types.h	6162638e883c285
+3165	4847	7455610077357862	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d11/SDL_shaders_d3d11.c.obj	da410e36e2493656
+13604	14892	7455610181754363	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_xinputjoystick.c.obj	43f45ed27a353363
+435	467	7455610050295080	Libraries/SDL/include/SDL2/SDL_version.h	1a517deddfd54613
+435	467	7455610050295080	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_version.h	1a517deddfd54613
+441	468	7455610050365030	Libraries/SDL/include/SDL2/SDL_video.h	a632238cbdc7ef1e
+2887	3037	7455610074583212	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_cos.c.obj	6f95cc9578e128d9
+2801	3165	7455610073732638	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/k_rem_pio2.c.obj	22dae883426cd90e
+441	468	7455610050365030	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/SDL_video.h	a632238cbdc7ef1e
+448	473	7455610050415041	Libraries/SDL/include/SDL2/SDL_vulkan.h	8b385ef413ba921f
+2795	2936	7455610073662030	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/k_cos.c.obj	eda4f6b99c2b8430
+453	478	7455610050465656	Libraries/SDL/include/SDL2/begin_code.h	5006fa0ced0fb937
+458	484	7455610050525982	C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/include/SDL2/close_code.h	5d86c1065b45a097
+2881	3050	7455610074523216	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_copysign.c.obj	fd3757d8da52d429
+6396	7267	7455610109673546	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_bmp.c.obj	91d66e4476606683
+501	705	7455610050726002	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_error.c.obj	2fe2b382d798e021
+2241	3286	7455610068121617	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/SDL_steam_virtual_gamepad.c.obj	45a3d14275495779
+8255	8440	7455610128269239	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/disk/SDL_diskaudio.c.obj	468020d06cd1e685
+506	738	7455610050776009	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_guid.c.obj	eb55fe96f0489b77
+510	787	7455610050815997	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_hints.c.obj	d61240ef9b882d35
+727	1331	7455610052982192	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_wave.c.obj	5a8d267e1cae763f
+535	1380	7455610051065988	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/atomic/SDL_spinlock.c.obj	c9e63fd3bc17e78b
+494	1483	7455610050645990	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/SDL_assert.c.obj	17b3e6a469bc9b74
+705	1550	7455610052766526	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_mixer.c.obj	6feea51b4ee769c5
+546	2815	7455610051176004	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiocvt.c.obj	447aef5a6f5fb374
+1484	1604	7455610060554313	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_keysym_to_scancode.c.obj	bb059abfd235dc67
+787	1663	7455610053585813	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_clipboardevents.c.obj	9b1b67d483cf5f7c
+9846	11433	7455610144176676	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi.c.obj	d749a55265201ffd
+10711	12141	7455610152824343	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmodes.c.obj	8173ff42f8dca773
+1598	1723	7455610061694917	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_scancode_tables.c.obj	3714649741dc7e43
+7144	8354	7455610117150996	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_stretch.c.obj	bfff3248dda08381
+732	1945	7455610053042191	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/cpuinfo/SDL_cpuinfo.c.obj	27101b059d0a5814
+1841	2190	7455610064117509	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/haptic/SDL_haptic.c.obj	7f0339318d469ba9
+1550	2473	7455610061214919	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_quit.c.obj	61e443e2b5a9ed59
+4348	5085	7455610089196371	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_drawpoint.c.obj	aba80f712356e292
+2482	2639	7455610070536406	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_atan2.c.obj	fb62fa4cf17fc48b
+13012	13969	7455610175838964	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_rumble.c.obj	cd7f063699bb1390
+1664	2659	7455610062351274	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_windowevents.c.obj	ea957d0dedf95330
+10427	11744	7455610149986067	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsframebuffer.c.obj	aee708a16fd416bd
+1331	2730	7455610059019870	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_events.c.obj	74f5971957c43e6b
+2652	2795	7455610072233413	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_log10.c.obj	d6fe08ca74070d81
+2640	2837	7455610072112802	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_fmod.c.obj	6f1dc82907f540a4
+8157	8308	7455610127278684	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/dummy/SDL_dummyaudio.c.obj	af4c06e2a42a2278
+1788	2843	7455610063594668	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/file/SDL_rwops.c.obj	2ceb201e9ac441bc
+1516	2881	7455610060874913	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/events/SDL_mouse.c.obj	9e9053c2da564eeb
+2730	2887	7455610073011488	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_rem_pio2.c.obj	61de80d1419be3c2
+11988	12894	7455610165589722	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_systhread.c.obj	2ad259a0129ed812
+2659	2893	7455610072303399	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_pow.c.obj	e272db39698b3c6a
+2755	2942	7455610073262029	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/e_sqrt.c.obj	187126c873bd30ae
+2815	2948	7455610073863213	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/k_sin.c.obj	a1e00555ee97525
+2837	2988	7455610074083221	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/k_tan.c.obj	7a5dac9749d0ee3c
+2843	2996	7455610074143226	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_atan.c.obj	d13dd767a4a0376a
+2893	3044	7455610074643835	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_fabs.c.obj	101cf66a15ebe0df
+11744	12640	7455610163151400	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_syscond_cv.c.obj	3e13bf89a53a3be3
+2948	3093	7455610075198387	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_sin.c.obj	2cee34318b604cf5
+2988	3126	7455610075592707	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/libm/s_tan.c.obj	d63c262e7fc40db1
+3044	3183	7455610076153196	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/power/SDL_power.c.obj	5698556b484b6415
+1946	3279	7455610065166666	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/hidapi/SDL_hidapi.c.obj	e1a92b840069764f
+6109	6852	7455610106806354	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_copy.c.obj	948c2bf439b67114
+6459	7572	7455610110304078	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_egl.c.obj	c05e901f618bac36
+3286	3405	7455610078573143	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/opengles/SDL_render_gles.c.obj	2dc70004595d2a12
+2191	3878	7455610067621057	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/SDL_gamecontroller.c.obj	7d398f277b879522
+3099	3951	7455610076704202	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/SDL_yuv_sw.c.obj	f9b2bae9fe04f66
+3951	4083	7455610085226249	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/ps2/SDL_render_ps2.c.obj	5ccb263ce0307e1f
+3126	4335	7455610076974202	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d/SDL_shaders_d3d.c.obj	4d0eb29edfc89c3c
+2197	4348	7455610067681616	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/SDL_joystick.c.obj	86eedc0f3d20b967
+3219	4874	7455610077900976	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/opengl/SDL_render_gl.c.obj	a03b4c8fd2cd6cde
+3105	4953	7455610076764205	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d/SDL_render_d3d.c.obj	5e1098c11c59cd1c
+5079	5210	7455610096508464	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm_tools.c.obj	baaf05dbc81c90eb
+5232	5416	7455610098040642	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_malloc.c.obj	124f94a6c0ffcfbf
+4335	5232	7455610089065210	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_drawline.c.obj	aa5595c7cf517e65
+5126	5289	7455610096978998	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_crc16.c.obj	5eaecf8e78f4cc6b
+3159	5372	7455610077297337	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d11/SDL_render_d3d11.c.obj	98e3474288d5194
+5565	6858	7455610101373150	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_0.c.obj	e29a645855c7a7d5
+3171	5479	7455610077417849	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/direct3d12/SDL_render_d3d12.c.obj	c4c66b9df22f377a
+3093	5508	7455610076644209	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/SDL_render.c.obj	298d180192cb6199
+5219	5514	7455610097910099	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_iconv.c.obj	4387640cf510933
+5422	5565	7455610099934554	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_strtokr.c.obj	8d8ad420287f878b
+5372	5604	7455610099430651	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_stdlib.c.obj	f54c96946d90dbeb
+4692	5842	7455610092632929	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_render_sw.c.obj	c456892ca466a298
+4848	6020	7455610094188581	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_rotate.c.obj	9e3132a884275bda
+11638	11797	7455610162097433	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/generic/SDL_syscond.c.obj	6e6073a700ba59b2
+5210	6109	7455610097818998	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_getenv.c.obj	cdbd132ec8552ef6
+9830	11444	7455610144016141	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/directsound/SDL_directsound.c.obj	1a96472e7545d0a7
+5085	6146	7455610096569011	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/sensor/SDL_sensor.c.obj	bc5cd0713c097a9
+5479	6426	7455610100507338	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/timer/SDL_timer.c.obj	2e14c7cee6d9848
+4083	7081	7455610086548638	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendfillrect.c.obj	51a82ae8db7928fc
+6147	7144	7455610107176343	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_slow.c.obj	d91803a8a19ab583
+6858	7208	7455610114302084	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_rect.c.obj	f07fa5c06552afa0
+5508	7781	7455610100797897	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_RLEaccel.c.obj	ad638bec9dca6e5
+11512	13166	7455610160832171	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowswindow.c.obj	a9dda08dfd54e501
+6852	8041	7455610114230995	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_pixels.c.obj	5856e93865940568
+7081	8157	7455610116530981	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_shape.c.obj	edc91e065e406c40
+7290	8255	7455610118606894	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_vulkan_utils.c.obj	caa748fedb8b723c
+7630	8315	7455610122016905	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/yuv2rgb/yuv_rgb_lsx.c.obj	96651ff8b282b1bf
+7208	8566	7455610117794158	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_surface.c.obj	9eff1e777d59da96
+8308	8662	7455610128799756	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/virtual/SDL_virtualjoystick.c.obj	f8f5ab1240956e23
+8440	9344	7455610130114063	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullvideo.c.obj	a981e446b6e3cba3
+8566	9442	7455610131374585	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenevents.c.obj	acfbe2847f75e4e1
+8663	9525	7455610132342231	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenframebuffer.c.obj	21dae05d7d3e3435
+7781	9710	7455610123532034	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/yuv2rgb/yuv_rgb_sse.c.obj	2ba71c9cbc24383
+7351	9830	7455610119227835	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_yuv.c.obj	cec8e27de834c200
+8929	9846	7455610134996322	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenopengles.c.obj	7df3c48da42acb0
+9188	10136	7455610137601715	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenvideo.c.obj	63386290497722bf
+9222	10145	7455610137941740	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenwindow.c.obj	27ca20092f2924d7
+9273	10210	7455610138441738	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_hid.c.obj	2926e53d55397ef8
+11444	12723	7455610160152172	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsshape.c.obj	def30a509e687baa
+9496	10427	7455610140672787	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_xinput.c.obj	6412b8abeab071b2
+9525	10450	7455610140964025	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/misc/windows/SDL_sysurl.c.obj	fb3c52ddc503942d
+5701	10513	7455610102723661	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_A.c.obj	285f4b10a9fce459
+9710	10711	7455610142814602	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/winmm/SDL_winmm.c.obj	51e4aacd5d51e929
+9442	10772	7455610140132316	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_windows.c.obj	8c4918410bb81f6e
+10145	11486	7455610147167730	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsclipboard.c.obj	c9c3d15a683b9eed
+7572	11499	7455610121436410	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/yuv2rgb/yuv_rgb.c.obj	8450ce067620032
+5842	11512	7455610104133655	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_N.c.obj	a15b34e485080bce
+12134	13674	7455610167053349	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/sensor/windows/SDL_windowssensor.c.obj	4baa34de41306415
+10137	11638	7455610147076663	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi_win32.c.obj	e5f58af60dcbdc87
+10513	11988	7455610150837559	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmessagebox.c.obj	5cbcec83540d77e4
+10772	12125	7455610153435410	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmouse.c.obj	d3e4f4539d1231c0
+10450	12134	7455610150206556	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowskeyboard.c.obj	cef08e25406aba7
+11798	12683	7455610163691974	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_sysmutex.c.obj	ee18c717e795d80b
+11433	12693	7455610160042172	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsopengles.c.obj	cb021e3e437f300f
+12125	13006	7455610166972818	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_systls.c.obj	b4423ecd20a84974
+12141	13012	7455610167123347	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/power/windows/SDL_syspower.c.obj	67fac1f4d6d73e44
+11486	13035	7455610160582175	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsvideo.c.obj	8332edd978f61aa5
+12754	13095	7455610173250926	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_gamecube.c.obj	e6ec5632b60c32ca
+12883	13135	7455610174545431	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_luna.c.obj	7a6b70d23c58cf71
+12894	13249	7455610174656001	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps3.c.obj	9c2ce457d03c0eb7
+13166	13314	7455610177370298	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_steamdeck.c.obj	f7bd562d63bfc548
+12939	13404	7455610175095991	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps4.c.obj	3efc36ec04c91930
+13321	13561	7455610178920926	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xbox360.c.obj	4822f980e90b40e5
+12683	13603	7455610172540313	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/timer/windows/SDL_systimer.c.obj	ff6a6c3b81082e4
+12694	13627	7455610172650925	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/loadso/windows/SDL_sysloadso.c.obj	f3e554244ecb98e5
+15727	15988	7455610202977419	Libraries/SDL/libSDL2.a	840f918f428ef954
+13250	13976	7455610178210913	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_switch.c.obj	e1fbdb88e17c1018
+12640	14448	7455610172106714	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/filesystem/windows/SDL_sysfilesystem.c.obj	2762649f1aa288d8
+13719	14996	7455610182908690	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_xinputhaptic.c.obj	3b2854a70fcd11c
+13628	15090	7455610181994359	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_dinputhaptic.c.obj	26c1c1027456e9aa
+13561	15226	7455610181323297	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_windows_gaming_input.c.obj	cfe72d86307be351
+13491	15437	7455610180627355	Libraries/SDL/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_rawinputjoystick.c.obj	fc28a8ac4a8f8eaa

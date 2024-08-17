@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/SDL/cmake_install.cmake")
+  include("/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/fmt/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)

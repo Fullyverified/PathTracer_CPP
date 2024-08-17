@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o.d"
-  "CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o"
-  "CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o"
@@ -13,6 +11,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o.d"
+  "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.o"
+  "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.o"
