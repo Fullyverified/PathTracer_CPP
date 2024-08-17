@@ -7,7 +7,7 @@
 
 struct Config {
 
-        int resX = 50;
+        int resX = 150;
         int aspectX = 1;
         int aspectY = 1;
         int fOV = 52;
@@ -15,7 +15,6 @@ struct Config {
         int raysPerPixel = 25;
         int bounceDepth = 5;
         int rayPerSegment = 10;
-        int memory = 4.5; // gigabytes
         bool ASCIIMode = false;
         float primaryRayStep = 0.01;
         float secondaryRayStep = 0.01;

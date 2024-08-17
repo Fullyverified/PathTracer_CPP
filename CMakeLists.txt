@@ -27,6 +27,11 @@ if (WIN32)  # Windows environment (MinGW)
     #set(GLM_DIR ${CMAKE_SOURCE_DIR}/libraries/glm) # Adjust this path if necessary
     #include_directories(${GLM_DIR})
 
+    # Add SDL
+    set(SDL_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL)
+    add_subdirectory(${SDL_DIR})
+    include_directories(${SDL_DIR}/include)
+
 elseif (UNIX)   # Linux environment (WSL)
     find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
@@ -36,6 +41,9 @@ elseif (UNIX)   # Linux environment (WSL)
     pkg_check_modules(GLFW REQUIRED glfw3)
     include_directories(${GLFW_INCLUDE_DIRS})
 
+    # Add SDL2 using system packages
+    find_package(SDL2 REQUIRED)
+    include_directories(${SDL2_INCLUDE_DIRS})
 endif()
 
 # Add TinyObjLoader
@@ -54,11 +62,6 @@ include_directories(${VMA_DIR})
 set(STB_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/stb_image)
 include_directories(${STB_IMAGE_DIR})
 
-# Add SDL
-set(SDL_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL)
-add_subdirectory(${SDL_DIR})
-include_directories(${SDL_DIR}/include)
-
 # Add IMGUI
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/libraries/imgui)
 include_directories(${IMGUI_DIR})
@@ -66,6 +69,7 @@ include_directories(${IMGUI_DIR})
 # Add FMT
 set(FMT_DIR ${CMAKE_SOURCE_DIR}/libraries/fmt)
 include_directories(${FMT_DIR})
+add_subdirectory(${FMT_DIR})
 
 # Add FASTGLTF
 set(FASTGLTF_DIR ${CMAKE_SOURCE_DIR}/libraries/fastgltf)
@@ -104,7 +108,7 @@ add_executable(PathTracer_CPP
         src/Config.h
         src/Config.cpp
         # Vulkan and vulkan related dependencies
-        Vulkan/main.cpp
+        Vulkan/vk_main.cpp
         Vulkan/camera.h
         Vulkan/camera.cpp
         Vulkan/meshes.h
@@ -120,6 +124,7 @@ add_executable(PathTracer_CPP
         Vulkan/vk_pipelines.cpp
         Vulkan/vk_pipelines.h
         Vulkan/vk_types.h
+
 )
 
 # Link Vulkan and glfw libraries
@@ -128,14 +133,13 @@ if (WIN32)
             ${Vulkan_LIBRARY}
             glfw
             ${tinyObjLoader}
-            volk
-            imgui
-            fmt
-            SDL2
-            imgui
-            fmt
-            fastgltf
-            vkbootstrap
+            fmt::fmt
+            SDL2::SDL2
+            fastgltf::fastgltf
+
+            ${imgui}
+            ${vkbootstrap}
+            ${volk}
     )
 
 elseif (UNIX)
@@ -144,13 +148,12 @@ elseif (UNIX)
             ${GLFW_LIBRARIES}
             glfw
             ${tinyObjLoader}
-            volk
-            imgui
-            fmt
-            SDL2
-            imgui
-            fmt
+            fmt::fmt
+            ${SDL2_LIBRARIES}  # Use system-installed SDL2 libraries
             fastgltf
-            vkbootstrap
+
+            ${imgui}
+            ${vkbootstrap}
+            ${volk}
     )
 endif()

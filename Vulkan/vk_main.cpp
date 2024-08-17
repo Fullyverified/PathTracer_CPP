@@ -1,6 +1,6 @@
 #include <vk_engine.h>
 
-int main(int argc, char* argv[])
+/*int main(int argc, char* argv[])
 {
 	VulkanEngine engine;
 
@@ -11,4 +11,4 @@ int main(int argc, char* argv[])
 	engine.cleanup();	
 
 	return 0;
-}
+}*/
