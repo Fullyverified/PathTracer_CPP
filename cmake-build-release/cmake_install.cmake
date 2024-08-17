@@ -42,6 +42,16 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/glfw-3.4/cmake_install.cmake")
 endif()
 
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/SDL/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release/Libraries/fastgltf/cmake_install.cmake")
+endif()
+
 if(CMAKE_INSTALL_COMPONENT)
   set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
 else()

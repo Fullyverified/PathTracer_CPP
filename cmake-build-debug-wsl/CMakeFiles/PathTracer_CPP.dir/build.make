@@ -237,6 +237,118 @@ CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Config.cpp" -o CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.s
 
+CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o: ../Vulkan/main.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/main.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/main.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/main.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o: ../Vulkan/camera.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/camera.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/camera.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/camera.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o: ../Vulkan/meshes.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/meshes.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/meshes.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/meshes.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o: ../Vulkan/vk_descriptors.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_descriptors.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_descriptors.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_descriptors.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o: ../Vulkan/vk_engine.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_engine.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_engine.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_engine.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o: ../Vulkan/vk_images.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_images.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_images.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_images.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o: ../Vulkan/vk_initializers.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_initializers.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_initializers.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_initializers.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.s
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o: CMakeFiles/PathTracer_CPP.dir/flags.make
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o: ../Vulkan/vk_pipelines.cpp
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o: CMakeFiles/PathTracer_CPP.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o -MF CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o.d -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o -c "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_pipelines.cpp"
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_pipelines.cpp" > CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.i
+
+CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_pipelines.cpp" -o CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.s
+
 # Object files for target PathTracer_CPP
 PathTracer_CPP_OBJECTS = \
 "CMakeFiles/PathTracer_CPP.dir/src/main.cpp.o" \
@@ -250,7 +362,15 @@ PathTracer_CPP_OBJECTS = \
 "CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.o" \
 "CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o" \
 "CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.o" \
-"CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o"
+"CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o" \
+"CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o"
 
 # External object files for target PathTracer_CPP
 PathTracer_CPP_EXTERNAL_OBJECTS =
@@ -267,10 +387,20 @@ PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.o
 PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o
 PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.o
 PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o
+PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o
 PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/build.make
 PathTracer_CPP: /usr/lib/x86_64-linux-gnu/libvulkan.so
+PathTracer_CPP: libraries/SDL/libSDL2-2.0d.so.0.2800.4
+PathTracer_CPP: libraries/fastgltf/libfastgltf.a
 PathTracer_CPP: CMakeFiles/PathTracer_CPP.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable PathTracer_CPP"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX executable PathTracer_CPP"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/PathTracer_CPP.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

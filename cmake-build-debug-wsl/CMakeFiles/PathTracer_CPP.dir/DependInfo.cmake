@@ -8,6 +8,14 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/camera.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/main.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/main.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/meshes.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_descriptors.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_engine.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_images.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_initializers.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan/vk_pipelines.cpp" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeBounds.cpp" "CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/AABCubeBounds.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/AABCubeCenter.cpp" "CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/AABCubeCenter.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/BVHNode.cpp" "CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/BVHNode.cpp.o.d"
@@ -24,6 +32,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/SDL/CMakeFiles/SDL2.dir/DependInfo.cmake"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-debug-wsl/libraries/fastgltf/CMakeFiles/fastgltf.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.
