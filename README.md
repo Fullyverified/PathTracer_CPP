@@ -7,7 +7,7 @@ I have finished implementing both BVH tree consturction and traversal. Multithre
 ![BVH Tree Traversal](https://github.com/user-attachments/assets/e06606b0-830a-4ddc-aae1-cfbb3a9738b1)  
 BVH creation is 220x faster and traversal is 34x faster :D
   
-![image](https://github.com/user-attachments/assets/e15b0de0-0cb8-49b8-8123-6940d6880d18) ![image](https://github.com/user-attachments/assets/ffe135d3-11b4-48a5-b6d7-b6b72e6a7684)
-  
-Resolution 3440x3440. 7x faster than Java for singlethread, and another 7x speed up with multithreading. For 8 physical threads that seems reasonable.
+![Final Comparison](https://github.com/user-attachments/assets/3e9d3384-3d5c-4127-9571-634cd8c5d133)  
+
+2.3x faster than Java for singlethread, and another 8.5x speed up with multithreading. For 8 physical threads that seems reasonable.  
 Cinebench has a 9.7x speed up with multithreading so I think thats not bad.
