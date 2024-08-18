@@ -28,11 +28,9 @@ bool BoundingBox::objectCulling(Ray &ray) const {
     float invDirZ = 1.0f / ray.getDir().getZ();
     float tmp;
 
-    // need a case to handle ray direction = 0;
-
     Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
 
-     if (ray.getDir().getX() == 0) {
+    if (ray.getDir().getX() == 0) {
         if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
             tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
             tMax.setX(-std::numeric_limits<float>::infinity());
@@ -85,8 +83,9 @@ bool BoundingBox::objectCulling(Ray &ray) const {
             tMin.setZ(tmp);
         }
     }
-    const float tNear = std::max(tMin.getX(), std::max(tMin.getY(), tMin.getZ()));
-    const float tFar = std::min(tMax.getX(), std::min(tMax.getY(), tMax.getZ()));
+
+    float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
+    float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
     return tNear <= tFar && tFar >= 0;
 }
 
@@ -187,14 +186,19 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
         }
     }
 
-    const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
-    const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
+    float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
+    float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
-    if (tNear > tFar || tFar < 0 || tFar == std::numeric_limits<float>::infinity() || tFar == -std::numeric_limits<float>::infinity()) {
-        return {-1, -1};
+    //std::cout << "Int Dis tNear: "<<tNear<<"\n";
+    //std::cout << "Int Dis tFar: "<<tFar<<"\n";
+    // if tNear < 0, return tFar, else return tNear
+
+    //std::cout<<"Pre computed:"<<"\n";
+    //std::cout<<"tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
+    if (tNear < 0) {
+        return {tFar, tNear};
     }
-
-    return {std::abs(tNear), std::abs(tFar)};
+    return {tNear, tFar};
 }
 
 float BoundingBox::getArea() const {

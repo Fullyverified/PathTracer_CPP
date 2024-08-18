@@ -7,12 +7,12 @@
 
 struct Config {
 
-        int resX = 150;
+        int resX = 50;
         int aspectX = 1;
         int aspectY = 1;
         int fOV = 52;
         int frameTime = 100; // Milliseconds
-        int raysPerPixel = 25;
+        int raysPerPixel = 200;
         int bounceDepth = 5;
         int rayPerSegment = 10;
         bool ASCIIMode = false;

@@ -85,10 +85,10 @@ bool AABCubeCenter::intersectionCheck(Ray &ray) const {
 }
 
 void AABCubeCenter::getNormal(Ray &ray) const {
-    float epsilon = 0.05;
-    float px = ray.getPos().getX();
-    float py = ray.getPos().getY();
-    float pz = ray.getPos().getZ();
+    const float epsilon = 0.05;
+    const float px = ray.getPos().getX();
+    const float py = ray.getPos().getY();
+    const float pz = ray.getPos().getZ();
 
     // x
     if (std::abs(px - minBounds.getX()) < epsilon) {

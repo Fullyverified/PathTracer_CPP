@@ -29,7 +29,7 @@ Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRa
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
 
     int numThreads = std::thread::hardware_concurrency();
-    numThreads = 1;
+    //numThreads = 1;
     std::mutex mutex;
     std::vector<std::future<void> > threads;
     std::cout << "Avaliable Threads: " << numThreads << std::endl;
@@ -75,6 +75,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
                                             std::ref(*BVHrootNode), std::ref(mutex)));
         }
     }
+
     for (std::future<void> &thread: threads) {
         thread.get(); // Blocks until the thread completes its task
     }
@@ -82,7 +83,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
     std::cout << config.raysPerPixel << " Secondary Ray Time: " << durationTimeMT.count() << "ms" << std::endl;
 
-    //printScreen();
+    printScreen();
 
     std::cout << "Deleting Objects" << std::endl;
     deleteObjects(); // delete all ray and luminance vectors
@@ -94,7 +95,7 @@ void Render::printScreen() {
             float lum = lumR[x][y] + lumG[x][y] + lumB[x][y];
             if (lum > 40) {
                 std::cout << "@@";
-            } else if (lum > 15) {
+            } else if (lum > 8) {
                 std::cout << "##";
             } else if (lum > 2) {
                 std::cout << "xx";
@@ -106,9 +107,10 @@ void Render::printScreen() {
                 std::cout << ",,";
             } else if (lum > 0.0001) {
                 std::cout << "..";
-            } else if (lum <= 0.0001) {
-                std::cout << "  ";
+            } else if (lum > 0) {
+                std::cout << ". ";
             }
+            else {std::cout<<"  ";}
         }
         std::cout << "|" << std::endl;
     }
@@ -142,14 +144,11 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &pr
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     ray->march(distance);
                     if (BVHSceneObject->intersectionCheck(*ray)) {
+                        //BVHSceneObject->printType();
                         //std::cout<<"Primary Ray Hit"<<std::endl;
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
-                        //std::cout<<"Hit"<<std::endl;
                         ray->setHitObject(BVHSceneObject);
-                        /*lumR[x][y] = BVHSceneObject->getLum()[0];
-                        lumG[x][y] = BVHSceneObject->getLum()[1];
-                        lumB[x][y] = BVHSceneObject->getLum()[2];*/
                     }
                     distance += config.primaryRayStep;
                 }
@@ -204,9 +203,11 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                             sampleRefractionDirection(*nthRay, *nthRay->getHitObject(), false);
                         }
                         BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
+                        //std::cout << "Just searched tree"<<std::endl;
                         if (leafNode != nullptr) {
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
                             std::vector<float> objectDistance = leafNode->getIntersectionDistance(*nthRay);
+                            //std::cout << "Get distance"<<std::endl;
                             float distanceClose = objectDistance[0];
                             float distanceFar = objectDistance[1];
                             float distance = distanceClose;
@@ -219,7 +220,7 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                                     nthRay->setHitObject(BVHSceneObject);
                                     // store hit data
                                     BVHSceneObject->getNormal(*nthRay); // update normal vector
-                                    float lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
+                                    lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
                                     lum = BVHSceneObject->getLum();
                                     col = BVHSceneObject->getCol();
                                     depthRed[currentBounce][0] = lum[0];
@@ -355,7 +356,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
     // calculate Tangent and Bitangnet vectors using arbitrary vector a
     Vector3 arbitraryA;
     // if the normals are exactly 0 there are problems... if statement to catch that
-    if (std::abs(ray.getNormal().getX() > 0.0001) || std::abs(ray.getNormal().getZ() > 0.0001)) {
+    if (std::abs(ray.getNormal().getX()) > 0.0001 || std::abs(ray.getNormal().getZ()) > 0.0001) {
         arbitraryA.set(0, 1, 0);
     } else { arbitraryA.set(1, 0, 0); }
     // tangent vector T equals cross product of normal N and arbitrary vector a
@@ -546,11 +547,12 @@ void Render::BVHProfiling() {
     Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(1, 0, 0.1));
     ray1.getDir().normalise();
     bool hit = true;
+    ray1.getDir().set(-1, 0,0);
     std::cout << "Searching BVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
     BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
     if (leafNode != nullptr) {
-        leafNode->getSceneObject()->printType();
+        //leafNode->getSceneObject()->printType();
         hit = leafNode->getSceneObject()->objectCulling(ray1);
     } else { hit = false; }
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
@@ -564,7 +566,7 @@ void Render::BVHProfiling() {
     startTime = std::chrono::high_resolution_clock::now();
     leafNode = BVHNodes.at(0)->searchBVHTree(ray2);
     if (leafNode != nullptr) {
-        leafNode->getSceneObject()->printType();
+        //leafNode->getSceneObject()->printType();
         hit = leafNode->getSceneObject()->objectCulling(ray2);
     } else { hit = false; }
     durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);

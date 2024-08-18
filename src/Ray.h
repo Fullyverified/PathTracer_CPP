@@ -34,7 +34,7 @@ private:
     bool hit;
     SceneObject* sceneObject;
 
-    Vector3 tMin, tMax; // for storing bounding box information
+    float tNear, tFar; // for storing bounding box information
 };
 
 

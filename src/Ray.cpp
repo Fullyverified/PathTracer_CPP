@@ -4,16 +4,16 @@
 #include "SceneObject.h"
 
 Ray::Ray(Vector3 origin, Vector3 dir) : origin(origin), dir(dir), pos(origin), hitpoint(0, 0, 0), normal(0, 0, 0),
-                                        hit(false), sceneObject(nullptr) {
+                                        hit(false), sceneObject(nullptr), tNear(0), tFar(0) {
 }
 
 Ray::Ray(Vector3 origin) : origin(origin), dir(0, 0, 0), pos(origin), hitpoint(0, 0, 0), normal(0, 0, 0), hit(false),
-sceneObject(nullptr) {
+sceneObject(nullptr), tNear(0), tFar(0) {
 
 }
 
 Ray::Ray():  origin(0,0,0), dir(0, 0, 0), pos(origin), hitpoint(0, 0, 0), normal(0, 0, 0), hit(false),
-sceneObject(nullptr) {
+sceneObject(nullptr), tNear(0), tFar(0) {
 }
 
 void Ray::march(const float &distance) {

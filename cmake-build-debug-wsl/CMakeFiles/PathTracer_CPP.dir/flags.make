@@ -6,5 +6,5 @@ CXX_DEFINES = -DFASTGLTF_DISABLE_CUSTOM_MEMORY_POOL=0 -DFASTGLTF_ENABLE_DEPRECAT
 
 CXX_INCLUDES = -I/usr/include/SDL2 -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/tinyobjloader" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/volk" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/VMA" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/stb_image" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/imgui" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/fmt" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/fastgltf/include" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/vkbootstrap" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/Vulkan" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/fmt/include" -I"/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/libraries/fastgltf/deps/simdjson"
 
-CXX_FLAGS = -g -std=gnu++23
+CXX_FLAGS =  -O3 -march=native -std=c++23 -g -std=gnu++23
 
