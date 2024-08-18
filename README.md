@@ -1,7 +1,7 @@
 Remaking my PathTracer in CPP, now with multithreading.  
   
 Building requires the vulkan SDK. In the CMakeLists.txt file find this line:
-set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version
+set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version.
 If you are on Linux use your fancy commands to install the Vulkan SDK and SDL2.
   
 I have finished implementing both BVH tree consturction and traversal. Multithreaded tree construction is only faster for scenes with hundreds of objects, so ST is also functional.  
