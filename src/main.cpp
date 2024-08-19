@@ -1,3 +1,7 @@
+#define SDL_MAIN_HANDLED
+#include "SDL.h"
+#include "vulkan/vulkan.h"
+
 #include <vector>
 #include "Vector3.h"
 #include "Camera.h"
@@ -7,14 +11,13 @@
 #include "Render.h"
 #include "Config.h"
 
-#include "vulkan/vulkan.h"
 
 int main() {
 
     std::vector<SceneObject*> SceneObjectsList;
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // left wall
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),1,1,1,0,0,0,0.75,1,0)); // right wall wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,0,0,0,0,0,0.75,1,0)); // left wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
 
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),1,1,1,0,0,0,0.75,1,0)); // back wall
 
@@ -54,19 +57,21 @@ int main() {
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(0,2.5,-5),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling*/
 
-    /*SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // left top
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,1,1,1,1,1,0,0,0,0.75,1,0)); // middle top
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,-2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // left top
+    /*SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,2.5),1,1,1,1,1,1,0,0,0,1,1,0)); // left top
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,1,1,1,1,1,0,0,0,0.8,1,0)); // middle top
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,-2.5),1,1,1,1,1,1,0,0,0,0.7,1,0)); // left top
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // middle left
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,0),1,1,1,1,1,1,40,40,40,0.75,1,0)); // middle light
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,-2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // middle right
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,2.5),1,1,1,1,1,1,0,0,0,0.6,1,0)); // middle left
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,0),1,1,1,1,1,1,40,40,40,0.5,1,0)); // middle light
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,0,-2.5),1,1,1,1,1,1,0,0,0,0.4,1,0)); // middle right
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // bottom left
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,0),1,1,1,1,1,1,0,0,0,0.75,1,0)); // bottom light
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,-2.5),1,1,1,1,1,1,0,0,0,0.75,1,0)); // bottom right*/
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,2.5),1,1,1,1,1,1,0,0,0,0.3,1,0)); // bottom left
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,0),1,1,1,1,1,1,0,0,0,0.2,1,0)); // bottom light
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2.5,-2.5),1,1,1,1,1,1,0,0,0,0,1,0)); // bottom right*/
 
+    //Camera *cam = new Camera(config, Vector3(-2, -2.2, -0.4), Vector3(1, 0, 0));
     Camera *cam = new Camera(config, Vector3(-2, 0, 0), Vector3(1, 0, 0));
+
     Render render(*cam);
     //render.constructBVHST(SceneObjectsList);
     //render.BVHProfiling();

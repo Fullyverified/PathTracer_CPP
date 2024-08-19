@@ -475,6 +475,12 @@
 		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Render.h">
 			<Option target="PathTracer_CPP"/>
 		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SDLWindow.cpp">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SDLWindow.h">
+			<Option target="PathTracer_CPP"/>
+		</Unit>
 		<Unit filename="/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SceneObject.cpp">
 			<Option target="PathTracer_CPP"/>
 		</Unit>

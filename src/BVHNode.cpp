@@ -73,8 +73,8 @@ BVHNode* BVHNode::searchBVHTree(Ray &ray) {
     BVHNode* hitRight = nodeRight == nullptr ? nullptr : nodeRight->searchBVHTree(ray);
 
     if (hitLeft != nullptr && hitRight != nullptr) {
-        double distanceLeft = hitLeft->getIntersectionDistance(ray)[0];
-        double distanceRight = hitRight->getIntersectionDistance(ray)[0];
+        float distanceLeft = hitLeft->getIntersectionDistance(ray)[0];
+        float distanceRight = hitRight->getIntersectionDistance(ray)[0];
 
         if (distanceLeft < 0 && distanceRight < 0) { // both objects are behind the ray
             return nullptr;

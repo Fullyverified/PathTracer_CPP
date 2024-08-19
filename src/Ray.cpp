@@ -35,6 +35,7 @@ void Ray::initialize(Ray &primaryRay) {
     hitpoint.set(primaryRay.getHitPoint());
     sceneObject = primaryRay.getHitObject();
     dir = primaryRay.getDir();
+    hit = primaryRay.getHit();
 }
 
 Vector3& Ray::getPos() { return pos; }

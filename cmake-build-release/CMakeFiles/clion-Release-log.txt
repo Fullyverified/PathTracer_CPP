@@ -8,7 +8,7 @@
 -- Platform: Windows-10.0.22631
 -- 64-bit:   TRUE
 -- Compiler: C:/Program Files/JetBrains/CLion 2024.1.1/bin/mingw/bin/gcc.exe
--- Revision: SDL-2.28.4-g881dd9e
+-- Revision: SDL-2.28.4-ge1c5fc3
 -- 
 -- Subsystems:
 --   Atomic:	ON

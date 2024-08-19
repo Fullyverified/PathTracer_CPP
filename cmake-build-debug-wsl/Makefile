@@ -584,6 +584,30 @@ src/Render.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.s
 .PHONY : src/Render.cpp.s
 
+src/SDLWindow.o: src/SDLWindow.cpp.o
+.PHONY : src/SDLWindow.o
+
+# target to build an object file
+src/SDLWindow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o
+.PHONY : src/SDLWindow.cpp.o
+
+src/SDLWindow.i: src/SDLWindow.cpp.i
+.PHONY : src/SDLWindow.i
+
+# target to preprocess a source file
+src/SDLWindow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.i
+.PHONY : src/SDLWindow.cpp.i
+
+src/SDLWindow.s: src/SDLWindow.cpp.s
+.PHONY : src/SDLWindow.s
+
+# target to generate assembly for a file
+src/SDLWindow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.s
+.PHONY : src/SDLWindow.cpp.s
+
 src/SceneObject.o: src/SceneObject.cpp.o
 .PHONY : src/SceneObject.o
 
@@ -743,6 +767,9 @@ help:
 	@echo "... src/Render.o"
 	@echo "... src/Render.i"
 	@echo "... src/Render.s"
+	@echo "... src/SDLWindow.o"
+	@echo "... src/SDLWindow.i"
+	@echo "... src/SDLWindow.s"
 	@echo "... src/SceneObject.o"
 	@echo "... src/SceneObject.i"
 	@echo "... src/SceneObject.s"

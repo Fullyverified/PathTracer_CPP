@@ -24,6 +24,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Config.cpp" "CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Ray.cpp" "CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Render.cpp" "CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o.d"
+  "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SDLWindow.cpp" "CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/SceneObject.cpp" "CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Sphere.cpp" "CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.o.d"
   "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/src/Vector3.cpp" "CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.o" "gcc" "CMakeFiles/PathTracer_CPP.dir/src/Vector3.cpp.o.d"

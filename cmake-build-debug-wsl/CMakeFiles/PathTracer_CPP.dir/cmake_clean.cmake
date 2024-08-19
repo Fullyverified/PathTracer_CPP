@@ -31,6 +31,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/PathTracer_CPP.dir/src/Ray.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.o.d"
+  "CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o"
+  "CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.o"
   "CMakeFiles/PathTracer_CPP.dir/src/SceneObject.cpp.o.d"
   "CMakeFiles/PathTracer_CPP.dir/src/Sphere.cpp.o"

@@ -125,6 +125,8 @@ add_executable(PathTracer_CPP
         Vulkan/vk_pipelines.cpp
         Vulkan/vk_pipelines.h
         Vulkan/vk_types.h
+        src/SDLWindow.h
+        src/SDLWindow.cpp
 
 )
 
@@ -142,7 +144,6 @@ if (WIN32)
             ${vkbootstrap}
             ${volk}
     )
-
 elseif (UNIX)
     target_link_libraries(PathTracer_CPP
             Vulkan::Vulkan

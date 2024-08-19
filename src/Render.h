@@ -10,6 +10,7 @@
 #include "BVHNode.h"
 #include "Camera.h"
 #include "Ray.h"
+#include "SDLWindow.h"
 
 class Render {
 
@@ -38,11 +39,14 @@ public:
     // multithreading logic
     std::pair<int, int> secondarySegments(float resI, int &numThreads, std::pair<int, int>, int i);
 
+    // tone mapping & draw screen
+    void toneMapDraw(SDLWindow* window, std::mutex &mutex);
+
     // cleanup
     void intialiseObjects();
     void deleteObjects();
 
-    void printScreen();
+    void printScreenASCII();
 
 
 private:
@@ -50,6 +54,7 @@ private:
     mutable std::vector<std::vector<float>> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<std::vector<float>> absR, absG, absB;
     mutable std::vector<std::vector<Ray*>> primaryRay, secondaryRay;
+    uint8_t* pixels;
 
     float primaryRayStep, secondaryRayStep;
     int resX, resY;
