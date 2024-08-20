@@ -195,6 +195,9 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
 
     //std::cout<<"Pre computed:"<<"\n";
     //std::cout<<"tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
+    if (tNear < 0 && tFar >= 0) {
+        return {0, tFar};
+    }
     if (tNear < 0) {
         return {tFar, tNear};
     }

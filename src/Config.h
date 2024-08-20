@@ -3,10 +3,10 @@
 
 struct Config {
 
-        int resX = 800;
+        int resX = 1300;
         int aspectX = 1;
         int aspectY = 1;
-        int fOV = 52;
+        int fOV = 53;
         int frameTime = 100; // Milliseconds
         int raysPerPixel = 1000;
         int bounceDepth = 5;
