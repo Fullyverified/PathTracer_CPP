@@ -313,13 +313,12 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                                     depthBlue[currentBounce][1] = lambertCosineLaw;
                                     depthBlue[currentBounce][2] = col[2];
                                     depthBlue[currentBounce][3] = 1;
-                                    /*if (currentBounce > 1) {
+                                    if (currentBounce > 1) {
                                         depthRed[currentBounce][0] = 2;
                                         depthGreen[currentBounce][0] = 2;
                                         depthBlue[currentBounce][0] = 2;
-                                    }*/
+                                    }
                                 }
-                                //nthRay->march(distance);
                                 distance += config.secondaryRayStep;
                             }
                         }
