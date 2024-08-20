@@ -37,7 +37,9 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     window.initializeTexture(width, height);
 
     int numThreads = std::thread::hardware_concurrency();
-    //numThreads = 1;
+    if (config.threads > 0) {
+        numThreads = config.threads;
+    }
     std::mutex mutex;
     std::vector<std::future<void> > threads;
     std::cout << "Avaliable Threads: " << numThreads << std::endl;
@@ -153,7 +155,7 @@ void Render::toneMapDraw(SDLWindow *window, std::mutex &mutex) {
         window->presentScreen(reinterpret_cast<uint32_t *>(pixels), resX);
 
         // Optional: Limit frame rate or add delay if necessary
-        SDL_Delay(100); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
+        SDL_Delay(200); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
     }
     delete[] pixels;
 }
@@ -211,8 +213,6 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &pr
                 while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
                     ray->march(distance);
                     if (BVHSceneObject->intersectionCheck(*ray)) {
-                        //BVHSceneObject->printType();
-                        //std::cout<<"Primary Ray Hit"<<std::endl;
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
                         ray->setHitObject(BVHSceneObject);
