@@ -10,7 +10,6 @@ struct Config {
         int frameTime = 100; // Milliseconds
         int raysPerPixel = 1000;
         int bounceDepth = 5;
-        int rayPerSegment = 10;
         bool ASCIIMode = false;
         float primaryRayStep = 0.01;
         float secondaryRayStep = 0.01;

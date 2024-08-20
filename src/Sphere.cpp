@@ -11,9 +11,12 @@ pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B)
 
 bool Sphere::objectCulling(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos().subtractNew(pos);
+    //std::cout << "centerOrigin: ";
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
     const float invZR = 1.0f / (radiusz * radiusz);
+
+    //std::cout << "invXR: " << invXR << ", invYR: " << invYR << ", invZR: " << invZR<<std::endl;
 
     // a should always = 1
     const float a = (ray.getDir().getX() * ray.getDir().getX() * invXR) + (ray.getDir().getY() * ray.getDir().getY() * invYR) + (ray.getDir().getZ() * ray.getDir().getZ() * invZR);
@@ -24,6 +27,11 @@ bool Sphere::objectCulling(Ray &ray) const {
 
     float discriminant = (b * b) - (4 * (a * c));
 
+    //std::cout<<"a: "<<a<<std::endl;
+    //std::cout<<"b: "<<b<<std::endl;
+    //std::cout<<"c: "<<c<<std::endl;
+    //std::cout<<"discriminant: "<<discriminant<<std::endl;
+
     if (discriminant < 0) {
         return false;
     }
@@ -31,6 +39,10 @@ bool Sphere::objectCulling(Ray &ray) const {
     float sqrtDiscriminant = std::sqrt(discriminant);
     float sqrt1 = (-b - sqrtDiscriminant) / (2 * a);
     float sqrt2 = (-b + sqrtDiscriminant) / (2 * a);
+
+    //std::cout<<"sqrtdisc: "<<sqrtDiscriminant<<std::endl;
+    //std::cout<<"sqrt1: "<<sqrt1<<std::endl;
+    //std::cout<<"sqrt2: "<<sqrt2<<std::endl;
 
     if (sqrt1 >= 0 || sqrt2 >= 0) {
         return true;

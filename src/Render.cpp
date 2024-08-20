@@ -279,8 +279,6 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                             sampleRefractionDirection(*nthRay, *nthRay->getHitObject(), false);
                         }
                         BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
-                        //std::cout << "leafNode object:"<<std::endl;
-                        //leafNode->getSceneObject()->printType();
                         if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
                             std::vector<float> objectDistance = leafNode->getIntersectionDistance(*nthRay);
@@ -292,10 +290,11 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                                 nthRay->march(distance - 0.05f); // march the ray to the objects bounding volume
                                 if (BVHSceneObject->intersectionCheck(*nthRay)) {
                                     nthRay->getHitPoint().set(nthRay->getPos());
-                                    //std::cout << "hitPosition"<<std::endl;
-                                    //nthRay->getPos().print();
                                     nthRay->setHit(true);
                                     nthRay->setHitObject(BVHSceneObject);
+                                    nthRay->getOrigin().set(nthRay->getPos());
+
+
                                     // store hit data
                                     BVHSceneObject->getNormal(*nthRay); // update normal vector
                                     lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
@@ -313,11 +312,6 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                                     depthBlue[currentBounce][1] = lambertCosineLaw;
                                     depthBlue[currentBounce][2] = col[2];
                                     depthBlue[currentBounce][3] = 1;
-                                    if (currentBounce > 1) {
-                                        depthRed[currentBounce][0] = 2;
-                                        depthGreen[currentBounce][0] = 2;
-                                        depthBlue[currentBounce][0] = 2;
-                                    }
                                 }
                                 distance += config.secondaryRayStep;
                             }
@@ -628,23 +622,24 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
 }
 
 void Render::BVHProfiling() {
-    Ray ray1(Vector3(0.1, 0.1, 0.1), Vector3(0.1, 0.1, 0.9));
+    Ray ray1(Vector3(4.5, -2.4, -1), Vector3(0.1, 0, 1));
     ray1.getDir().normalise();
     bool hit = false;
-    Vector3 newDirection(-5, 0, 0);
-    ray1.getDir().set(ray1.getPos());
     std::cout << "Searching BVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
     BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
     if (leafNode != nullptr) {
+        std::cout << "Intersection Test: "<<std::endl;;
         leafNode->getSceneObject()->printType();
+        std::cout << "SceneObject Pos";
+        leafNode->getSceneObject()->getPos().print();
         hit = leafNode->getSceneObject()->objectCulling(ray1);
     } else { hit = false; }
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
     std::cout << "Hit: " << hit << std::endl;
 
-    Ray ray2(Vector3(0.1, 0.1, 0.1), Vector3(1, 0, 0.1));
+    /*Ray ray2(Vector3(0.1, 0.1, 0.1), Vector3(1, 0, 0.1));
     ray2.getDir().normalise();
     hit = false;
     std::cout << "Searching BVH" << std::endl;
@@ -656,7 +651,7 @@ void Render::BVHProfiling() {
     } else { hit = false; }
     durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
-    std::cout << "Hit: " << hit << std::endl;
+    std::cout << "Hit: " << hit << std::endl;*/
 }
 
 void Render::intialiseObjects() {

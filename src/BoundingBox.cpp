@@ -189,12 +189,9 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
     float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
     float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
-    //std::cout << "Int Dis tNear: "<<tNear<<"\n";
-    //std::cout << "Int Dis tFar: "<<tFar<<"\n";
-    // if tNear < 0, return tFar, else return tNear
+    //std::cout << "tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
 
-    //std::cout<<"Pre computed:"<<"\n";
-    //std::cout<<"tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
+    // if tNear < 0, return tFar, else return tNear
     if (tNear < 0 && tFar >= 0) {
         return {0, tFar};
     }

@@ -63,12 +63,19 @@ BVHNode* BVHNode::getNodeRight() const {
 
 BVHNode* BVHNode::searchBVHTree(Ray &ray) {
     if (!boundingBox->objectCulling(ray)) {
+        //std::cout << "returning nullptr"<<std::endl;
         return nullptr; // ray does not intersect at all
     }
+
+    if (sceneObject != nullptr) {
+        //sceneObject->printType();
+    }
     if (sceneObject != nullptr && sceneObject->objectCulling(ray)) { // only return the node if the ray actually points at the object itself
+        //std::cout << "Returning this"<<std::endl;
         return this;
     }
 
+    //std::cout <<"Determining left and right nodes"<<std::endl;
     BVHNode* hitLeft = nodeLeft == nullptr ? nullptr : nodeLeft->searchBVHTree(ray);
     BVHNode* hitRight = nodeRight == nullptr ? nullptr : nodeRight->searchBVHTree(ray);
 
@@ -77,20 +84,26 @@ BVHNode* BVHNode::searchBVHTree(Ray &ray) {
         float distanceRight = hitRight->getIntersectionDistance(ray)[0];
 
         if (distanceLeft < 0 && distanceRight < 0) { // both objects are behind the ray
+            //std::cout <<"DistanceLeft < 0 && DistanceRight < 0"<<std::endl;
             return nullptr;
         }
         if (distanceLeft < 0) {
+            //std::cout <<"DistanceLeft < 0 - return right"<<std::endl;
             return hitRight;
         }
         if (distanceRight < 0) {
+            //std::cout <<"DistanceRight < 0 - return left"<<std::endl;
             return hitLeft;
         }
+        //std::cout <<"Returning closest"<<std::endl;
         return distanceLeft < distanceRight ? hitLeft : hitRight;
     }
 
     if (hitLeft == nullptr && hitRight == nullptr) {
+        //std::cout <<"Both null"<<std::endl;
         return nullptr;
     }
 
+    //std::cout <<"One null, returning other"<<std::endl;
     return (hitLeft != nullptr) ? hitLeft : hitRight;
 }
