@@ -16,7 +16,8 @@
 //#include "SDLWindow.h"
 
 Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep),
-                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), numThreads(std::thread::hardware_concurrency()) {
+                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
+                              numThreads(std::thread::hardware_concurrency()) {
     primaryRay.resize(resX * resY, nullptr);
     secondaryRay.resize(resX * resY, nullptr);
     lumR.resize(resX * resY, 0.0f);
@@ -28,7 +29,6 @@ Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRa
 }
 
 void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &cam, SDLWindow &window) {
-
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
@@ -141,10 +141,20 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             if (event.type == SDL_QUIT) {
                 running = false;
             }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_w) {
+                    std::cout << "W key pressed" << std::endl;
+                }
+                else if (event.key.keysym.sym == SDLK_s) {
+                    std::cout << "S key pressed" << std::endl;
+                }
+
+            }
+
         }
 
         // Optional: Limit frame rate or add delay if necessary
-        SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
+        SDL_Delay(16); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
     }
 
     renderThread.join();

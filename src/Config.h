@@ -3,13 +3,12 @@
 
 struct Config {
 
-        int resX = 600;
+        int resX = 1300;
         int aspectX = 1;
         int aspectY = 1;
         int fOV = 52;
-        int raysPerPixel = 20;
-        int bounceDepth = 5;
-        int frameTime = 100; // Milliseconds
+        int raysPerPixel = 1;
+        int bounceDepth = 10;
         int threads = 12; // 0 = default
         bool ASCIIMode = false;
         float primaryRayStep = 0.01;

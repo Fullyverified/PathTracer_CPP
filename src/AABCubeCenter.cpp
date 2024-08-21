@@ -85,27 +85,27 @@ bool AABCubeCenter::intersectionCheck(Ray &ray) const {
 }
 
 void AABCubeCenter::getNormal(Ray &ray) const {
-    const float epsilon = 0.05;
+    const float epsilon = 0.005;
     const float px = ray.getPos().getX();
     const float py = ray.getPos().getY();
     const float pz = ray.getPos().getZ();
 
     // x
-    if (std::abs(px - minBounds.getX()) < epsilon) {
+    if (std::abs(px - minBounds.getX()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(-1, 0, 0);
-    } else if (std::abs(px - maxBounds.getX()) < epsilon) {
+    } else if (std::abs(px - maxBounds.getX()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(1, 0, 0);
     }
     // y
-    else if (std::abs(py - minBounds.getY()) < epsilon) {
+    else if (std::abs(py - minBounds.getY()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(0, -1, 0);
-    } else if (std::abs(py - maxBounds.getY()) < epsilon) {
+    } else if (std::abs(py - maxBounds.getY()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(0, 1, 0);
     }
     // z
-    else if (std::abs(pz - minBounds.getZ()) < epsilon) {
+    else if (std::abs(pz - minBounds.getZ()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(0, 0, -1);
-    } else if (std::abs(pz - maxBounds.getZ()) < epsilon) {
+    } else if (std::abs(pz - maxBounds.getZ()) < std::numeric_limits<float>::epsilon()) {
         ray.getNormal().set(0, 0, 1);
     }
 }
