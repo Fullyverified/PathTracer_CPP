@@ -1,7 +1,7 @@
-#include "Vector3.h"
+/*#include "Vector3.h"
 
-// this code is now inlined. 4.8x faster
-/*Vector3::Vector3() : x(0), y(0), z(0) {
+// this code is now inlined. 2.5x faster
+Vector3::Vector3() : x(0), y(0), z(0) {
 } // default constructor
 Vector3::Vector3(const float &x, const float &y, const float &z) : x(x), y(y), z(z) {
 }
@@ -42,15 +42,15 @@ void Vector3::subtract(const Vector3 &second) {
     z -= second.z;
 }
 
-Vector3 Vector3::subtractNew(const Vector3 &second) {
+Vector3 Vector3::subtractNew(const Vector3 &second) const {
     return {x - second.x, y - second.y, z - second.z};
 }
 
-float Vector3::dot(const Vector3 &second) {
+float Vector3::dot(const Vector3 &second) const {
     return x * second.x + y * second.y + z * second.z;
 }
 
-Vector3 Vector3::cross(const Vector3 &second) {
+Vector3 Vector3::cross(const Vector3 &second) const {
     return {y * second.z - z * second.y, z * second.x - x * second.z, x * second.y - y * second.x};
 }
 

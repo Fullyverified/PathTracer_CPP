@@ -1,5 +1,9 @@
 C:\Windows\system32\wsl.exe --distribution Ubuntu --exec "/mnt/c/Program Files/JetBrains/CLion 2024.1.1/bin/ttyfix" /bin/bash -c "export CLION_IDE=TRUE && export CMAKE_COLOR_DIAGNOSTICS=ON && export JETBRAINS_IDE=TRUE && cd '/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl' && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Release -G 'CodeBlocks - Unix Makefiles' -S '/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP' -B '/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl'"
--- Using CXX Flags:  -O3 -march=native -std=c++23
+-- Using CXX Flags: 
+-- {fmt} version: 11.0.2
+-- Build type: Release
+-- Could NOT find simdjson (missing: simdjson_DIR)
+-- fastgltf: Found simdjson (Version 3.9.4)
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl

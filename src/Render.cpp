@@ -16,15 +16,110 @@
 //#include "SDLWindow.h"
 
 Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep),
-                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f) {
-    primaryRay.resize(resX, std::vector<Ray *>(resY, nullptr));
-    secondaryRay.resize(resX, std::vector<Ray *>(resY, nullptr));
-    lumR.resize(resX, std::vector<float>(resY, 0.0f));
-    lumG.resize(resX, std::vector<float>(resY, 0.0f));
-    lumB.resize(resX, std::vector<float>(resY, 0.0f));
-    absR.resize(resX, std::vector<float>(resY, 0.0f));
-    absG.resize(resX, std::vector<float>(resY, 0.0f));
-    absB.resize(resX, std::vector<float>(resY, 0.0f));
+                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), numThreads(std::thread::hardware_concurrency()) {
+    primaryRay.resize(resX * resY, nullptr);
+    secondaryRay.resize(resX * resY, nullptr);
+    lumR.resize(resX * resY, 0.0f);
+    lumG.resize(resX * resY, 0.0f);
+    lumB.resize(resX * resY, 0.0f);
+    absR.resize(resX * resY, 0.0f);
+    absG.resize(resX * resY, 0.0f);
+    absB.resize(resX * resY, 0.0f);
+}
+
+void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &cam, SDLWindow &window) {
+
+    // initialise objects
+    std::mutex mutex;
+    std::vector<std::future<void> > threads;
+    // create all ray and luminance vector objects
+    std::cout << "Constructing Objects: " << std::endl;
+    intialiseObjects();
+    std::cout << "Avaliable Threads: " << numThreads << std::endl;
+
+    std::cout << "Constructing BVH: " << std::endl;
+    constructBVHST(sceneobjectsList);
+    BVHNode *BVHrootNode = BVHNodes.at(0);
+
+    while (running) {
+        // render loop code
+        numThreads = std::thread::hardware_concurrency();
+        if (config.threads > 0) {
+            numThreads = config.threads;
+        }
+
+        // construct BVH
+        int segments = std::round(std::sqrt(numThreads));
+        if (iterations == 0) {
+            std::cout << "Reconstructing BVH: " << std::endl;
+            constructBVHST(sceneobjectsList);
+            BVHNode *BVHrootNode = BVHNodes.at(0);
+
+            // primary rays
+            auto startTimePR = std::chrono::high_resolution_clock::now();
+
+            for (int j = 0; j < segments; j++) {
+                for (int i = 0; i < segments; i++) {
+                    boundsX = threadSegments(cam.getResX(), segments, boundsX, i);
+                    boundsY = threadSegments(cam.getResY(), segments, boundsY, j);
+                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this,
+                                                    std::ref(cam), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                                                    std::ref(*BVHrootNode), std::ref(mutex)));
+                }
+            }
+            for (std::future<void> &thread: threads) {
+                thread.get(); // Blocks until the thread completes its task
+            }
+            threads.clear();
+            auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimePR);
+            std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
+        }
+
+        iterations++;
+        //---------------------
+
+        // secondary rays
+        std::cout << "Starting Secondary Rays" << std::endl;
+        auto startTimeSR = std::chrono::high_resolution_clock::now();
+
+        for (int j = 0; j < segments; j++) {
+            for (int i = 0; i < segments; i++) {
+                boundsX = threadSegments(cam.getResX(), segments, boundsX, i);
+                boundsY = threadSegments(cam.getResY(), segments, boundsY, j);
+                threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
+                                                boundsX.first, boundsX.second, boundsY.first,
+                                                boundsY.second,
+                                                std::ref(*BVHrootNode), std::ref(mutex)));
+            }
+        }
+        for (std::future<void> &thread: threads) {
+            thread.get(); // Blocks until the thread completes its task
+        }
+        threads.clear();
+        auto durationTimeSR = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeSR);
+        std::cout << config.raysPerPixel * iterations << " Secondary Ray(s) Time: " << durationTimeSR.count() << "ms" << std::endl;
+        //-----------------------
+
+        toneMap();
+        window.presentScreen(reinterpret_cast<uint32_t *>(pixels), resX);
+
+        bool sceneUpdated = false;
+        if (sceneUpdated) {
+            // reset colour buffer
+            for (int i = 0; i < resY * resX; i++) {
+                lumR[i] = 0.0f;
+                lumG[i] = 0.0f;
+                lumB[i] = 0.0f;
+                absR[i] = 0.0f;
+                absG[i] = 0.0f;
+                absB[i] = 0.0f;
+            }
+            iterations = 0;
+        }
+
+        // Optional: Limit frame rate or add delay if necessary
+        //SDL_Delay(1);
+    }
 }
 
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
@@ -36,68 +131,23 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     window.createRenderer();
     window.initializeTexture(width, height);
 
-    int numThreads = std::thread::hardware_concurrency();
-    if (config.threads > 0) {
-        numThreads = config.threads;
-    }
-    std::mutex mutex;
-    std::vector<std::future<void> > threads;
-    std::cout << "Avaliable Threads: " << numThreads << std::endl;
-    std::cout << "Constructing Objects: " << std::endl;
-    // create all ray and luminance vector objects
-    intialiseObjects();
+    // render loop
+    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList), std::ref(cam), std::ref(window));
 
-    // construct BVH
-    std::cout << "Constructing BVH: " << std::endl;
-    constructBVHST(sceneobjectsList);
-    BVHNode *BVHrootNode = BVHNodes.at(0);
-
-    // primary rays
-    auto startTimeMT = std::chrono::high_resolution_clock::now();
-
-    int segments = std::round(std::sqrt(numThreads));
-    for (int j = 0; j < segments; j++) {
-        for (int i = 0; i < segments; i++) {
-            boundsX = secondarySegments(cam.getResX(), segments, boundsX, i);
-            boundsY = secondarySegments(cam.getResY(), segments, boundsY, j);
-            threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this,
-                                            std::ref(cam), std::ref(primaryRay), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
-                                            std::ref(*BVHrootNode), std::ref(mutex)));
+    // Main event loop
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
         }
-    }
-    for (std::future<void> &thread: threads) {
-        thread.get(); // Blocks until the thread completes its task
-    }
-    threads.clear();
-    auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
-    std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
 
-    // secondary rays
-    std::cout << "Starting Secondary Rays" << std::endl;
-    startTimeMT = std::chrono::high_resolution_clock::now();
-
-    std::vector<std::future<void> > drawScreenTask;
-    drawScreenTask.emplace_back(std::async(std::launch::async, &Render::toneMapDraw, this, &window, std::ref(mutex)));
-
-    for (int j = 0; j < segments; j++) {
-        for (int i = 0; i < segments; i++) {
-            boundsX = secondarySegments(cam.getResX(), segments, boundsX, i);
-            boundsY = secondarySegments(cam.getResY(), segments, boundsY, j);
-            threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
-                                            std::ref(cam), std::ref(primaryRay), std::ref(secondaryRay), boundsX.first, boundsX.second, boundsY.first,
-                                            boundsY.second,
-                                            std::ref(*BVHrootNode), std::ref(mutex)));
-        }
+        // Optional: Limit frame rate or add delay if necessary
+        SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
     }
 
-    for (std::future<void> &thread: threads) {
-        thread.get(); // Blocks until the thread completes its task
-    }
-    threads.clear();
-    durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeMT);
-    std::cout << config.raysPerPixel << " Secondary Ray Time: " << durationTimeMT.count() << "ms" << std::endl;
-
-    //printScreenASCII();
+    renderThread.join();
 
     std::cout << "Deleting Objects" << std::endl;
     deleteObjects(); // delete all ray and luminance vectors
@@ -105,91 +155,48 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 }
 
 
-void Render::toneMapDraw(SDLWindow *window, std::mutex &mutex) {
+void Render::toneMap() {
     pixels = new uint8_t[resX * resY * 3];
 
-    bool running = true;
-    SDL_Event event;
-    while (running) {
-        float maxR = 0;
-        float maxG = 0;
-        float maxB = 0;
-        for (int x = 0; x < cam.getResX(); x++) {
-            // determine brightest amplitude in scene
-            for (int y = 0; y < cam.getResY(); y++) {
-                if (lumR[x][y] > maxR) {
-                    maxR = lumR[x][y];
-                }
-                if (lumG[x][y] > maxG) {
-                    maxG = lumG[x][y];
-                }
-                if (lumB[x][y] > maxB) {
-                    maxB = lumB[x][y];
-                }
-            }
-        }
-        float maxA = std::max(maxR, std::max(maxG, maxB));
-        float brightnessFactor = 255 / (maxA * config.ISO);
-
-        for (int x = 0; x < cam.getResX(); x++) {
-            for (int y = 0; y < cam.getResY(); y++) {
-                int red = lumR[x][y] * brightnessFactor;
-                int green = lumG[x][y] * brightnessFactor;
-                int blue = lumB[x][y] * brightnessFactor;
-
-                red *= brightnessFactor * config.ISO;
-                green *= brightnessFactor * config.ISO;
-                blue *= brightnessFactor * config.ISO;
-
-                red = std::min(255, red);
-                green = std::min(255, green);
-                blue = std::min(255, blue);
-                int offset = (y * resX + x) * 3;
-
-                pixels[offset] = red;
-                pixels[offset + 1] = green;
-                pixels[offset + 2] = blue;
-            }
-        }
-
-        window->presentScreen(reinterpret_cast<uint32_t *>(pixels), resX);
-
-        // Optional: Limit frame rate or add delay if necessary
-        SDL_Delay(200); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
+    float maxR = 0;
+    float maxG = 0;
+    float maxB = 0;
+    for (int i = 0; i < resX * resY; i++) {
+        // determine brightest amplitude in scene
+        maxR = lumR[i] > maxR ? lumR[i] : maxR;
+        maxG = lumG[i] > maxG ? lumG[i] : maxG;
+        maxB = lumB[i] > maxB ? lumB[i] : maxB;
     }
-    delete[] pixels;
-}
+    float maxA = std::max(maxR, std::max(maxG, maxB));
+    float brightnessFactor = 255 / (maxA * config.ISO);
 
+    for (int x = 0; x < resX; x++) {
+        for (int y = 0; y < resY; y++) {
+            int red = lumR[y * resX + x] * brightnessFactor;
+            int green = lumG[y * resX + x] * brightnessFactor;
+            int blue = lumB[y * resX + x] * brightnessFactor;
 
-void Render::printScreenASCII() {
-    for (int y = 0; y < cam.getResX(); y++) {
-        for (int x = 0; x < cam.getResX(); x++) {
-            float lum = lumR[x][y] + lumG[x][y] + lumB[x][y];
-            if (lum > 40) {
-                std::cout << "@@";
-            } else if (lum > 8) {
-                std::cout << "##";
-            } else if (lum > 2) {
-                std::cout << "xx";
-            } else if (lum > 1.5) {
-                std::cout << "~~";
-            } else if (lum > 1) {
-                std::cout << ";;";
-            } else if (lum > 0.5) {
-                std::cout << ",,";
-            } else if (lum > 0) {
-                std::cout << "..";
-            } else { std::cout << "  "; }
+            red *= brightnessFactor * config.ISO;
+            green *= brightnessFactor * config.ISO;
+            blue *= brightnessFactor * config.ISO;
+
+            red = std::min(255, red);
+            green = std::min(255, green);
+            blue = std::min(255, blue);
+            int offset = (y * resX + x) * 3;
+
+            pixels[offset] = red;
+            pixels[offset + 1] = green;
+            pixels[offset + 2] = blue;
         }
-        std::cout << "|" << std::endl;
     }
 }
 
-void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &primaryRay, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
+void Render::computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
                                std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
-            Ray *ray = primaryRay[x][y];
+            Ray *ray = primaryRay[resX * y + x];
             ray->getOrigin().set(cam.getPos());
             // calculate position of pixel on image plane
             Vector3 pixelPosPlane((((x + 0.5f) / cam.getResX()) * 2) - 1, 1 - (((y + 0.5f) / cam.getResX()) * 2), 0);
@@ -210,7 +217,7 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &pr
                 float distanceFar = objectDistance[1];
                 float distance = distanceClose;
                 ray->march(distance - 0.05f); // march the ray to the objects bounding volume
-                while (distance <= distanceFar && !primaryRay[x][y]->getHit()) {
+                while (distance <= distanceFar && !ray->getHit()) {
                     ray->march(distance);
                     if (BVHSceneObject->intersectionCheck(*ray)) {
                         ray->getHitPoint().set(ray->getPos());
@@ -224,8 +231,7 @@ void Render::computePrimaryRay(Camera &cam, std::vector<std::vector<Ray *> > &pr
     }
 }
 
-void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &primaryRayV, std::vector<std::vector<Ray *> > &secondaryRayV, int xstart,
-                                 int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
@@ -234,8 +240,8 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
     for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
         for (int y = ystart; y <= yend; y++) {
             for (int x = xstart; x <= xend; x++) {
-                Ray *primaryRay = primaryRayV[x][y];
-                if (primaryRay->getHit()) {
+                Ray *primRay = primaryRay[resX * y + x];
+                if (primRay->getHit()) {
                     // store primary ray depth information
                     for (int i = 0; i < config.bounceDepth + 1; i++) {
                         // reset hit bool
@@ -245,10 +251,10 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                             depthBlue[i][j] = 0;
                         }
                     }
-                    primaryRay->getHitObject()->getNormal(*primaryRay); // update normal vector
-                    float lambertCosineLaw = std::abs(primaryRay->getNormal().dot(primaryRay->getDir())); // dot product of object normal and ray direction
-                    lum = primaryRay->getHitObject()->getLum();
-                    col = primaryRay->getHitObject()->getCol();
+                    primRay->getHitObject()->getNormal(*primRay); // update normal vector
+                    float lambertCosineLaw = std::abs(primRay->getNormal().dot(primRay->getDir())); // dot product of object normal and ray direction
+                    lum = primRay->getHitObject()->getLum();
+                    col = primRay->getHitObject()->getCol();
                     depthRed[0][0] = lum[0]; // object brightness
                     depthRed[0][1] = lambertCosineLaw;
                     depthRed[0][2] = col[0];
@@ -262,15 +268,9 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                     depthBlue[0][2] = col[2];
                     depthBlue[0][3] = 1;
                     // initialize secondary ray
-                    Ray *nthRay = secondaryRayV[x][y];
-                    nthRay->initialize(*primaryRay);
-                    //std::cout << "primaryRay starting Position"<<std::endl;
-                    //primaryRay->getPos().print();
-                    //primaryRay->getHitObject()->printType();
+                    Ray *nthRay = secondaryRay[resX * y + x];
+                    nthRay->initialize(*primRay);
                     for (int currentBounce = 1; currentBounce <= config.bounceDepth && nthRay->getHit(); currentBounce++) {
-                        //std::cout << "startingPosition"<<std::endl;
-                        //nthRay->getPos().print();
-                        //nthRay->getHitObject()->printType();
                         // BOUNCES PER RAY
                         float randomSample = dist(rng); // monte carlo sampling
                         if (randomSample >= nthRay->getHitObject()->getTransp()) {
@@ -287,14 +287,13 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                             float distance = distanceClose;
                             nthRay->setHit(false);
                             while (distance <= distanceFar && !nthRay->getHit()) {
-                                nthRay->march(distance - 0.05f); // march the ray to the objects bounding volume
+                                nthRay->march(distance - 0.05f);
                                 if (BVHSceneObject->intersectionCheck(*nthRay)) {
+                                    //
                                     nthRay->getHitPoint().set(nthRay->getPos());
                                     nthRay->setHit(true);
                                     nthRay->setHitObject(BVHSceneObject);
                                     nthRay->getOrigin().set(nthRay->getPos());
-
-
                                     // store hit data
                                     BVHSceneObject->getNormal(*nthRay); // update normal vector
                                     lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
@@ -333,16 +332,15 @@ void Render::computeSecondaryRay(Camera &cam, std::vector<std::vector<Ray *> > &
                         }
                     }
                     //std::cout<<"redAmplitude: "<<redAmplitude<<std::endl;
-                    absR[x][y] += redAmplitude;
-                    absG[x][y] += greenAmplitude;
-                    absB[x][y] += blueAmplitude;
-                    lumR[x][y] = absR[x][y] / static_cast<float>(currentRay);
-                    lumG[x][y] = absG[x][y] / static_cast<float>(currentRay);
-                    lumB[x][y] = absB[x][y] / static_cast<float>(currentRay);
+                    absR[y * resX + x] += redAmplitude;
+                    absG[y * resX + x] += greenAmplitude;
+                    absB[y * resX + x] += blueAmplitude;
+                    lumR[y * resX + x] = absR[y * resX + x] / (static_cast<float>(currentRay) * iterations);
+                    lumG[y * resX + x] = absG[y * resX + x] / (static_cast<float>(currentRay) * iterations);
+                    lumB[y * resX + x] = absB[y * resX + x] / (static_cast<float>(currentRay) * iterations);
                 }
             }
         }
-        std::cout << "Current Ray: " << currentRay << "\n";
     }
 }
 
@@ -629,7 +627,7 @@ void Render::BVHProfiling() {
     auto startTime = std::chrono::high_resolution_clock::now();
     BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
     if (leafNode != nullptr) {
-        std::cout << "Intersection Test: "<<std::endl;;
+        std::cout << "Intersection Test: " << std::endl;;
         leafNode->getSceneObject()->printType();
         std::cout << "SceneObject Pos";
         leafNode->getSceneObject()->getPos().print();
@@ -657,26 +655,25 @@ void Render::BVHProfiling() {
 void Render::intialiseObjects() {
     for (int i = 0; i < resX; ++i) {
         for (int j = 0; j < resY; ++j) {
-            primaryRay[i][j] = new Ray(); // allocate new Ray
-            secondaryRay[i][j] = new Ray();
+            secondaryRay[resX * j + i] = new Ray();
+            primaryRay[resX * j + i] = new Ray();
         }
     }
 }
 
 void Render::deleteObjects() {
-    for (int i = 0; i < resX; ++i) {
-        for (int j = 0; j < resY; ++j) {
-            delete primaryRay[i][j];
-            delete secondaryRay[i][j];
-        }
-    }
     for (auto node: BVHNodes) {
         delete node;
     }
     BVHNodes.clear();
+
+    for (int i = 0; i < resX * resY; i++) {
+        delete primaryRay[i];
+        delete secondaryRay[i];
+    }
 }
 
-std::pair<int, int> Render::secondarySegments(float resInput, int &numThreads, std::pair<int, int>, int step) {
+std::pair<int, int> Render::threadSegments(float resInput, int &numThreads, std::pair<int, int>, int step) {
     int res = resInput;
     int pixelsPerThread = res / numThreads; // number of pixels per thread
     int remainder = res % numThreads; // remaining pixels after division
@@ -684,4 +681,28 @@ std::pair<int, int> Render::secondarySegments(float resInput, int &numThreads, s
     int start = step * pixelsPerThread + std::min(step, remainder);
     int end = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
     return std::make_pair(start, end);
+}
+
+void Render::printScreenASCII() {
+    for (int y = 0; y < cam.getResX(); y++) {
+        for (int x = 0; x < cam.getResX(); x++) {
+            float lum = lumR[y * resX + x] + lumG[y * resX + x] + lumB[y * resX + x];
+            if (lum > 40) {
+                std::cout << "@@";
+            } else if (lum > 8) {
+                std::cout << "##";
+            } else if (lum > 2) {
+                std::cout << "xx";
+            } else if (lum > 1.5) {
+                std::cout << "~~";
+            } else if (lum > 1) {
+                std::cout << ";;";
+            } else if (lum > 0.5) {
+                std::cout << ",,";
+            } else if (lum > 0) {
+                std::cout << "..";
+            } else { std::cout << "  "; }
+        }
+        std::cout << "|" << std::endl;
+    }
 }

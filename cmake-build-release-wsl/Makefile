@@ -85,6 +85,51 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl/CMakeFiles" "/mnt/c/Users/hazza/Downloads/C++ Programming/PathTracer_CPP/cmake-build-release-wsl//CMakeFiles/progress.marks"
@@ -128,6 +173,224 @@ PathTracer_CPP: cmake_check_build_system
 PathTracer_CPP/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/build
 .PHONY : PathTracer_CPP/fast
+
+#=============================================================================
+# Target rules for targets named fmt
+
+# Build rule for target.
+fmt: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 fmt
+.PHONY : fmt
+
+# fast build rule for target.
+fmt/fast:
+	$(MAKE) $(MAKESILENT) -f libraries/fmt/CMakeFiles/fmt.dir/build.make libraries/fmt/CMakeFiles/fmt.dir/build
+.PHONY : fmt/fast
+
+#=============================================================================
+# Target rules for targets named fastgltf
+
+# Build rule for target.
+fastgltf: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 fastgltf
+.PHONY : fastgltf
+
+# fast build rule for target.
+fastgltf/fast:
+	$(MAKE) $(MAKESILENT) -f libraries/fastgltf/CMakeFiles/fastgltf.dir/build.make libraries/fastgltf/CMakeFiles/fastgltf.dir/build
+.PHONY : fastgltf/fast
+
+Vulkan/camera.o: Vulkan/camera.cpp.o
+.PHONY : Vulkan/camera.o
+
+# target to build an object file
+Vulkan/camera.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.o
+.PHONY : Vulkan/camera.cpp.o
+
+Vulkan/camera.i: Vulkan/camera.cpp.i
+.PHONY : Vulkan/camera.i
+
+# target to preprocess a source file
+Vulkan/camera.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.i
+.PHONY : Vulkan/camera.cpp.i
+
+Vulkan/camera.s: Vulkan/camera.cpp.s
+.PHONY : Vulkan/camera.s
+
+# target to generate assembly for a file
+Vulkan/camera.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/camera.cpp.s
+.PHONY : Vulkan/camera.cpp.s
+
+Vulkan/meshes.o: Vulkan/meshes.cpp.o
+.PHONY : Vulkan/meshes.o
+
+# target to build an object file
+Vulkan/meshes.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.o
+.PHONY : Vulkan/meshes.cpp.o
+
+Vulkan/meshes.i: Vulkan/meshes.cpp.i
+.PHONY : Vulkan/meshes.i
+
+# target to preprocess a source file
+Vulkan/meshes.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.i
+.PHONY : Vulkan/meshes.cpp.i
+
+Vulkan/meshes.s: Vulkan/meshes.cpp.s
+.PHONY : Vulkan/meshes.s
+
+# target to generate assembly for a file
+Vulkan/meshes.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/meshes.cpp.s
+.PHONY : Vulkan/meshes.cpp.s
+
+Vulkan/vk_descriptors.o: Vulkan/vk_descriptors.cpp.o
+.PHONY : Vulkan/vk_descriptors.o
+
+# target to build an object file
+Vulkan/vk_descriptors.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.o
+.PHONY : Vulkan/vk_descriptors.cpp.o
+
+Vulkan/vk_descriptors.i: Vulkan/vk_descriptors.cpp.i
+.PHONY : Vulkan/vk_descriptors.i
+
+# target to preprocess a source file
+Vulkan/vk_descriptors.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.i
+.PHONY : Vulkan/vk_descriptors.cpp.i
+
+Vulkan/vk_descriptors.s: Vulkan/vk_descriptors.cpp.s
+.PHONY : Vulkan/vk_descriptors.s
+
+# target to generate assembly for a file
+Vulkan/vk_descriptors.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_descriptors.cpp.s
+.PHONY : Vulkan/vk_descriptors.cpp.s
+
+Vulkan/vk_engine.o: Vulkan/vk_engine.cpp.o
+.PHONY : Vulkan/vk_engine.o
+
+# target to build an object file
+Vulkan/vk_engine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.o
+.PHONY : Vulkan/vk_engine.cpp.o
+
+Vulkan/vk_engine.i: Vulkan/vk_engine.cpp.i
+.PHONY : Vulkan/vk_engine.i
+
+# target to preprocess a source file
+Vulkan/vk_engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.i
+.PHONY : Vulkan/vk_engine.cpp.i
+
+Vulkan/vk_engine.s: Vulkan/vk_engine.cpp.s
+.PHONY : Vulkan/vk_engine.s
+
+# target to generate assembly for a file
+Vulkan/vk_engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_engine.cpp.s
+.PHONY : Vulkan/vk_engine.cpp.s
+
+Vulkan/vk_images.o: Vulkan/vk_images.cpp.o
+.PHONY : Vulkan/vk_images.o
+
+# target to build an object file
+Vulkan/vk_images.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.o
+.PHONY : Vulkan/vk_images.cpp.o
+
+Vulkan/vk_images.i: Vulkan/vk_images.cpp.i
+.PHONY : Vulkan/vk_images.i
+
+# target to preprocess a source file
+Vulkan/vk_images.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.i
+.PHONY : Vulkan/vk_images.cpp.i
+
+Vulkan/vk_images.s: Vulkan/vk_images.cpp.s
+.PHONY : Vulkan/vk_images.s
+
+# target to generate assembly for a file
+Vulkan/vk_images.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_images.cpp.s
+.PHONY : Vulkan/vk_images.cpp.s
+
+Vulkan/vk_initializers.o: Vulkan/vk_initializers.cpp.o
+.PHONY : Vulkan/vk_initializers.o
+
+# target to build an object file
+Vulkan/vk_initializers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.o
+.PHONY : Vulkan/vk_initializers.cpp.o
+
+Vulkan/vk_initializers.i: Vulkan/vk_initializers.cpp.i
+.PHONY : Vulkan/vk_initializers.i
+
+# target to preprocess a source file
+Vulkan/vk_initializers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.i
+.PHONY : Vulkan/vk_initializers.cpp.i
+
+Vulkan/vk_initializers.s: Vulkan/vk_initializers.cpp.s
+.PHONY : Vulkan/vk_initializers.s
+
+# target to generate assembly for a file
+Vulkan/vk_initializers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_initializers.cpp.s
+.PHONY : Vulkan/vk_initializers.cpp.s
+
+Vulkan/vk_main.o: Vulkan/vk_main.cpp.o
+.PHONY : Vulkan/vk_main.o
+
+# target to build an object file
+Vulkan/vk_main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.o
+.PHONY : Vulkan/vk_main.cpp.o
+
+Vulkan/vk_main.i: Vulkan/vk_main.cpp.i
+.PHONY : Vulkan/vk_main.i
+
+# target to preprocess a source file
+Vulkan/vk_main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.i
+.PHONY : Vulkan/vk_main.cpp.i
+
+Vulkan/vk_main.s: Vulkan/vk_main.cpp.s
+.PHONY : Vulkan/vk_main.s
+
+# target to generate assembly for a file
+Vulkan/vk_main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_main.cpp.s
+.PHONY : Vulkan/vk_main.cpp.s
+
+Vulkan/vk_pipelines.o: Vulkan/vk_pipelines.cpp.o
+.PHONY : Vulkan/vk_pipelines.o
+
+# target to build an object file
+Vulkan/vk_pipelines.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.o
+.PHONY : Vulkan/vk_pipelines.cpp.o
+
+Vulkan/vk_pipelines.i: Vulkan/vk_pipelines.cpp.i
+.PHONY : Vulkan/vk_pipelines.i
+
+# target to preprocess a source file
+Vulkan/vk_pipelines.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.i
+.PHONY : Vulkan/vk_pipelines.cpp.i
+
+Vulkan/vk_pipelines.s: Vulkan/vk_pipelines.cpp.s
+.PHONY : Vulkan/vk_pipelines.s
+
+# target to generate assembly for a file
+Vulkan/vk_pipelines.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/Vulkan/vk_pipelines.cpp.s
+.PHONY : Vulkan/vk_pipelines.cpp.s
 
 src/AABCubeBounds.o: src/AABCubeBounds.cpp.o
 .PHONY : src/AABCubeBounds.o
@@ -249,6 +512,30 @@ src/Camera.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Camera.cpp.s
 .PHONY : src/Camera.cpp.s
 
+src/Config.o: src/Config.cpp.o
+.PHONY : src/Config.o
+
+# target to build an object file
+src/Config.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.o
+.PHONY : src/Config.cpp.o
+
+src/Config.i: src/Config.cpp.i
+.PHONY : src/Config.i
+
+# target to preprocess a source file
+src/Config.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.i
+.PHONY : src/Config.cpp.i
+
+src/Config.s: src/Config.cpp.s
+.PHONY : src/Config.s
+
+# target to generate assembly for a file
+src/Config.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Config.cpp.s
+.PHONY : src/Config.cpp.s
+
 src/Ray.o: src/Ray.cpp.o
 .PHONY : src/Ray.o
 
@@ -296,6 +583,30 @@ src/Render.s: src/Render.cpp.s
 src/Render.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/Render.cpp.s
 .PHONY : src/Render.cpp.s
+
+src/SDLWindow.o: src/SDLWindow.cpp.o
+.PHONY : src/SDLWindow.o
+
+# target to build an object file
+src/SDLWindow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.o
+.PHONY : src/SDLWindow.cpp.o
+
+src/SDLWindow.i: src/SDLWindow.cpp.i
+.PHONY : src/SDLWindow.i
+
+# target to preprocess a source file
+src/SDLWindow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.i
+.PHONY : src/SDLWindow.cpp.i
+
+src/SDLWindow.s: src/SDLWindow.cpp.s
+.PHONY : src/SDLWindow.s
+
+# target to generate assembly for a file
+src/SDLWindow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/PathTracer_CPP.dir/build.make CMakeFiles/PathTracer_CPP.dir/src/SDLWindow.cpp.s
+.PHONY : src/SDLWindow.cpp.s
 
 src/SceneObject.o: src/SceneObject.cpp.o
 .PHONY : src/SceneObject.o
@@ -400,8 +711,38 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... PathTracer_CPP"
+	@echo "... fastgltf"
+	@echo "... fmt"
+	@echo "... Vulkan/camera.o"
+	@echo "... Vulkan/camera.i"
+	@echo "... Vulkan/camera.s"
+	@echo "... Vulkan/meshes.o"
+	@echo "... Vulkan/meshes.i"
+	@echo "... Vulkan/meshes.s"
+	@echo "... Vulkan/vk_descriptors.o"
+	@echo "... Vulkan/vk_descriptors.i"
+	@echo "... Vulkan/vk_descriptors.s"
+	@echo "... Vulkan/vk_engine.o"
+	@echo "... Vulkan/vk_engine.i"
+	@echo "... Vulkan/vk_engine.s"
+	@echo "... Vulkan/vk_images.o"
+	@echo "... Vulkan/vk_images.i"
+	@echo "... Vulkan/vk_images.s"
+	@echo "... Vulkan/vk_initializers.o"
+	@echo "... Vulkan/vk_initializers.i"
+	@echo "... Vulkan/vk_initializers.s"
+	@echo "... Vulkan/vk_main.o"
+	@echo "... Vulkan/vk_main.i"
+	@echo "... Vulkan/vk_main.s"
+	@echo "... Vulkan/vk_pipelines.o"
+	@echo "... Vulkan/vk_pipelines.i"
+	@echo "... Vulkan/vk_pipelines.s"
 	@echo "... src/AABCubeBounds.o"
 	@echo "... src/AABCubeBounds.i"
 	@echo "... src/AABCubeBounds.s"
@@ -417,12 +758,18 @@ help:
 	@echo "... src/Camera.o"
 	@echo "... src/Camera.i"
 	@echo "... src/Camera.s"
+	@echo "... src/Config.o"
+	@echo "... src/Config.i"
+	@echo "... src/Config.s"
 	@echo "... src/Ray.o"
 	@echo "... src/Ray.i"
 	@echo "... src/Ray.s"
 	@echo "... src/Render.o"
 	@echo "... src/Render.i"
 	@echo "... src/Render.s"
+	@echo "... src/SDLWindow.o"
+	@echo "... src/SDLWindow.i"
+	@echo "... src/SDLWindow.s"
 	@echo "... src/SceneObject.o"
 	@echo "... src/SceneObject.i"
 	@echo "... src/SceneObject.s"

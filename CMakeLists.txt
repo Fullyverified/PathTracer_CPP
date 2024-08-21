@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -std=c++23")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -std=c++23 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -march=native")
 message(STATUS "Using CXX Flags: ${CMAKE_CXX_FLAGS}")
 
 if (WIN32)  # Windows environment (MinGW)
