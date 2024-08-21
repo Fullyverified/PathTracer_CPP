@@ -14,3 +14,8 @@ I have now finished implementing the core render logic. The new method also supp
 
 2.3x faster than Java for singlethread, and another 8.5x speed up with multithreading. For 8 physical threads that seems reasonable.  
 Cinebench has a 9.7x speed up with multithreading so I think thats not bad.
+Edit - I've noticed a sclaing issue, at high resolutions the Java version is still faster in singlethread. Not sure what thats about.  
+
+![Sphere and Ball v2 100 rays](https://github.com/user-attachments/assets/18227dc1-4655-4fcf-8c9d-c34532eab03b)
+  
+![V2 100 Rays](https://github.com/user-attachments/assets/310d1dda-be13-4953-8708-64652f906310)
