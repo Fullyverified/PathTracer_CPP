@@ -15,17 +15,18 @@
 #include "BVHNode.h"
 //#include "SDLWindow.h"
 
-Render::Render(Camera &cam) : primaryRayStep(config.primaryRayStep), secondaryRayStep(config.secondaryRayStep),
-                              cam(cam), resX(cam.getResX()), resY(cam.getResY()), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
-                              numThreads(std::thread::hardware_concurrency()) {
-    primaryRay.resize(resX * resY, nullptr);
-    secondaryRay.resize(resX * resY, nullptr);
-    lumR.resize(resX * resY, 0.0f);
-    lumG.resize(resX * resY, 0.0f);
-    lumB.resize(resX * resY, 0.0f);
-    absR.resize(resX * resY, 0.0f);
-    absG.resize(resX * resY, 0.0f);
-    absB.resize(resX * resY, 0.0f);
+Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.ScaleFactor),
+                              internalResY(resY / config.ScaleFactor), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
+                              numThreads(std::thread::hardware_concurrency()), sceneUpdated(false), maxA1(0), maxA2(0), maxA3(0), maxA4(0) {
+    int res = internalResX * internalResY;
+    primaryRay.resize(res, nullptr);
+    secondaryRay.resize(res, nullptr);
+    lumR.resize(res, 0.0f);
+    lumG.resize(res, 0.0f);
+    lumB.resize(res, 0.0f);
+    absR.resize(res, 0.0f);
+    absG.resize(res, 0.0f);
+    absB.resize(res, 0.0f);
 }
 
 void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &cam, SDLWindow &window) {
@@ -41,27 +42,39 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
+    // render loop code
     while (running) {
-        // render loop code
         numThreads = std::thread::hardware_concurrency();
         if (config.threads > 0) {
             numThreads = config.threads;
         }
-
-        // construct BVH
         int segments = std::round(std::sqrt(numThreads));
+
+
         if (iterations == 0) {
-            std::cout << "Reconstructing BVH: " << std::endl;
-            constructBVHST(sceneobjectsList);
-            BVHNode *BVHrootNode = BVHNodes.at(0);
+            // reset colour buffer
+            for (int i = 0; i < internalResX * internalResY; i++) {
+                lumR[i] = 0.0f;
+                lumG[i] = 0.0f;
+                lumB[i] = 0.0f;
+                absR[i] = 0.0f;
+                absG[i] = 0.0f;
+                absB[i] = 0.0f;
+            }
+
+            if (sceneUpdated) {
+                std::cout << "Reconstructing BVH: " << std::endl;
+                constructBVHST(sceneobjectsList);
+                BVHNode *BVHrootNode = BVHNodes.at(0);
+            }
 
             // primary rays
             auto startTimePR = std::chrono::high_resolution_clock::now();
 
             for (int j = 0; j < segments; j++) {
                 for (int i = 0; i < segments; i++) {
-                    boundsX = threadSegments(cam.getResX(), segments, boundsX, i);
-                    boundsY = threadSegments(cam.getResY(), segments, boundsY, j);
+                    boundsX = threadSegments(internalResX, segments, boundsX, i);
+                    boundsY = threadSegments(internalResY, segments, boundsY, j);
                     threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this,
                                                     std::ref(cam), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
                                                     std::ref(*BVHrootNode), std::ref(mutex)));
@@ -79,17 +92,18 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
         //---------------------
 
         // secondary rays
-        std::cout << "Starting Secondary Rays" << std::endl;
+        //std::cout << "Starting Secondary Rays" << std::endl;
         auto startTimeSR = std::chrono::high_resolution_clock::now();
-
+        std::cout << "Starting Secondary Rays: " << std::endl;
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
-                boundsX = threadSegments(cam.getResX(), segments, boundsX, i);
-                boundsY = threadSegments(cam.getResY(), segments, boundsY, j);
+                boundsX = threadSegments(internalResX, segments, boundsX, i);
+                boundsY = threadSegments(internalResY, segments, boundsY, j);
+                int its = iterations;
                 threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
                                                 boundsX.first, boundsX.second, boundsY.first,
                                                 boundsY.second,
-                                                std::ref(*BVHrootNode), std::ref(mutex)));
+                                                std::ref(*BVHrootNode), its, std::ref(mutex)));
             }
         }
         for (std::future<void> &thread: threads) {
@@ -101,32 +115,15 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
         //-----------------------
 
         toneMap();
-        window.presentScreen(reinterpret_cast<uint32_t *>(pixels), resX);
-
-        bool sceneUpdated = false;
-        if (sceneUpdated) {
-            // reset colour buffer
-            for (int i = 0; i < resY * resX; i++) {
-                lumR[i] = 0.0f;
-                lumG[i] = 0.0f;
-                lumB[i] = 0.0f;
-                absR[i] = 0.0f;
-                absG[i] = 0.0f;
-                absB[i] = 0.0f;
-            }
-            iterations = 0;
-        }
-
-        // Optional: Limit frame rate or add delay if necessary
-        //SDL_Delay(1);
+        window.presentScreen(reinterpret_cast<uint32_t *>(RGBBuffer), resX);
     }
 }
 
 void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
     // Create Window
     SDLWindow window;
-    int width = (int) cam.getResX();
-    int height = (int) cam.getResY();
+    int width = resX;
+    int height = resY;
     window.createWindow(width, height);
     window.createRenderer();
     window.initializeTexture(width, height);
@@ -142,19 +139,28 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
                 running = false;
             }
             if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_w) {
-                    std::cout << "W key pressed" << std::endl;
+                if (event.key.keysym.sym == SDLK_UP) {
+                    config.increaeISO();
+                } else if (event.key.keysym.sym == SDLK_DOWN) {
+                    config.decreaeISO();
+                } else if (event.key.keysym.sym == SDLK_w) {
+                    iterations = 0;
+                    cam.moveForward(1.0f);
+                } else if (event.key.keysym.sym == SDLK_s) {
+                    iterations = 0;
+                    cam.moveBackward(1.0f);
+                } else if (event.key.keysym.sym == SDLK_a) {
+                    iterations = 0;
+                    cam.moveLeft(1.0f);
+                } else if (event.key.keysym.sym == SDLK_d) {
+                    iterations = 0;
+                    cam.moveRight(1.0f);
                 }
-                else if (event.key.keysym.sym == SDLK_s) {
-                    std::cout << "S key pressed" << std::endl;
-                }
-
             }
-
         }
 
         // Optional: Limit frame rate or add delay if necessary
-        SDL_Delay(16); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
+        SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
     }
 
     renderThread.join();
@@ -166,25 +172,29 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 
 
 void Render::toneMap() {
-    pixels = new uint8_t[resX * resY * 3];
-
     float maxR = 0;
     float maxG = 0;
     float maxB = 0;
-    for (int i = 0; i < resX * resY; i++) {
+    for (int i = 0; i < internalResX * internalResY; i++) {
         // determine brightest amplitude in scene
         maxR = lumR[i] > maxR ? lumR[i] : maxR;
         maxG = lumG[i] > maxG ? lumG[i] : maxG;
         maxB = lumB[i] > maxB ? lumB[i] : maxB;
     }
     float maxA = std::max(maxR, std::max(maxG, maxB));
-    float brightnessFactor = 255 / (maxA * config.ISO);
 
-    for (int x = 0; x < resX; x++) {
-        for (int y = 0; y < resY; y++) {
-            int red = lumR[y * resX + x] * brightnessFactor;
-            int green = lumG[y * resX + x] * brightnessFactor;
-            int blue = lumB[y * resX + x] * brightnessFactor;
+    maxA4 = maxA3;
+    maxA3 = maxA2;
+    maxA2 = maxA1;
+    maxA1 = maxA;
+    float average = (maxA1 + maxA2 + maxA3 + maxA4) / 4;
+    float brightnessFactor = 255 / (average * config.ISO);
+
+    for (int x = 0; x < internalResX; x++) {
+        for (int y = 0; y < internalResY; y++) {
+            int red = lumR[y * internalResX + x] * brightnessFactor;
+            int green = lumG[y * internalResX + x] * brightnessFactor;
+            int blue = lumB[y * internalResX + x] * brightnessFactor;
 
             red *= brightnessFactor * config.ISO;
             green *= brightnessFactor * config.ISO;
@@ -193,11 +203,18 @@ void Render::toneMap() {
             red = std::min(255, red);
             green = std::min(255, green);
             blue = std::min(255, blue);
-            int offset = (y * resX + x) * 3;
 
-            pixels[offset] = red;
-            pixels[offset + 1] = green;
-            pixels[offset + 2] = blue;
+            for (int i = 0; i < config.ScaleFactor; i++) {
+                for (int j = 0; j < config.ScaleFactor; j++) {
+                    int outX = x * config.ScaleFactor + i;
+                    int outY = y * config.ScaleFactor + j;
+                    int offset = (outY * resX + outX) * 3;
+
+                    RGBBuffer[offset] = red;
+                    RGBBuffer[offset + 1] = green;
+                    RGBBuffer[offset + 2] = blue;
+                }
+            }
         }
     }
 }
@@ -206,12 +223,12 @@ void Render::computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, in
                                std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
-            Ray *ray = primaryRay[resX * y + x];
+            Ray *ray = primaryRay[internalResX * y + x];
             ray->getOrigin().set(cam.getPos());
             // calculate position of pixel on image plane
-            Vector3 pixelPosPlane((((x + 0.5f) / cam.getResX()) * 2) - 1, 1 - (((y + 0.5f) / cam.getResX()) * 2), 0);
+            Vector3 pixelPosPlane((((x + 0.5f) / internalResX) * 2) - 1, 1 - (((y + 0.5f) / internalResY) * 2), 0);
             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
-            // point ray to pixel position (ray starts from camera origin)
+            // point ray according to pixel position (ray starts from camera origin)
             ray->getDir().set(
                 cam.getDir().getX() + cam.getRight().getX() * pixelPosScene.getX() + cam.getUp().getX() * pixelPosScene.getY(),
                 cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
@@ -222,26 +239,18 @@ void Render::computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, in
             if (leafNode != nullptr) {
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
-                std::vector<float> objectDistance = leafNode->getIntersectionDistance(*ray);
+                std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
                 float distanceClose = objectDistance[0];
-                float distanceFar = objectDistance[1];
-                float distance = distanceClose;
-                ray->march(distance - 0.05f); // march the ray to the objects bounding volume
-                while (distance <= distanceFar && !ray->getHit()) {
-                    ray->march(distance);
-                    if (BVHSceneObject->intersectionCheck(*ray)) {
-                        ray->getHitPoint().set(ray->getPos());
-                        ray->setHit(true);
-                        ray->setHitObject(BVHSceneObject);
-                    }
-                    distance += config.primaryRayStep;
-                }
+                ray->march(distanceClose); // march the ray to the object
+                ray->getHitPoint().set(ray->getPos());
+                ray->setHit(true);
+                ray->setHitObject(BVHSceneObject);
             }
         }
     }
 }
 
-void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const {
     std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
@@ -250,7 +259,7 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
     for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
         for (int y = ystart; y <= yend; y++) {
             for (int x = xstart; x <= xend; x++) {
-                Ray *primRay = primaryRay[resX * y + x];
+                Ray *primRay = primaryRay[internalResX * y + x];
                 if (primRay->getHit()) {
                     // store primary ray depth information
                     for (int i = 0; i < config.bounceDepth + 1; i++) {
@@ -278,9 +287,9 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                     depthBlue[0][2] = col[2];
                     depthBlue[0][3] = 1;
                     // initialize secondary ray
-                    Ray *nthRay = secondaryRay[resX * y + x];
+                    Ray *nthRay = secondaryRay[internalResX * y + x];
                     nthRay->initialize(*primRay);
-                    for (int currentBounce = 1; currentBounce <= config.bounceDepth && nthRay->getHit(); currentBounce++) {
+                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {
                         // BOUNCES PER RAY
                         float randomSample = dist(rng); // monte carlo sampling
                         if (randomSample >= nthRay->getHitObject()->getTransp()) {
@@ -289,41 +298,33 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                             sampleRefractionDirection(*nthRay, *nthRay->getHitObject(), false);
                         }
                         BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
+                        //nthRay->setHit(false);
                         if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
-                            std::vector<float> objectDistance = leafNode->getIntersectionDistance(*nthRay);
+                            std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*nthRay);
                             float distanceClose = objectDistance[0];
-                            float distanceFar = objectDistance[1];
-                            float distance = distanceClose;
-                            nthRay->setHit(false);
-                            while (distance <= distanceFar && !nthRay->getHit()) {
-                                nthRay->march(distance - 0.05f);
-                                if (BVHSceneObject->intersectionCheck(*nthRay)) {
-                                    //
-                                    nthRay->getHitPoint().set(nthRay->getPos());
-                                    nthRay->setHit(true);
-                                    nthRay->setHitObject(BVHSceneObject);
-                                    nthRay->getOrigin().set(nthRay->getPos());
-                                    // store hit data
-                                    BVHSceneObject->getNormal(*nthRay); // update normal vector
-                                    lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
-                                    lum = BVHSceneObject->getLum();
-                                    col = BVHSceneObject->getCol();
-                                    depthRed[currentBounce][0] = lum[0];
-                                    depthRed[currentBounce][1] = lambertCosineLaw;
-                                    depthRed[currentBounce][2] = col[0];
-                                    depthRed[currentBounce][3] = 1;
-                                    depthGreen[currentBounce][0] = lum[1];
-                                    depthGreen[currentBounce][1] = lambertCosineLaw;
-                                    depthGreen[currentBounce][2] = col[1];
-                                    depthGreen[currentBounce][3] = 1;
-                                    depthBlue[currentBounce][0] = lum[2];
-                                    depthBlue[currentBounce][1] = lambertCosineLaw;
-                                    depthBlue[currentBounce][2] = col[2];
-                                    depthBlue[currentBounce][3] = 1;
-                                }
-                                distance += config.secondaryRayStep;
-                            }
+                            nthRay->march(distanceClose);
+                            nthRay->getHitPoint().set(nthRay->getPos());
+                            //nthRay->setHit(true);
+                            nthRay->setHitObject(BVHSceneObject);
+                            nthRay->getOrigin().set(nthRay->getPos());
+                            // store hit data
+                            BVHSceneObject->getNormal(*nthRay); // update normal vector
+                            lambertCosineLaw = std::abs(nthRay->getNormal().dot(nthRay->getDir()));
+                            lum = BVHSceneObject->getLum();
+                            col = BVHSceneObject->getCol();
+                            depthRed[currentBounce][0] = lum[0];
+                            depthRed[currentBounce][1] = lambertCosineLaw;
+                            depthRed[currentBounce][2] = col[0];
+                            depthRed[currentBounce][3] = 1;
+                            depthGreen[currentBounce][0] = lum[1];
+                            depthGreen[currentBounce][1] = lambertCosineLaw;
+                            depthGreen[currentBounce][2] = col[1];
+                            depthGreen[currentBounce][3] = 1;
+                            depthBlue[currentBounce][0] = lum[2];
+                            depthBlue[currentBounce][1] = lambertCosineLaw;
+                            depthBlue[currentBounce][2] = col[2];
+                            depthBlue[currentBounce][3] = 1;
                         }
                     }
                     // sum up ray depth information
@@ -341,13 +342,12 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                             blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
                         }
                     }
-                    //std::cout<<"redAmplitude: "<<redAmplitude<<std::endl;
-                    absR[y * resX + x] += redAmplitude;
-                    absG[y * resX + x] += greenAmplitude;
-                    absB[y * resX + x] += blueAmplitude;
-                    lumR[y * resX + x] = absR[y * resX + x] / (static_cast<float>(currentRay) * iterations);
-                    lumG[y * resX + x] = absG[y * resX + x] / (static_cast<float>(currentRay) * iterations);
-                    lumB[y * resX + x] = absB[y * resX + x] / (static_cast<float>(currentRay) * iterations);
+                    absR[y * internalResX + x] += redAmplitude;
+                    absG[y * internalResX + x] += greenAmplitude;
+                    absB[y * internalResX + x] += blueAmplitude;
+                    lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                    lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                    lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                 }
             }
         }
@@ -404,9 +404,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
             ray.getDir().getY() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getY(),
             ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
         ray.getDir().normalise();
-        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.1f);
-        //std::cout<<"Transprent Bounce"<<std::endl;
-        //ray.getDir().print();
+        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.01f);
     }
 }
 
@@ -470,9 +468,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
     if (ray.getDir().dot(ray.getNormal()) < 0) {
         ray.getDir().flip();
     }
-    ray.updateOrigin(0.1); // march the ray a tiny amount to move it off the object
-    //std::cout<<"Reflection Bounce"<<std::endl;
-    //ray.getDir().print();
+    ray.updateOrigin(0.01f); // march the ray a tiny amount to move it off the object
 }
 
 void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
@@ -663,12 +659,11 @@ void Render::BVHProfiling() {
 }
 
 void Render::intialiseObjects() {
-    for (int i = 0; i < resX; ++i) {
-        for (int j = 0; j < resY; ++j) {
-            secondaryRay[resX * j + i] = new Ray();
-            primaryRay[resX * j + i] = new Ray();
-        }
+    for (int i = 0; i < internalResX * internalResY; i++) {
+        secondaryRay[i] = new Ray();
+        primaryRay[i] = new Ray();
     }
+    RGBBuffer = new uint8_t[resX * resY * 3];
 }
 
 void Render::deleteObjects() {
@@ -694,8 +689,8 @@ std::pair<int, int> Render::threadSegments(float resInput, int &numThreads, std:
 }
 
 void Render::printScreenASCII() {
-    for (int y = 0; y < cam.getResX(); y++) {
-        for (int x = 0; x < cam.getResX(); x++) {
+    for (int y = 0; y < internalResX; y++) {
+        for (int x = 0; x < internalResY; x++) {
             float lum = lumR[y * resX + x] + lumG[y * resX + x] + lumB[y * resX + x];
             if (lum > 40) {
                 std::cout << "@@";

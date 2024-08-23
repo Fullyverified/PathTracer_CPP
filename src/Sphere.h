@@ -8,6 +8,7 @@ class Sphere : public SceneObject {
 public:
     Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
     [[nodiscard]] bool objectCulling(Ray &ray) const override;
+    std::vector<float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] bool intersectionCheck(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
     void getNormal(Ray &ray) const override;
@@ -17,8 +18,8 @@ public:
     [[nodiscard]] float getRough() const override;
     [[nodiscard]] float getRefrac() const override;
     [[nodiscard]] float getTransp() const override;
-    std::vector<float> getIntersectionDistance(Ray &ray) const override;
     void printType() const override;
+    [[nodiscard]] int getObjID() const override;
 
     Sphere(const Sphere& other) = delete; // disable copy constructor
     Sphere& operator=(const Sphere& other) = delete; // disable copy assignment

@@ -18,8 +18,6 @@ public:
 
     float toRadians(float &degrees) const;
 
-    [[nodiscard]] float getResX() const;
-    [[nodiscard]] float getResY() const;
     [[nodiscard]] Vector3 getPos() const;
     [[nodiscard]] Vector3 getDir() const;
     [[nodiscard]] Vector3 getRight() const;
@@ -27,9 +25,15 @@ public:
     [[nodiscard]] float getPlaneWidth() const;
     [[nodiscard]] float getPlaneHeight() const;
 
+    void moveForward(float elapsedTime);
+    void moveBackward(float elapsedTime);
+    void moveLeft(float elapsedTime);
+    void moveRight(float elapsedTime);
+
+
 
 private:
-    float fOV, planeWidth, planeHeight, aspectX, aspectY, resX, resY, ISO;
+    float fOV, planeWidth, planeHeight, aspectX, aspectY, ISO;
     Vector3 pos, dir, up, right;
 };
 

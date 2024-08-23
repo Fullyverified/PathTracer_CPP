@@ -9,6 +9,7 @@ AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, floa
     : pos(pos), length(length), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp),
       minBounds(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2),
       maxBounds(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2) {
+    objID = ++objectCounter;
 }
 
 bool AABCubeCenter::objectCulling(Ray &ray) const {
@@ -85,27 +86,37 @@ bool AABCubeCenter::intersectionCheck(Ray &ray) const {
 }
 
 void AABCubeCenter::getNormal(Ray &ray) const {
-    const float epsilon = 0.005;
     const float px = ray.getPos().getX();
     const float py = ray.getPos().getY();
     const float pz = ray.getPos().getZ();
 
     // x
-    if (std::abs(px - minBounds.getX()) < std::numeric_limits<float>::epsilon()) {
-        ray.getNormal().set(-1, 0, 0);
-    } else if (std::abs(px - maxBounds.getX()) < std::numeric_limits<float>::epsilon()) {
-        ray.getNormal().set(1, 0, 0);
-    }
+    float xmin = std::abs(px - minBounds.getX());
+    float xmax = std::abs(px - maxBounds.getX());
+
     // y
-    else if (std::abs(py - minBounds.getY()) < std::numeric_limits<float>::epsilon()) {
-        ray.getNormal().set(0, -1, 0);
-    } else if (std::abs(py - maxBounds.getY()) < std::numeric_limits<float>::epsilon()) {
-        ray.getNormal().set(0, 1, 0);
-    }
+    float ymin = std::abs(py - minBounds.getY());
+    float ymax = std::abs(py - maxBounds.getY());
+
     // z
-    else if (std::abs(pz - minBounds.getZ()) < std::numeric_limits<float>::epsilon()) {
+    float zmin = std::abs(pz - minBounds.getZ());
+    float zmax = std::abs(pz - maxBounds.getZ());
+
+    // find smallest value
+    float minDist = std::min(xmin, std::min(xmax, std::min(ymin, std::min(ymax, std::min(zmin, zmax)))));
+
+    // set normal according the cloest face of the rays position
+    if (minDist == xmin) {
+        ray.getNormal().set(-1, 0, 0);
+    } else if (minDist == xmax) {
+        ray.getNormal().set(1, 0, 0);
+    } else if (minDist == ymin) {
+        ray.getNormal().set(0, -1, 0);
+    } else if (minDist == ymax) {
+        ray.getNormal().set(0, 1, 0);
+    } else if (minDist == zmin) {
         ray.getNormal().set(0, 0, -1);
-    } else if (std::abs(pz - maxBounds.getZ()) < std::numeric_limits<float>::epsilon()) {
+    } else if (minDist == zmax) {
         ray.getNormal().set(0, 0, 1);
     }
 }
@@ -114,9 +125,9 @@ std::vector<float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
-    float invDirX = 1.0f / ray.getPos().getX();
-    float invDirY = 1.0f / ray.getPos().getY();
-    float invDirZ = 1.0f / ray.getPos().getZ();
+    float invDirX = 1.0f / ray.getDir().getX();
+    float invDirY = 1.0f / ray.getDir().getY();
+    float invDirZ = 1.0f / ray.getDir().getZ();
     float tmp;
 
     Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
@@ -174,29 +185,36 @@ std::vector<float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
             tMin.setZ(tmp);
         }
     }
-    const float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
-    const float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
-    if (tNear > tFar || tFar > 0) {
-        return {-1, -1};
+    float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
+    float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
+
+    //std::cout << "tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
+
+    // if tNear < 0, return tFar, else return tNear
+    if (tNear < 0 && tFar >= 0) {
+        return {0, tFar};
+    }
+    if (tNear < 0) {
+        return {tFar, tNear};
     }
     return {tNear, tFar};
 }
 
 std::pair<Vector3, Vector3> AABCubeCenter::getBounds() const {
     return std::make_pair(minBounds, maxBounds);
-    }
+}
 
 Vector3 AABCubeCenter::getPos() const {
     return pos;
 }
 
 std::vector<float> AABCubeCenter::getCol() const {
-    return std::vector<float> {R, G, B};
+    return std::vector<float>{R, G, B};
 }
 
 std::vector<float> AABCubeCenter::getLum() const {
-    return std::vector<float> {RL, GL, BL};
+    return std::vector<float>{RL, GL, BL};
 }
 
 float AABCubeCenter::getRough() const {
@@ -212,5 +230,9 @@ float AABCubeCenter::getTransp() const {
 }
 
 void AABCubeCenter::printType() const {
-    std::cout<<"Type: AABCubeCenter"<<std::endl;
+    std::cout << "Type: AABCubeCenter" << std::endl;
+}
+
+int AABCubeCenter::getObjID() const {
+    return objID;
 }

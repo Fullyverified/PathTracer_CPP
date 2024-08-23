@@ -32,7 +32,7 @@ public:
 
     // traversal logic
     void computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
-    void computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
+    void computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const;
 
     // bounce logic
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
@@ -56,18 +56,18 @@ private:
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
     mutable std::vector<Ray*> primaryRay, secondaryRay;
-    uint8_t* pixels;
+    uint8_t* RGBBuffer;
 
-    float primaryRayStep, secondaryRayStep;
-    int resX, resY, iterations, numThreads;
+    int resX, resY, internalResX, internalResY, iterations, numThreads;
     Camera &cam;
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
-    bool running;
+    bool running, sceneUpdated;
     static thread_local std::mt19937 rng;  // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
     float pi = 3.14159265358979323846f;
+    float maxA1, maxA2, maxA3, maxA4;
 };
 
 #endif //RENDER_H

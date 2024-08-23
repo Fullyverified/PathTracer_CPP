@@ -6,7 +6,7 @@
 
 Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
 pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp) {
-
+    objID = ++objectCounter;
 }
 
 bool Sphere::objectCulling(Ray &ray) const {
@@ -139,4 +139,8 @@ float Sphere::getTransp() const {
 
 void Sphere::printType() const {
     std::cout<<"Type: Sphere"<<std::endl;
+}
+
+int Sphere::getObjID() const {
+    return objID;
 }
