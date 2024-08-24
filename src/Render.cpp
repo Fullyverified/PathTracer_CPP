@@ -17,7 +17,7 @@
 
 Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.ScaleFactor),
                               internalResY(resY / config.ScaleFactor), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
-                              sceneUpdated(false), camMoved(true),
+                              sceneUpdated(false), camMoved(true), lockInput(false),
                               numThreads(std::thread::hardware_concurrency()) {
     int res = internalResX * internalResY;
     primaryRay.resize(res, nullptr);
@@ -139,51 +139,58 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             }
         }
         const Uint8 *inputState = SDL_GetKeyboardState(NULL);
-        if (inputState[SDL_SCANCODE_UP]) {
-            config.increaeISO();
-        }
-        if (inputState[SDL_SCANCODE_DOWN]) {
-            config.decreaeISO();
-        }
-        if (inputState[SDL_SCANCODE_KP_PLUS]) {
-            config.increaeFOV();
-            cam.reInitilize();
-            camMoved = true;
-        }
-        if (inputState[SDL_SCANCODE_KP_MINUS]) {
-            config.decreaeFOV();
-            cam.reInitilize();
-            camMoved = true;
-        }
-        if (inputState[SDL_SCANCODE_W]) {
-            camMoved = true;
-            cam.moveForward(0.1f);
-        }
-        if (inputState[SDL_SCANCODE_S]) {
-            camMoved = true;
-            cam.moveBackward(0.1f);
-        }
-        if (inputState[SDL_SCANCODE_A]) {
-            camMoved = true;
-            cam.moveLeft(0.1f);
-        }
-        if (inputState[SDL_SCANCODE_D]) {
-            camMoved = true;
-            cam.moveRight(0.1f);
-        }
-        if (inputState[SDL_SCANCODE_E]) {
-            camMoved = true;
-            cam.moveUp(0.1f);
-        }
-        if (inputState[SDL_SCANCODE_Q]) {
-            camMoved = true;
-            cam.moveDown(0.1f);
+
+        if (inputState[SDL_SCANCODE_DELETE]) {
+            lockInput = lockInput == false ? true : false;
         }
 
-        SDL_GetRelativeMouseState(&mouseX, &mouseY);
-        if (mouseX != 0 || mouseY != 0) {
-            cam.updateDirection(mouseX, mouseY);
-            camMoved = true;
+        if (!lockInput) {
+            if (inputState[SDL_SCANCODE_UP]) {
+                config.increaeISO();
+            }
+            if (inputState[SDL_SCANCODE_DOWN]) {
+                config.decreaeISO();
+            }
+            if (inputState[SDL_SCANCODE_KP_PLUS]) {
+                config.increaeFOV();
+                cam.reInitilize();
+                camMoved = true;
+            }
+            if (inputState[SDL_SCANCODE_KP_MINUS]) {
+                config.decreaeFOV();
+                cam.reInitilize();
+                camMoved = true;
+            }
+            if (inputState[SDL_SCANCODE_W]) {
+                camMoved = true;
+                cam.moveForward(0.1f);
+            }
+            if (inputState[SDL_SCANCODE_S]) {
+                camMoved = true;
+                cam.moveBackward(0.1f);
+            }
+            if (inputState[SDL_SCANCODE_A]) {
+                camMoved = true;
+                cam.moveLeft(0.1f);
+            }
+            if (inputState[SDL_SCANCODE_D]) {
+                camMoved = true;
+                cam.moveRight(0.1f);
+            }
+            if (inputState[SDL_SCANCODE_E]) {
+                camMoved = true;
+                cam.moveUp(0.1f);
+            }
+            if (inputState[SDL_SCANCODE_Q]) {
+                camMoved = true;
+                cam.moveDown(0.1f);
+            }
+
+            SDL_GetRelativeMouseState(&mouseX, &mouseY);
+            if (mouseX != 0 || mouseY != 0) {
+                cam.updateDirection(mouseX, mouseY);
+                camMoved = true;
+            }
         }
 
         // Optional: Limit frame rate or add delay if necessary

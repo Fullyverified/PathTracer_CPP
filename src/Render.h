@@ -63,7 +63,7 @@ private:
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
-    bool running, sceneUpdated, camMoved;
+    bool running, sceneUpdated, camMoved, lockInput;
     static thread_local std::mt19937 rng;  // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
     float pi = 3.14159265358979323846f;
