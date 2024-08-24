@@ -16,11 +16,11 @@ Extended Reinhard Tone Mapping
 Settings can be altered in the Config.h file. I will add a UI soon.
 
 # To Do  
-Temporal frame reconstruction using motion vectors
-SIMD Instructions to find more paralellism
-GPU Acceleration with Vulkan
-GUI to control options
-Meshes, image textures, rougness maps, etc
+Temporal frame reconstruction using motion vectors  
+SIMD Instructions to find more paralellism  
+GPU Acceleration with Vulkan  
+GUI to control options  
+Meshes, image textures, rougness maps, etc  
 
 # Improvments
 BVH Tree Construction supports both multithreaded and singlethreaded modes. Multithreaded tree construction is only faster for scenes with hundreds of objects, so ST is default.  
