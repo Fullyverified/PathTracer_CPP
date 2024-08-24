@@ -18,4 +18,4 @@ Edit - I've noticed a sclaing issue, at high resolutions the Java version is sti
 
 ![Sphere and Ball v2 100 rays](https://github.com/user-attachments/assets/18227dc1-4655-4fcf-8c9d-c34532eab03b)
   
-![V2 100 Rays](https://github.com/user-attachments/assets/310d1dda-be13-4953-8708-64652f906310)
+![Uploading Sphere and Cube 1200x1200 1000 Rays.png…]()
