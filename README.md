@@ -1,7 +1,7 @@
 Remaking my PathTracer in CPP, now with multithreading.  
 
-![Sphere and Ball v2 100 rays](https://github.com/user-attachments/assets/18227dc1-4655-4fcf-8c9d-c34532eab03b)
-  
+![Sphere and Ball 1200x1200 650 Rays](https://github.com/user-attachments/assets/cfc63d02-5af1-46f3-89fb-01018e7ac7d9)
+
 ![Sphere and Cube 1200x1200 1000 Rays](https://github.com/user-attachments/assets/8d32a8b7-7f5e-43c1-8ebc-9327847c217a)
 
 # Features  
