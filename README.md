@@ -10,7 +10,7 @@ BVH Acceleration
 Cosine Weighted Importance Sampling  
 Refraction (Transparency)  
 Controls - WASD and Mouse  
-  - inpute can be locked with Del key for longer renders
+  input can be locked with Del key for longer renders
 Extended Reinhard Tone Mapping
 
 Settings can be altered in the Config.h file. I will add a UI soon.
