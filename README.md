@@ -24,7 +24,7 @@ BVH creation is 220x faster and traversal is 34x faster :D
 
 2.3x faster than Java for singlethread, and another 8.5x speed up with multithreading. For 8 physical threads that seems reasonable.  
 Cinebench has a 9.7x speed up with multithreading so I think thats not bad.  
-Edit - I've noticed a sclaing issue, at high resolutions the Java version is still faster in singlethread. Not sure what thats about. 
+Edit - I've noticed a scaling issue, at high resolutions the Java version is still faster in singlethread. Not sure what thats about.
 
 # Building  
 Building requires the vulkan SDK to be installed on your system. The project does not currently use Vulkan but I plan to add GPU Acceleration. In the CMakeLists.txt file find this line:  
