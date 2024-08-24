@@ -17,7 +17,8 @@
 
 Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.ScaleFactor),
                               internalResY(resY / config.ScaleFactor), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
-                              numThreads(std::thread::hardware_concurrency()), sceneUpdated(false), maxA1(0), maxA2(0), maxA3(0), maxA4(0) {
+                              sceneUpdated(false), camMoved(true),
+                              numThreads(std::thread::hardware_concurrency()) {
     int res = internalResX * internalResY;
     primaryRay.resize(res, nullptr);
     secondaryRay.resize(res, nullptr);
@@ -51,7 +52,13 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
         int segments = std::round(std::sqrt(numThreads));
 
 
-        if (iterations == 0) {
+        if (camMoved) {
+            if (sceneUpdated) {
+                std::cout << "Reconstructing BVH: " << std::endl;
+                constructBVHST(sceneobjectsList);
+                BVHNode *BVHrootNode = BVHNodes.at(0);
+            }
+
             // reset colour buffer
             for (int i = 0; i < internalResX * internalResY; i++) {
                 lumR[i] = 0.0f;
@@ -62,21 +69,13 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
                 absB[i] = 0.0f;
             }
 
-            if (sceneUpdated) {
-                std::cout << "Reconstructing BVH: " << std::endl;
-                constructBVHST(sceneobjectsList);
-                BVHNode *BVHrootNode = BVHNodes.at(0);
-            }
-
             // primary rays
             auto startTimePR = std::chrono::high_resolution_clock::now();
-
             for (int j = 0; j < segments; j++) {
                 for (int i = 0; i < segments; i++) {
                     boundsX = threadSegments(internalResX, segments, boundsX, i);
                     boundsY = threadSegments(internalResY, segments, boundsY, j);
-                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this,
-                                                    std::ref(cam), boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, cam, boundsX.first, boundsX.second, boundsY.first, boundsY.second,
                                                     std::ref(*BVHrootNode), std::ref(mutex)));
                 }
             }
@@ -86,13 +85,13 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
             threads.clear();
             auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimePR);
             std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
+            iterations = 1;
+            camMoved = false;
+            sceneUpdated = false;
         }
-
-        iterations++;
         //---------------------
 
         // secondary rays
-        //std::cout << "Starting Secondary Rays" << std::endl;
         auto startTimeSR = std::chrono::high_resolution_clock::now();
         std::cout << "Starting Secondary Rays: " << std::endl;
         for (int j = 0; j < segments; j++) {
@@ -113,9 +112,9 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
         auto durationTimeSR = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeSR);
         std::cout << config.raysPerPixel * iterations << " Secondary Ray(s) Time: " << durationTimeSR.count() << "ms" << std::endl;
         //-----------------------
-
+        iterations++;
         toneMap();
-        window.presentScreen(reinterpret_cast<uint32_t *>(RGBBuffer), resX);
+        window.presentScreen(reinterpret_cast<uint8_t *>(RGBBuffer), resX);
     }
 }
 
@@ -138,25 +137,53 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             if (event.type == SDL_QUIT) {
                 running = false;
             }
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_UP) {
-                    config.increaeISO();
-                } else if (event.key.keysym.sym == SDLK_DOWN) {
-                    config.decreaeISO();
-                } else if (event.key.keysym.sym == SDLK_w) {
-                    iterations = 0;
-                    cam.moveForward(1.0f);
-                } else if (event.key.keysym.sym == SDLK_s) {
-                    iterations = 0;
-                    cam.moveBackward(1.0f);
-                } else if (event.key.keysym.sym == SDLK_a) {
-                    iterations = 0;
-                    cam.moveLeft(1.0f);
-                } else if (event.key.keysym.sym == SDLK_d) {
-                    iterations = 0;
-                    cam.moveRight(1.0f);
-                }
-            }
+        }
+        const Uint8 *inputState = SDL_GetKeyboardState(NULL);
+        if (inputState[SDL_SCANCODE_UP]) {
+            config.increaeISO();
+        }
+        if (inputState[SDL_SCANCODE_DOWN]) {
+            config.decreaeISO();
+        }
+        if (inputState[SDL_SCANCODE_KP_PLUS]) {
+            config.increaeFOV();
+            cam.reInitilize();
+            camMoved = true;
+        }
+        if (inputState[SDL_SCANCODE_KP_MINUS]) {
+            config.decreaeFOV();
+            cam.reInitilize();
+            camMoved = true;
+        }
+        if (inputState[SDL_SCANCODE_W]) {
+            camMoved = true;
+            cam.moveForward(0.1f);
+        }
+        if (inputState[SDL_SCANCODE_S]) {
+            camMoved = true;
+            cam.moveBackward(0.1f);
+        }
+        if (inputState[SDL_SCANCODE_A]) {
+            camMoved = true;
+            cam.moveLeft(0.1f);
+        }
+        if (inputState[SDL_SCANCODE_D]) {
+            camMoved = true;
+            cam.moveRight(0.1f);
+        }
+        if (inputState[SDL_SCANCODE_E]) {
+            camMoved = true;
+            cam.moveUp(0.1f);
+        }
+        if (inputState[SDL_SCANCODE_Q]) {
+            camMoved = true;
+            cam.moveDown(0.1f);
+        }
+
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+        if (mouseX != 0 || mouseY != 0) {
+            cam.updateDirection(mouseX, mouseY);
+            camMoved = true;
         }
 
         // Optional: Limit frame rate or add delay if necessary
@@ -181,29 +208,39 @@ void Render::toneMap() {
         maxG = lumG[i] > maxG ? lumG[i] : maxG;
         maxB = lumB[i] > maxB ? lumB[i] : maxB;
     }
-    float maxA = std::max(maxR, std::max(maxG, maxB));
-
-    maxA4 = maxA3;
-    maxA3 = maxA2;
-    maxA2 = maxA1;
-    maxA1 = maxA;
-    float average = (maxA1 + maxA2 + maxA3 + maxA4) / 4;
-    float brightnessFactor = 255 / (average * config.ISO);
+    float maxLuminance = 0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB;
 
     for (int x = 0; x < internalResX; x++) {
         for (int y = 0; y < internalResY; y++) {
-            int red = lumR[y * internalResX + x] * brightnessFactor;
-            int green = lumG[y * internalResX + x] * brightnessFactor;
-            int blue = lumB[y * internalResX + x] * brightnessFactor;
+            float red = lumR[y * internalResX + x];
+            float green = lumG[y * internalResX + x];
+            float blue = lumB[y * internalResX + x];
 
-            red *= brightnessFactor * config.ISO;
-            green *= brightnessFactor * config.ISO;
-            blue *= brightnessFactor * config.ISO;
+            float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
 
-            red = std::min(255, red);
-            green = std::min(255, green);
-            blue = std::min(255, blue);
+            // extended Reinhard Tone Mapping - returns value [0, 1]
+            float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
+            red *= mappedLuminance;
+            green *= mappedLuminance;
+            blue *= mappedLuminance;
+
+            // Apply gamma correction
+            float gamma = 2.2f;
+            float invGamma = 1.0f / gamma;
+            red = pow(red, invGamma);
+            green = pow(green, invGamma);
+            blue = pow(blue, invGamma);
+
+            red *= 255;
+            green *= 255;
+            blue *= 255;
+
+            red = std::min(red, 255.0f);
+            green = std::min(green, 255.0f);
+            blue = std::min(blue, 255.0f);
+
+            // upscale and sote in RGB buffer
             for (int i = 0; i < config.ScaleFactor; i++) {
                 for (int j = 0; j < config.ScaleFactor; j++) {
                     int outX = x * config.ScaleFactor + i;
@@ -219,7 +256,7 @@ void Render::toneMap() {
     }
 }
 
-void Render::computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
+void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
                                std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
@@ -236,6 +273,7 @@ void Render::computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, in
             ray->getDir().normalise();
             ray->march(0);
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
+            ray->setHit(false);
             if (leafNode != nullptr) {
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
@@ -348,6 +386,9 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                     lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                     lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                     lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                    if (its == 0) {
+                        std::cout << "its zero" << std::endl;
+                    }
                 }
             }
         }

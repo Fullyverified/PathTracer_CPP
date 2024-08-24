@@ -31,7 +31,7 @@ public:
     void BVHProfiling();
 
     // traversal logic
-    void computePrimaryRay(Camera &cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
+    void computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
     void computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const;
 
     // bounce logic
@@ -58,16 +58,15 @@ private:
     mutable std::vector<Ray*> primaryRay, secondaryRay;
     uint8_t* RGBBuffer;
 
-    int resX, resY, internalResX, internalResY, iterations, numThreads;
+    int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY;
     Camera &cam;
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
-    bool running, sceneUpdated;
+    bool running, sceneUpdated, camMoved;
     static thread_local std::mt19937 rng;  // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
     float pi = 3.14159265358979323846f;
-    float maxA1, maxA2, maxA3, maxA4;
 };
 
 #endif //RENDER_H

@@ -10,11 +10,12 @@ SDLWindow::SDLWindow() {
 }
 
 void SDLWindow::createWindow(int &W, int &H) {
-    window = SDL_CreateWindow("Path Tracer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, W, H, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Path Tracer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, W, H, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (window == nullptr) {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
     }
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void SDLWindow::createRenderer() {
@@ -36,7 +37,7 @@ void SDLWindow::initializeTexture(int &W, int &H) {
     }
 }
 
-void SDLWindow::presentScreen(uint32_t* pixels, int &W) {
+void SDLWindow::presentScreen(uint8_t* pixels, int &W) {
     SDL_UpdateTexture(textureBuffer, nullptr, pixels, W * 3);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, textureBuffer, nullptr, nullptr);

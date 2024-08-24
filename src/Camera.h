@@ -5,10 +5,7 @@
 
 class Camera {
 public:
-
-    Config config;
-
-    Camera(Config& config, Vector3 pos, Vector3 dir);
+    Camera(Vector3 pos, Vector3 dir);
 
     void upVector();
 
@@ -25,15 +22,19 @@ public:
     [[nodiscard]] float getPlaneWidth() const;
     [[nodiscard]] float getPlaneHeight() const;
 
+    void initilizePitchYaw();
+    void reInitilize();
+
     void moveForward(float elapsedTime);
     void moveBackward(float elapsedTime);
     void moveLeft(float elapsedTime);
     void moveRight(float elapsedTime);
-
-
+    void moveUp(float elapsedTime);
+    void moveDown(float elapsedTime);
+    void updateDirection(float mouseX, float mouseY);
 
 private:
-    float fOV, planeWidth, planeHeight, aspectX, aspectY, ISO;
+    float planeWidth, planeHeight, aspectX, aspectY, yaw, pitch;
     Vector3 pos, dir, up, right;
 };
 

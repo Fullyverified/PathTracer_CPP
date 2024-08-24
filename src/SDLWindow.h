@@ -15,7 +15,7 @@ public:
 
     void initializeTexture(int &W, int &H);
 
-    void presentScreen(uint32_t* pixels, int &W);
+    void presentScreen(uint8_t* pixels, int &W);
 
     void destroyWindow();
 
