@@ -3,7 +3,7 @@
 
 struct Config {
     int resX = 1200;
-    int ScaleFactor = 1; // 1 is default - integer scaling: 1, 2, 4, 8
+    int upScale = 8; // 1 is default - integer scaling: 1, 2, 4, 8
     int aspectX = 1;
     int aspectY = 1;
     float fOV = 54;
@@ -12,7 +12,7 @@ struct Config {
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
-    float ISO = 0.2; // up and down keys to modify
+    float ISO = 1; // up and down keys to modify
     float mouseSensitivity = 0.1f;
 
     void increaeISO() {
@@ -21,6 +21,10 @@ struct Config {
 
     void decreaeISO() {
         ISO = ISO + (ISO * 0.01f);
+    }
+
+    void resetISO() {
+        ISO = 1.0f;
     }
 
     void increaeFOV() {

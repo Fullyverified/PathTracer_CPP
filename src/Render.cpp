@@ -144,13 +144,20 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             lockInput = lockInput == false ? true : false;
         }
 
+        if (inputState[SDL_SCANCODE_UP]) {
+            config.increaeISO();
+        }
+        if (inputState[SDL_SCANCODE_DOWN]) {
+            config.decreaeISO();
+        }
+        if (inputState[SDL_SCANCODE_RIGHT]) {
+            config.resetISO();
+        }
+        if (inputState[SDL_SCANCODE_ESCAPE]) {
+            running = false;
+        }
+
         if (!lockInput) {
-            if (inputState[SDL_SCANCODE_UP]) {
-                config.increaeISO();
-            }
-            if (inputState[SDL_SCANCODE_DOWN]) {
-                config.decreaeISO();
-            }
             if (inputState[SDL_SCANCODE_KP_PLUS]) {
                 config.increaeFOV();
                 cam.reInitilize();
@@ -215,7 +222,7 @@ void Render::toneMap() {
         maxG = lumG[i] > maxG ? lumG[i] : maxG;
         maxB = lumB[i] > maxB ? lumB[i] : maxB;
     }
-    float maxLuminance = 0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB;
+    float maxLuminance = (0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB) * config.ISO;
 
     for (int x = 0; x < internalResX; x++) {
         for (int y = 0; y < internalResY; y++) {
@@ -248,10 +255,10 @@ void Render::toneMap() {
             blue = std::min(blue, 255.0f);
 
             // upscale and sote in RGB buffer
-            for (int i = 0; i < config.ScaleFactor; i++) {
-                for (int j = 0; j < config.ScaleFactor; j++) {
-                    int outX = x * config.ScaleFactor + i;
-                    int outY = y * config.ScaleFactor + j;
+            for (int i = 0; i < config.upScale; i++) {
+                for (int j = 0; j < config.upScale; j++) {
+                    int outX = x * config.upScale + i;
+                    int outY = y * config.upScale + j;
                     int offset = (outY * resX + outX) * 3;
 
                     RGBBuffer[offset] = red;
