@@ -15,8 +15,8 @@
 #include "BVHNode.h"
 //#include "SDLWindow.h"
 
-Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.ScaleFactor),
-                              internalResY(resY / config.ScaleFactor), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
+Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.upScale),
+                              internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
                               sceneUpdated(false), camMoved(true), lockInput(false),
                               numThreads(std::thread::hardware_concurrency()) {
     int res = internalResX * internalResY;
