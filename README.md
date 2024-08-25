@@ -1,15 +1,13 @@
 Remaking my PathTracer in CPP, now with multithreading.  
 
-![Sphere and Ball 1200x1200 3000 Rays](https://github.com/user-attachments/assets/9baaec98-af83-4689-a435-b15d295d222f)
-
-![Sphere and Cube 1200x1200 1000 Rays](https://github.com/user-attachments/assets/8d32a8b7-7f5e-43c1-8ebc-9327847c217a)
+![extended room 2200x 1230 1250 rays](https://github.com/user-attachments/assets/8e964ffb-353f-4e80-96f5-4a1bc75527e2)  
 
 # Features  
 Multithreading  
 BVH Acceleration  
 Cosine Weighted Importance Sampling  
 Refraction (Transparency)  
-Controls - WASD and Mouse  
+Controls - WASD and Mouse - UP and DOWN for exposure - numPad -, + for fOV  
   input can be locked with Del key for longer renders
 Extended Reinhard Tone Mapping
 
