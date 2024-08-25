@@ -286,8 +286,8 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             // Upscale and store in RGB buffer considering aspect ratio
             for (int i = 0; i < config.upScale; i++) {
                 for (int j = 0; j < config.upScale; j++) {
-                    int outX = static_cast<int>((x + i / static_cast<float>(config.upScale)) * aspectRatioX);
-                    int outY = static_cast<int>((y + j / static_cast<float>(config.upScale)) * aspectRatioY);
+                    int outX = static_cast<int>(x * config.upScale + i);
+                    int outY = static_cast<int>(y * config.upScale + j);
                     int offset = (outY * resX + outX) * 3;
 
                     RGBBuffer[offset] = red;
