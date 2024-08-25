@@ -1,17 +1,17 @@
 #include "Camera.h"
 #include <numbers>
 
-Camera::Camera(Vector3 pos, Vector3 dir) : aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), up(0,1,0),
-planeWidth(0), planeHeight(0), right(0,0,0) {
-    dir.normalise();
-    upVector();
-    up.normalise();
-    rightVector();
-    imagePlane();
+Camera::Camera(Vector3 pos, Vector3 dir) : aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), worldUp(0,1,0),
+planeWidth(0), planeHeight(0), right(0,0,0), up(0,0,0) {
+    reInitilize();
     initilizePitchYaw();
 }
 
 void Camera::upVector() {
+
+    up = dir.cross(right);
+    up.normalise();
+
     if ((dir.getY() == 1 || dir.getY() == -1) && dir.getX() == 0 && dir.getZ() == 0) {
         up.setX(1);
         up.setY(0);
@@ -20,10 +20,7 @@ void Camera::upVector() {
 }
 
 void Camera::rightVector() {
-    // calculate right vector
-    right.setX((up.getY() * dir.getZ()) - (up.getZ() * dir.getY()));
-    right.setY((up.getZ() * dir.getX()) - (up.getX() * dir.getZ()));
-    right.setZ((up.getX() * dir.getY()) - (up.getY() * dir.getX()));
+    right = worldUp.cross(dir);
     right.normalise();
 }
 
@@ -32,39 +29,24 @@ void Camera::imagePlane() {
     planeHeight = planeWidth / (aspectX / aspectY);
 }
 
-Vector3 Camera::getPos() const {
-    return pos;
-}
+Vector3 Camera::getPos() const {return pos;}
 
-Vector3 Camera::getDir() const {
-    return dir;
-}
+Vector3 Camera::getDir() const {return dir;}
 
-Vector3 Camera::getRight() const {
-    return right;
-}
+Vector3 Camera::getRight() const {return right;}
 
-Vector3 Camera::getUp() const {
-    return up;
-}
+Vector3 Camera::getUp() const {return up;}
 
-float Camera::getPlaneWidth() const {
-    return planeWidth;
-}
+float Camera::getPlaneWidth() const {return planeWidth;}
 
-float Camera::getPlaneHeight() const {
-    return planeWidth;
-}
+float Camera::getPlaneHeight() const {return planeWidth;}
 
-float Camera::toRadians(float &degrees) const{
-    return (degrees * std::numbers::pi) / 180.0f;
-}
+float Camera::toRadians(float &degrees) const{return (degrees * std::numbers::pi) / 180.0f;}
 
 void Camera::reInitilize() {
     dir.normalise();
-    upVector();
-    up.normalise();
     rightVector();
+    upVector();
     imagePlane();
 }
 

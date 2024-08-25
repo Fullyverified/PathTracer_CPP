@@ -15,10 +15,9 @@
 #include "BVHNode.h"
 //#include "SDLWindow.h"
 
-Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.aspectY / config.aspectX)), internalResX(resX / config.upScale),
+Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (config.aspectX / config.aspectY)), internalResX(config.resX / config.upScale),
                               internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
-                              sceneUpdated(false), camMoved(true), lockInput(false),
-                              numThreads(std::thread::hardware_concurrency()) {
+                              sceneUpdated(false), camMoved(true), lockInput(false), numThreads(0) {
     int res = internalResX * internalResY;
     primaryRay.resize(res, nullptr);
     secondaryRay.resize(res, nullptr);
@@ -28,6 +27,8 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(resX / (config.a
     absR.resize(res, 0.0f);
     absG.resize(res, 0.0f);
     absB.resize(res, 0.0f);
+    std::cout << "External: resX:" << resX << ", internal: resY: " << resY << std::endl;
+    std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
 }
 
 void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &cam, SDLWindow &window) {
@@ -37,7 +38,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
     // create all ray and luminance vector objects
     std::cout << "Constructing Objects: " << std::endl;
     intialiseObjects();
-    std::cout << "Avaliable Threads: " << numThreads << std::endl;
+    std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
 
     std::cout << "Constructing BVH: " << std::endl;
     constructBVHST(sceneobjectsList);
@@ -45,12 +46,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
 
     // render loop code
     while (running) {
-        numThreads = std::thread::hardware_concurrency();
-        if (config.threads > 0) {
-            numThreads = config.threads;
-        }
+        numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
-
 
         if (camMoved) {
             if (sceneUpdated) {
@@ -68,6 +65,14 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
                 absG[i] = 0.0f;
                 absB[i] = 0.0f;
             }
+
+            aspectRatio = static_cast<float>(internalResX) / internalResY;
+            // convert fOV to radians
+            fovYRad = (config.fOV * std::numbers::pi) / 180.0f;
+            fovXRad = 2 * atan(tan(fovYRad / 2) * aspectRatio);
+            // compute scaling Factors
+            scaleX = tan(fovXRad / 2);
+            scaleY = tan(fovYRad / 2);
 
             // primary rays
             auto startTimePR = std::chrono::high_resolution_clock::now();
@@ -117,7 +122,9 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
 
         // tone mapping
         auto startTimeTM = std::chrono::high_resolution_clock::now();
-        maxR = 0; maxG = 0; maxB = 0;
+        maxR = 0;
+        maxG = 0;
+        maxB = 0;
         for (int i = 0; i < internalResX * internalResY; i++) {
             // determine brightest amplitude in scene
             maxR = lumR[i] > maxR ? lumR[i] : maxR;
@@ -243,6 +250,9 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 
 void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
     auto startTime = std::chrono::high_resolution_clock::now();
+    float aspectRatioX = static_cast<float>(resX) / internalResX;
+    float aspectRatioY = static_cast<float>(resY) / internalResY;
+
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
@@ -251,7 +261,7 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
 
             float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
 
-            // extended Reinhard Tone Mapping - returns value [0, 1]
+            // Extended Reinhard Tone Mapping - returns value [0, 1]
             float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
             red *= mappedLuminance;
@@ -273,11 +283,11 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             green = std::min(green, 255.0f);
             blue = std::min(blue, 255.0f);
 
-            // upscale and store in RGB buffer
+            // Upscale and store in RGB buffer considering aspect ratio
             for (int i = 0; i < config.upScale; i++) {
                 for (int j = 0; j < config.upScale; j++) {
-                    int outX = x * config.upScale + i;
-                    int outY = y * config.upScale + j;
+                    int outX = static_cast<int>((x + i / static_cast<float>(config.upScale)) * aspectRatioX);
+                    int outY = static_cast<int>((y + j / static_cast<float>(config.upScale)) * aspectRatioY);
                     int offset = (outY * resX + outX) * 3;
 
                     RGBBuffer[offset] = red;
@@ -287,18 +297,21 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             }
         }
     }
+
     auto durationTimeAMP = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
-    //std::cout << "All Tone Map Time: " << durationTimeAMP.count() << "us" << std::endl;
+    // std::cout << "All Tone Map Time: " << durationTimeAMP.count() << "us" << std::endl;
 }
 
 void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
                                std::mutex &mutex) const {
+    float aspectRatio = static_cast<float>(internalResX) / internalResY;
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = primaryRay[internalResX * y + x];
             ray->getOrigin().set(cam.getPos());
+            ray->getPos().set(cam.getPos());
             // calculate position of pixel on image plane
-            Vector3 pixelPosPlane((((x + 0.5f) / internalResX) * 2) - 1, 1 - (((y + 0.5f) / internalResY) * 2), 0);
+            Vector3 pixelPosPlane(((((x + 0.5f) / internalResX) * 2) - 1) * aspectRatio, 1 - (((y + 0.5f) / internalResY) * 2), 0);
             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
             // point ray according to pixel position (ray starts from camera origin)
             ray->getDir().set(
@@ -306,7 +319,6 @@ void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int
                 cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
                 cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
             ray->getDir().normalise();
-            ray->march(0);
             BVHNode *leafNode = rootNode.searchBVHTree(*ray);
             ray->setHit(false);
             if (leafNode != nullptr) {
@@ -502,7 +514,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
     float gamma = dist(rng);
     // convert to sphereical coodinates
     alpha = std::acos(std::sqrt(alpha)); // polar angle - sqrt more likely to be near the pole (z axis)
-    gamma = 2 * pi * gamma; // azimuthal angle
+    gamma = 2 * std::numbers::pi * gamma; // azimuthal angle
 
     // convert random direction in spherical coordinates to vector coordinates
     Vector3 random(
@@ -752,6 +764,7 @@ void Render::deleteObjects() {
         delete primaryRay[i];
         delete secondaryRay[i];
     }
+    delete RGBBuffer;
 }
 
 std::pair<int, int> Render::threadSegments(float resInput, int &numThreads, std::pair<int, int>, int step) {
@@ -761,5 +774,6 @@ std::pair<int, int> Render::threadSegments(float resInput, int &numThreads, std:
 
     int start = step * pixelsPerThread + std::min(step, remainder);
     int end = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
+
     return std::make_pair(start, end);
 }

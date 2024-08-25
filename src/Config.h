@@ -2,10 +2,10 @@
 #define CONFIG_H
 
 struct Config {
-    int resX = 1300;
-    int upScale = 1; // 1 is default - integer scaling: 1, 2, 4, 8
-    int aspectX = 1;
-    int aspectY = 1;
+    float resX = 800;
+    float upScale = 4; // 1 is default - integer scaling - multiples of res X
+    float aspectX = 1;
+    float aspectY = 1;
     float fOV = 54;
     int raysPerPixel = 1;
     int bounceDepth = 5;

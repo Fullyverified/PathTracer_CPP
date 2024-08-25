@@ -35,7 +35,7 @@ public:
 
 private:
     float planeWidth, planeHeight, aspectX, aspectY, yaw, pitch;
-    Vector3 pos, dir, up, right;
+    Vector3 pos, dir, up, right, worldUp;
 };
 
 
