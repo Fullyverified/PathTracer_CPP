@@ -38,17 +38,15 @@ public:
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
     void sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
 
+    // tone mapping
+    void toneMap(float &maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
+
     // multithreading logic
     std::pair<int, int> threadSegments(float resI, int &numThreads, std::pair<int, int>, int i);
-
-    // tone mapping & draw screen
-    void toneMap();
 
     // cleanup
     void intialiseObjects();
     void deleteObjects();
-
-    void printScreenASCII();
 
 
 private:
@@ -56,7 +54,8 @@ private:
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
     mutable std::vector<Ray*> primaryRay, secondaryRay;
-    uint8_t* RGBBuffer;
+    float maxR, maxG, maxB, maxLuminance;
+    mutable uint8_t* RGBBuffer;
 
     int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY;
     Camera &cam;

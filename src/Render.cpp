@@ -75,7 +75,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
                 for (int i = 0; i < segments; i++) {
                     boundsX = threadSegments(internalResX, segments, boundsX, i);
                     boundsY = threadSegments(internalResY, segments, boundsY, j);
-                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, cam, boundsX.first, boundsX.second, boundsY.first, boundsY.second,
+                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, cam, boundsX.first, boundsX.second, boundsY.first,
+                                                    boundsY.second,
                                                     std::ref(*BVHrootNode), std::ref(mutex)));
                 }
             }
@@ -111,10 +112,36 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
         threads.clear();
         auto durationTimeSR = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeSR);
         std::cout << config.raysPerPixel * iterations << " Secondary Ray(s) Time: " << durationTimeSR.count() << "ms" << std::endl;
-        //-----------------------
         iterations++;
-        toneMap();
-        window.presentScreen(reinterpret_cast<uint8_t *>(RGBBuffer), resX);
+        //-----------------------
+
+        // tone mapping
+        auto startTimeTM = std::chrono::high_resolution_clock::now();
+        maxR = 0; maxG = 0; maxB = 0;
+        for (int i = 0; i < internalResX * internalResY; i++) {
+            // determine brightest amplitude in scene
+            maxR = lumR[i] > maxR ? lumR[i] : maxR;
+            maxG = lumG[i] > maxG ? lumG[i] : maxG;
+            maxB = lumB[i] > maxB ? lumB[i] : maxB;
+        }
+        maxLuminance = (0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB) * config.ISO;
+        for (int j = 0; j < segments; j++) {
+            for (int i = 0; i < segments; i++) {
+                boundsX = threadSegments(internalResX, segments, boundsX, i);
+                boundsY = threadSegments(internalResY, segments, boundsY, j);
+                threads.emplace_back(std::async(std::launch::async, &Render::toneMap, this, std::ref(maxLuminance),
+                                                boundsX.first, boundsX.second, boundsY.first,
+                                                boundsY.second, std::ref(mutex)));
+            }
+        }
+        for (std::future<void> &thread: threads) {
+            thread.get(); // Blocks until the thread completes its task
+        }
+        threads.clear();
+        window.presentScreen(RGBBuffer, resX);
+        auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
+        std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
+        //-----------------------
     }
 }
 
@@ -142,6 +169,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 
         if (inputState[SDL_SCANCODE_DELETE]) {
             lockInput = lockInput == false ? true : false;
+            std::cout << "locking input" << std::endl;
         }
 
         if (inputState[SDL_SCANCODE_UP]) {
@@ -211,21 +239,10 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     window.destroyWindow(); // delete SDL objects
 }
 
-
-void Render::toneMap() {
-    float maxR = 0;
-    float maxG = 0;
-    float maxB = 0;
-    for (int i = 0; i < internalResX * internalResY; i++) {
-        // determine brightest amplitude in scene
-        maxR = lumR[i] > maxR ? lumR[i] : maxR;
-        maxG = lumG[i] > maxG ? lumG[i] : maxG;
-        maxB = lumB[i] > maxB ? lumB[i] : maxB;
-    }
-    float maxLuminance = (0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB) * config.ISO;
-
-    for (int x = 0; x < internalResX; x++) {
-        for (int y = 0; y < internalResY; y++) {
+void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
+    auto startTime = std::chrono::high_resolution_clock::now();
+    for (int x = xstart; x <= xend; x++) {
+        for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
             float green = lumG[y * internalResX + x];
             float blue = lumB[y * internalResX + x];
@@ -254,7 +271,7 @@ void Render::toneMap() {
             green = std::min(green, 255.0f);
             blue = std::min(blue, 255.0f);
 
-            // upscale and sote in RGB buffer
+            // upscale and store in RGB buffer
             for (int i = 0; i < config.upScale; i++) {
                 for (int j = 0; j < config.upScale; j++) {
                     int outX = x * config.upScale + i;
@@ -268,6 +285,8 @@ void Render::toneMap() {
             }
         }
     }
+    auto durationTimeAMP = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
+    //std::cout << "All Tone Map Time: " << durationTimeAMP.count() << "us" << std::endl;
 }
 
 void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
@@ -741,28 +760,4 @@ std::pair<int, int> Render::threadSegments(float resInput, int &numThreads, std:
     int start = step * pixelsPerThread + std::min(step, remainder);
     int end = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
     return std::make_pair(start, end);
-}
-
-void Render::printScreenASCII() {
-    for (int y = 0; y < internalResX; y++) {
-        for (int x = 0; x < internalResY; x++) {
-            float lum = lumR[y * resX + x] + lumG[y * resX + x] + lumB[y * resX + x];
-            if (lum > 40) {
-                std::cout << "@@";
-            } else if (lum > 8) {
-                std::cout << "##";
-            } else if (lum > 2) {
-                std::cout << "xx";
-            } else if (lum > 1.5) {
-                std::cout << "~~";
-            } else if (lum > 1) {
-                std::cout << ";;";
-            } else if (lum > 0.5) {
-                std::cout << ",,";
-            } else if (lum > 0) {
-                std::cout << "..";
-            } else { std::cout << "  "; }
-        }
-        std::cout << "|" << std::endl;
-    }
 }
