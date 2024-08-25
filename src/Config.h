@@ -1,14 +1,15 @@
 #ifndef CONFIG_H
 #define CONFIG_H
+#include <limits>
 
 struct Config {
     float resX = 800;
     float upScale = 4; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
-    float fOV = 54;
-    int raysPerPixel = 1;
-    int bounceDepth = 5;
+    float fOV = 52;
+    int raysPerPixel = 5;
+    int bounceDepth = 10;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
@@ -16,11 +17,11 @@ struct Config {
     float mouseSensitivity = 0.1f;
 
     void increaeISO() {
-        ISO = ISO - (ISO * 0.01f);
+        ISO += (ISO * 0.01f);
     }
 
-    void decreaeISO() {
-        ISO = ISO + (ISO * 0.01f);
+    void decreaseISO() {
+        ISO = ISO > 0.05f ? ISO - (ISO * 0.01f) : 0.05f;
     }
 
     void resetISO() {
@@ -28,11 +29,11 @@ struct Config {
     }
 
     void increaeFOV() {
-        fOV = fOV + (0.1f);
+        fOV = fOV < 180 ? fOV += 0.1f : 180;
     }
 
     void decreaeFOV() {
-        fOV = fOV - (0.1f);
+        fOV = fOV > 0 ? fOV -= 0.1f : 0;
     }
 };
 

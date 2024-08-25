@@ -185,7 +185,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             config.increaeISO();
         }
         if (inputState[SDL_SCANCODE_DOWN]) {
-            config.decreaeISO();
+            config.decreaseISO();
         }
         if (inputState[SDL_SCANCODE_RIGHT]) {
             config.resetISO();
@@ -264,9 +264,13 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             // Extended Reinhard Tone Mapping - returns value [0, 1]
             float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
-            red *= mappedLuminance;
-            green *= mappedLuminance;
-            blue *= mappedLuminance;
+            red *= mappedLuminance / luminance;
+            green *= mappedLuminance / luminance;
+            blue *= mappedLuminance / luminance;
+
+            red *= config.ISO;
+            green *= config.ISO;
+            blue *= config.ISO;
 
             // Apply gamma correction
             float gamma = 2.2f;
