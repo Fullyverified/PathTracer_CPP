@@ -51,3 +51,14 @@ void SDLWindow::destroyWindow() {
     SDL_Quit();
 }
 
+void SDLWindow::setRelativeMouse() {
+    if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
+        // If currently enabled, disable it
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+    } else {
+        // If currently disabled, enable it
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
+}
+
+

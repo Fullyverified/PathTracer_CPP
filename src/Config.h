@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 struct Config {
-    int resX = 800;
+    int resX = 1300;
     int upScale = 1; // 1 is default - integer scaling: 1, 2, 4, 8
     int aspectX = 1;
     int aspectY = 1;

@@ -164,13 +164,15 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             if (event.type == SDL_QUIT) {
                 running = false;
             }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_DELETE) {
+                    lockInput = lockInput == false ? true : false;
+                    window.setRelativeMouse();
+                    std::cout << "locking input" << std::endl;
+                }
+            }
         }
         const Uint8 *inputState = SDL_GetKeyboardState(NULL);
-
-        if (inputState[SDL_SCANCODE_DELETE]) {
-            lockInput = lockInput == false ? true : false;
-            std::cout << "locking input" << std::endl;
-        }
 
         if (inputState[SDL_SCANCODE_UP]) {
             config.increaeISO();

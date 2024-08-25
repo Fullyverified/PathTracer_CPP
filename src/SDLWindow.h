@@ -21,6 +21,8 @@ public:
 
     SDL_Texture* getTextureBuffer() {return this->textureBuffer;}
 
+    void setRelativeMouse();
+
 private:
 
     SDL_Window *window = nullptr;
