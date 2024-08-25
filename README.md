@@ -39,6 +39,5 @@ set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK v
 If you are on Linux use your fancy commands to install the Vulkan SDK and SDL2.  
 
 # Known Bugs  
-Looking up or down skews the fOV weirdly.  
-The SDL2 window does not work properly on Linux
-Executes 40% faster on Linux
+The SDL2 window does not work properly on Linux  
+Executes 40% faster on Linux  
