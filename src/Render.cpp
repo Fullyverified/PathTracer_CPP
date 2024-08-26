@@ -181,6 +181,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
             }
         }
         const Uint8 *inputState = SDL_GetKeyboardState(NULL);
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
         if (inputState[SDL_SCANCODE_UP]) {
             config.increaeISO();
@@ -231,7 +232,6 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
                 cam.moveDown(0.1f);
             }
 
-            SDL_GetRelativeMouseState(&mouseX, &mouseY);
             if (mouseX != 0 || mouseY != 0) {
                 cam.updateDirection(mouseX, mouseY);
                 camMoved = true;
@@ -479,7 +479,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         sinTheta2 = (n1 / n2) * sinTheta1;
         while (sinTheta2 >= 1) {
             sampleReflectionDirection(ray, sceneObject, true); // inside object so flipped normal
-            ray.updateOrigin(-0.1); // undo the march from the previous method
+            ray.updateOrigin(-0.01f); // undo the march from the previous method
             ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
             // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
             sceneObject.getNormal(ray); // update normal
