@@ -19,6 +19,7 @@ SIMD Instructions to find more paralellism
 GPU Acceleration with Vulkan  
 GUI to control options  
 Meshes, image textures, rougness maps, etc  
+Depth of Field  
 
 # Improvments
 BVH Tree Construction supports both multithreaded and singlethreaded modes. Multithreaded tree construction is only faster for scenes with hundreds of objects, so ST is default.  
