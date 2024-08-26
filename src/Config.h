@@ -4,12 +4,12 @@
 
 struct Config {
     float resX = 1200;
-    float upScale = 1; // 1 is default - integer scaling - multiples of res X
+    float upScale = 6; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
     float fOV = 52;
-    int raysPerPixel = 1;
-    int bounceDepth = 7;
+    int raysPerPixel = 5;
+    int bounceDepth = 5;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;

@@ -250,10 +250,6 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
 }
 
 void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
-    auto startTime = std::chrono::high_resolution_clock::now();
-    float aspectRatioX = static_cast<float>(resX) / internalResX;
-    float aspectRatioY = static_cast<float>(resY) / internalResY;
-
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
@@ -304,9 +300,6 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             }
         }
     }
-
-    auto durationTimeAMP = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
-    // std::cout << "All Tone Map Time: " << durationTimeAMP.count() << "us" << std::endl;
 }
 
 void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
