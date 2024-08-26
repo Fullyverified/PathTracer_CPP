@@ -29,17 +29,12 @@ void Camera::imagePlane() {
     planeHeight = planeWidth / (aspectX / aspectY);
 }
 
-Vector3 Camera::getPos() const {return pos;}
-
-Vector3 Camera::getDir() const {return dir;}
-
-Vector3 Camera::getRight() const {return right;}
-
-Vector3 Camera::getUp() const {return up;}
-
-float Camera::getPlaneWidth() const {return planeWidth;}
-
-float Camera::getPlaneHeight() const {return planeWidth;}
+//Vector3 Camera::getPos() const {return pos;}
+//Vector3 Camera::getDir() const {return dir;}
+//Vector3 Camera::getRight() const {return right;}
+//Vector3 Camera::getUp() const {return up;}
+//float Camera::getPlaneWidth() const {return planeWidth;}
+//float Camera::getPlaneHeight() const {return planeWidth;}
 
 float Camera::toRadians(float &degrees) const{return (degrees * std::numbers::pi) / 180.0f;}
 

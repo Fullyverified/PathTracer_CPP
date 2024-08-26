@@ -3,13 +3,13 @@
 #include <limits>
 
 struct Config {
-    float resX = 800;
-    float upScale = 4; // 1 is default - integer scaling - multiples of res X
+    float resX = 1200;
+    float upScale = 6; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
     float fOV = 52;
     int raysPerPixel = 5;
-    int bounceDepth = 10;
+    int bounceDepth = 7;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;

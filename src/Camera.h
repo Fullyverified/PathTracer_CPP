@@ -15,12 +15,12 @@ public:
 
     float toRadians(float &degrees) const;
 
-    [[nodiscard]] Vector3 getPos() const;
-    [[nodiscard]] Vector3 getDir() const;
-    [[nodiscard]] Vector3 getRight() const;
-    [[nodiscard]] Vector3 getUp() const;
-    [[nodiscard]] float getPlaneWidth() const;
-    [[nodiscard]] float getPlaneHeight() const;
+    [[nodiscard]] Vector3 getPos() const {return pos;}
+    [[nodiscard]] Vector3 getDir() const {return dir;}
+    [[nodiscard]] Vector3 getRight() const {return right;}
+    [[nodiscard]] Vector3 getUp() const {return up;}
+    [[nodiscard]] float getPlaneWidth() const {return planeWidth;}
+    [[nodiscard]] float getPlaneHeight() const {return planeWidth;}
 
     void initilizePitchYaw();
     void reInitilize();

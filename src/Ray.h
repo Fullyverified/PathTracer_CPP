@@ -17,15 +17,15 @@ public:
 
     void march(const float& distance);
     void updateOrigin(const float& distance);
-    [[nodiscard]] Vector3& getPos();
-    [[nodiscard]] Vector3& getOrigin();
-    [[nodiscard]] Vector3& getDir();
-    [[nodiscard]] Vector3& getHitPoint();
-    [[nodiscard]] Vector3& getNormal();
-    void setHit(bool hit);
-    [[nodiscard]] bool getHit() const;
-    void setHitObject(SceneObject* sceneObject);
-    [[nodiscard]] SceneObject* getHitObject() const;
+    [[nodiscard]] Vector3& getPos() { return pos; }
+    [[nodiscard]] Vector3& getOrigin() { return origin; }
+    [[nodiscard]] Vector3& getDir() { return dir; }
+    [[nodiscard]] Vector3& getHitPoint() { return hitpoint; }
+    [[nodiscard]] Vector3& getNormal() { return normal; }
+    void setHit(bool hit) { this->hit = hit; }
+    [[nodiscard]] bool getHit() const { return hit; }
+    void setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
+    [[nodiscard]] SceneObject* getHitObject() const { return sceneObject; }
 
     void initialize(Ray &primaryRay);
 

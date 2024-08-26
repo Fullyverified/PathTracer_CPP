@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <numbers>
 #include <vector>
 
 #include "Config.h"
@@ -264,9 +265,11 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
             // Extended Reinhard Tone Mapping - returns value [0, 1]
             float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
-            red *= mappedLuminance / luminance;
-            green *= mappedLuminance / luminance;
-            blue *= mappedLuminance / luminance;
+            if (luminance > 0) {
+                red *= mappedLuminance / luminance;
+                green *= mappedLuminance / luminance;
+                blue *= mappedLuminance / luminance;
+            }
 
             red *= config.ISO;
             green *= config.ISO;
@@ -306,9 +309,7 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
     // std::cout << "All Tone Map Time: " << durationTimeAMP.count() << "us" << std::endl;
 }
 
-void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode,
-                               std::mutex &mutex) const {
-    float aspectRatio = static_cast<float>(internalResX) / internalResY;
+void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = primaryRay[internalResX * y + x];
@@ -437,9 +438,6 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                     lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                     lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                     lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
-                    if (its == 0) {
-                        std::cout << "its zero" << std::endl;
-                    }
                 }
             }
         }
@@ -498,6 +496,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.01f);
     }
+    //std::cout<<"Relfection Direction Time: "<<refractionDirectionTime.count()<<"ns"<<std::endl;
 }
 
 void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
@@ -584,8 +583,7 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         for (int i = 0; i < BVHNodes.size(); i++) {
             for (int j = i + 1; j < BVHNodes.size(); j++) {
                 combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (
-                           BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
+                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
 
                 if (cost < bestCost) {
                     bestCost = cost;

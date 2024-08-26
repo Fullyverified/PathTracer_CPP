@@ -38,20 +38,20 @@ void Ray::initialize(Ray &primaryRay) {
     hit = primaryRay.getHit();
 }
 
-Vector3& Ray::getPos() { return pos; }
+//Vector3& Ray::getPos() { return pos; }
 
-Vector3& Ray::getOrigin() { return origin; }
+//Vector3& Ray::getOrigin() { return origin; }
 
-Vector3& Ray::getDir() { return dir; }
+//Vector3& Ray::getDir() { return dir; }
 
-Vector3& Ray::getHitPoint() { return hitpoint; }
+//Vector3& Ray::getHitPoint() { return hitpoint; }
 
-Vector3& Ray::getNormal() { return normal; }
+//Vector3& Ray::getNormal() { return normal; }
 
-void Ray::setHit(bool hit) { this->hit = hit; }
+//void Ray::setHit(bool hit) { this->hit = hit; }
 
-bool Ray::getHit() const { return hit; }
+//bool Ray::getHit() const { return hit; }
 
-void Ray::setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
+//void Ray::setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
 
-SceneObject* Ray::getHitObject() const { return sceneObject; }
+//SceneObject* Ray::getHitObject() const { return sceneObject; }
