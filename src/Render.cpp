@@ -32,7 +32,7 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
     std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
 }
 
-void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &cam, SDLWindow &window) {
+void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow &window) {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
@@ -81,7 +81,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
                 for (int i = 0; i < segments; i++) {
                     boundsX = threadSegments(internalResX, segments, boundsX, i);
                     boundsY = threadSegments(internalResY, segments, boundsY, j);
-                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, cam, boundsX.first, boundsX.second, boundsY.first,
+                    threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, boundsX.first, boundsX.second, boundsY.first,
                                                     boundsY.second,
                                                     std::ref(*BVHrootNode), std::ref(mutex)));
                 }
@@ -153,7 +153,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, Camera &ca
     }
 }
 
-void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera &cam) {
+void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
     // Create Window
     SDLWindow window;
     int width = resX;
@@ -163,7 +163,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList, Camera 
     window.initializeTexture(width, height);
 
     // render loop
-    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList), std::ref(cam), std::ref(window));
+    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList), std::ref(window));
 
     // Main event loop
     while (running) {
@@ -302,7 +302,7 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
     }
 }
 
-void Render::computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = primaryRay[internalResX * y + x];

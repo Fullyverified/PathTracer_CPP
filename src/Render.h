@@ -19,8 +19,8 @@ public:
     ~Render() = default;
 
     // render loop
-    void renderLoop(std::vector<SceneObject*> &sceneobjectsList, Camera &cam, SDLWindow &window);
-    void computePixels(std::vector<SceneObject*> &sceneobjectsList, Camera &cam);
+    void renderLoop(std::vector<SceneObject*> &sceneobjectsList, SDLWindow &window);
+    void computePixels(std::vector<SceneObject*> &sceneobjectsList);
 
     // bvh logic
     void constructBVHST(const std::vector<SceneObject*> &sceneObjectsList);
@@ -31,7 +31,7 @@ public:
     void BVHProfiling();
 
     // traversal logic
-    void computePrimaryRay(Camera cam, int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
+    void computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
     void computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const;
 
     // bounce logic

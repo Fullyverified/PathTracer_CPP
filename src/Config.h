@@ -7,9 +7,9 @@ struct Config {
     float upScale = 6; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
-    float fOV = 52;
-    int raysPerPixel = 5;
-    int bounceDepth = 5;
+    float fOV = 20;
+    int raysPerPixel = 1;
+    int bounceDepth = 8;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
