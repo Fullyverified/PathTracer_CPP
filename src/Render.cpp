@@ -288,7 +288,8 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
                     if (ray->getHit()) {
-                        if (currentBounce == 0) { // primary Ray
+                        if (currentBounce == 0) {
+                            // primary Ray
                             // reset hit bool
                             for (int i = 0; i < config.bounceDepth + 1; i++) {
                                 for (int j = 0; j <= 3; j++) {
@@ -308,7 +309,8 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                                 cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
                                 cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
                             ray->getDir().normalise();
-                        } else { // secondary Ray
+                        } else {
+                            // secondary Ray
                             float randomSample = dist(rng); // monte carlo sampling
                             if (randomSample >= ray->getHitObject()->getTransp()) {
                                 sampleReflectionDirection(*ray, *ray->getHitObject(), false);
@@ -376,8 +378,6 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
 thread_local std::mt19937 Render::rng(std::random_device{}());
 
 void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
-    sceneObject.getNormal(ray);
-    // refraction
     float n1 = 1.0003f; // refractive index of air
     float n2 = sceneObject.getRefrac();
     // cosine of incient angle
@@ -425,65 +425,69 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.01f);
     }
-    //std::cout<<"Relfection Direction Time: "<<refractionDirectionTime.count()<<"ns"<<std::endl;
 }
 
 void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
-    sceneObject.getNormal(ray); // update normal
-    if (flipNormal) {
-        ray.getNormal().flip();
-    }
+    float roughness = sceneObject.getRough();
     // reflection direction
     float dotProduct = ray.getDir().dot(ray.getNormal());
     Vector3 reflection(
         ray.getDir().getX() - 2 * dotProduct * ray.getNormal().getX(),
         ray.getDir().getY() - 2 * dotProduct * ray.getNormal().getY(),
         ray.getDir().getZ() - 2 * dotProduct * ray.getNormal().getZ());
+    if (roughness > 0) {
+        if (flipNormal) {
+            ray.getNormal().flip();
+        }
 
-    // generate random direction
-    // two randoms between 0 and 1
-    float alpha = dist(rng);
-    float gamma = dist(rng);
-    // convert to sphereical coodinates
-    alpha = std::acos(std::sqrt(alpha)); // polar angle - sqrt more likely to be near the pole (z axis)
-    gamma = 2 * std::numbers::pi * gamma; // azimuthal angle
+        // generate random direction
+        // two randoms between 0 and 1
+        float alpha = dist(rng);
+        float gamma = dist(rng);
+        // convert to sphereical coodinates
+        alpha = std::acos(std::sqrt(alpha)); // polar angle - sqrt more likely to be near the pole (z axis)
+        gamma = 2 * std::numbers::pi * gamma; // azimuthal angle
 
-    // convert random direction in spherical coordinates to vector coordinates
-    Vector3 random(
-        std::sin(alpha) * std::cos(gamma),
-        std::sin(alpha) * std::sin(gamma),
-        std::cos(alpha));
-    random.normalise();
+        // convert random direction in spherical coordinates to vector coordinates
+        Vector3 random(
+            std::sin(alpha) * std::cos(gamma),
+            std::sin(alpha) * std::sin(gamma),
+            std::cos(alpha));
+        random.normalise();
 
-    // convert to tangent space (a coordinate system defined by the normal of the surface)
-    // calculate Tangent and Bitangnet vectors using arbitrary vector a
-    Vector3 arbitraryA;
-    // if the normals are exactly 0 there are problems... if statement to catch that
-    if (std::abs(ray.getNormal().getX()) > 0.0001 || std::abs(ray.getNormal().getZ()) > 0.0001) {
-        arbitraryA.set(0, 1, 0);
-    } else { arbitraryA.set(1, 0, 0); }
-    // tangent vector T equals cross product of normal N and arbitrary vector a
-    Vector3 tangentT(ray.getNormal().cross(arbitraryA));
-    tangentT.normalise();
+        // convert to tangent space (a coordinate system defined by the normal of the surface)
+        // calculate Tangent and Bitangnet vectors using arbitrary vector a
+        Vector3 arbitraryA;
+        // if the normals are exactly 0 there are problems... if statement to catch that
+        if (std::abs(ray.getNormal().getX()) > 0.0001 || std::abs(ray.getNormal().getZ()) > 0.0001) {
+            arbitraryA.set(0, 1, 0);
+        } else { arbitraryA.set(1, 0, 0); }
+        // tangent vector T equals cross product of normal N and arbitrary vector a
+        Vector3 tangentT(ray.getNormal().cross(arbitraryA));
+        tangentT.normalise();
 
-    // bitangnet vector B equals cross product of tangent and normal
-    Vector3 bitangent(ray.getNormal().cross(tangentT));
-    bitangent.normalise();
+        // bitangnet vector B equals cross product of tangent and normal
+        Vector3 bitangent(ray.getNormal().cross(tangentT));
+        bitangent.normalise();
 
-    // set final sampled direction
-    // x = randomX * tangentX + randomY * bitangentX + randomZ * normalX
-    Vector3 sampledD(
-        random.getX() * tangentT.getX() + random.getY() * bitangent.getX() + random.getZ() * ray.getNormal().getX(),
-        random.getX() * tangentT.getY() + random.getY() * bitangent.getY() + random.getZ() * ray.getNormal().getY(),
-        random.getX() * tangentT.getZ() + random.getY() * bitangent.getZ() + random.getZ() * ray.getNormal().getZ());
+        // set final sampled direction
+        // x = randomX * tangentX + randomY * bitangentX + randomZ * normalX
+        Vector3 sampledD(
+            random.getX() * tangentT.getX() + random.getY() * bitangent.getX() + random.getZ() * ray.getNormal().getX(),
+            random.getX() * tangentT.getY() + random.getY() * bitangent.getY() + random.getZ() * ray.getNormal().getY(),
+            random.getX() * tangentT.getZ() + random.getY() * bitangent.getZ() + random.getZ() * ray.getNormal().getZ());
 
-    // bias the reflection direction with the random direction
-    // biasedDirection = (1 - roughness) * reflectionDirection + roughness * randomDirection
-    float roughness = sceneObject.getRough();
-    ray.getDir().set(
-        ((1 - roughness) * reflection.getX()) + roughness * sampledD.getX(),
-        ((1 - roughness) * reflection.getY()) + roughness * sampledD.getY(),
-        ((1 - roughness) * reflection.getZ()) + roughness * sampledD.getZ());
+        // bias the reflection direction with the random direction
+        // biasedDirection = (1 - roughness) * reflectionDirection + roughness * randomDirection
+
+        ray.getDir().set(
+            ((1 - roughness) * reflection.getX()) + roughness * sampledD.getX(),
+            ((1 - roughness) * reflection.getY()) + roughness * sampledD.getY(),
+            ((1 - roughness) * reflection.getZ()) + roughness * sampledD.getZ());
+    }
+    else { // pure reflection direction if rough = 0
+        ray.getDir().set(reflection.getX(), reflection.getY(),reflection.getZ());
+    }
     ray.getDir().normalise();
     if (ray.getDir().dot(ray.getNormal()) < 0) {
         ray.getDir().flip();
