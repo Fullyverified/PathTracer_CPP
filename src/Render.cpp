@@ -20,8 +20,6 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
                               internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
                               sceneUpdated(false), camMoved(true), lockInput(false), numThreads(0) {
     int res = internalResX * internalResY;
-    primaryRay.resize(res, nullptr);
-    secondaryRay.resize(res, nullptr);
     rays.resize(res, nullptr);
     lumR.resize(res, 0.0f);
     lumG.resize(res, 0.0f);
@@ -684,8 +682,6 @@ void Render::BVHProfiling() {
 
 void Render::intialiseObjects() {
     for (int i = 0; i < internalResX * internalResY; i++) {
-        secondaryRay[i] = new Ray();
-        primaryRay[i] = new Ray();
         rays[i] = new Ray();
     }
     RGBBuffer = new uint8_t[resX * resY * 3];
@@ -698,8 +694,6 @@ void Render::deleteObjects() {
     BVHNodes.clear();
 
     for (int i = 0; i < resX * resY; i++) {
-        delete primaryRay[i];
-        delete secondaryRay[i];
         delete rays[i];
     }
     delete RGBBuffer;
