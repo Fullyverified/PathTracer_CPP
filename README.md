@@ -1,7 +1,9 @@
 Remaking my PathTracer in CPP, now with multithreading.  
 
 ![extended room 2200x 1230 1250 rays](https://github.com/user-attachments/assets/8e964ffb-353f-4e80-96f5-4a1bc75527e2)  
-
+  
+![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
+  
 # Features  
 Multithreading  
 BVH Acceleration  
