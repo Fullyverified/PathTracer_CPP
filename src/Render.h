@@ -31,8 +31,10 @@ public:
     void BVHProfiling();
 
     // traversal logic
-    void computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const;
-    void computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const;
+    void computePrimaryRay(int xstart, int xend, int ystart, int yend, std::mutex &mutex) const;
+    void computeSecondaryRay(int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
+    void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
+
 
     // bounce logic
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
@@ -53,7 +55,7 @@ private:
     std::vector<BVHNode*> BVHNodes;
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
-    mutable std::vector<Ray*> primaryRay, secondaryRay;
+    mutable std::vector<Ray*> primaryRay, secondaryRay, rays;
     float maxR, maxG, maxB, maxLuminance;
     mutable uint8_t* RGBBuffer;
 

@@ -22,6 +22,7 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
     int res = internalResX * internalResY;
     primaryRay.resize(res, nullptr);
     secondaryRay.resize(res, nullptr);
+    rays.resize(res, nullptr);
     lumR.resize(res, 0.0f);
     lumG.resize(res, 0.0f);
     lumB.resize(res, 0.0f);
@@ -54,9 +55,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             if (sceneUpdated) {
                 std::cout << "Reconstructing BVH: " << std::endl;
                 constructBVHST(sceneobjectsList);
-                BVHNode *BVHrootNode = BVHNodes.at(0);
+                sceneUpdated = false;
             }
-
             // reset colour buffer
             for (int i = 0; i < internalResX * internalResY; i++) {
                 lumR[i] = 0.0f;
@@ -66,7 +66,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
                 absG[i] = 0.0f;
                 absB[i] = 0.0f;
             }
-
             aspectRatio = static_cast<float>(internalResX) / internalResY;
             // convert fOV to radians
             fovYRad = (config.fOV * std::numbers::pi) / 180.0f;
@@ -75,15 +74,14 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             scaleX = tan(fovXRad / 2);
             scaleY = tan(fovYRad / 2);
 
-            // primary rays
+            /*// primary rays
             auto startTimePR = std::chrono::high_resolution_clock::now();
             for (int j = 0; j < segments; j++) {
                 for (int i = 0; i < segments; i++) {
                     boundsX = threadSegments(internalResX, segments, boundsX, i);
                     boundsY = threadSegments(internalResY, segments, boundsY, j);
                     threads.emplace_back(std::async(std::launch::async, &Render::computePrimaryRay, this, boundsX.first, boundsX.second, boundsY.first,
-                                                    boundsY.second,
-                                                    std::ref(*BVHrootNode), std::ref(mutex)));
+                                                    boundsY.second, std::ref(mutex)));
                 }
             }
             for (std::future<void> &thread: threads) {
@@ -91,14 +89,13 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             }
             threads.clear();
             auto durationTimeMT = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimePR);
-            std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;
+            std::cout << "PrimaryRay Time: " << durationTimeMT.count() << "ms" << std::endl;*/
             iterations = 1;
             camMoved = false;
-            sceneUpdated = false;
         }
         //---------------------
 
-        // secondary rays
+        /*// secondary rays
         auto startTimeSR = std::chrono::high_resolution_clock::now();
         std::cout << "Starting Secondary Rays: " << std::endl;
         for (int j = 0; j < segments; j++) {
@@ -108,8 +105,25 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
                 int its = iterations;
                 threads.emplace_back(std::async(std::launch::async, &Render::computeSecondaryRay, this,
                                                 boundsX.first, boundsX.second, boundsY.first,
-                                                boundsY.second,
-                                                std::ref(*BVHrootNode), its, std::ref(mutex)));
+                                                boundsY.second, its, std::ref(mutex)));
+            }
+        }
+        for (std::future<void> &thread: threads) {
+            thread.get(); // Blocks until the thread completes its task
+        }
+        threads.clear();
+        auto durationTimeSR = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeSR);
+        std::cout << config.raysPerPixel * iterations << " Secondary Ray(s) Time: " << durationTimeSR.count() << "ms" << std::endl;*/
+        auto startTimeSR = std::chrono::high_resolution_clock::now();
+        std::cout << "Starting Secondary Rays: " << std::endl;
+        for (int j = 0; j < segments; j++) {
+            for (int i = 0; i < segments; i++) {
+                boundsX = threadSegments(internalResX, segments, boundsX, i);
+                boundsY = threadSegments(internalResY, segments, boundsY, j);
+                int its = iterations;
+                threads.emplace_back(std::async(std::launch::async, &Render::traceRay, this,
+                                                cam, boundsX.first, boundsX.second, boundsY.first,
+                                                boundsY.second, its, std::ref(mutex)));
             }
         }
         for (std::future<void> &thread: threads) {
@@ -122,7 +136,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         //-----------------------
 
         // tone mapping
-        auto startTimeTM = std::chrono::high_resolution_clock::now();
         maxR = 0;
         maxG = 0;
         maxB = 0;
@@ -133,6 +146,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             maxB = lumB[i] > maxB ? lumB[i] : maxB;
         }
         maxLuminance = (0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB) * config.ISO;
+        auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(internalResX, segments, boundsX, i);
@@ -258,35 +272,36 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
 
             float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
 
-            // Extended Reinhard Tone Mapping - returns value [0, 1]
-            float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
-
             if (luminance > 0) {
+                // Extended Reinhard Tone Mapping - returns value [0, 1]
+                float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
+
                 red *= mappedLuminance / luminance;
                 green *= mappedLuminance / luminance;
                 blue *= mappedLuminance / luminance;
+
+
+                red *= config.ISO;
+                green *= config.ISO;
+                blue *= config.ISO;
+
+                // Apply gamma correction
+                float gamma = 2.2f;
+                float invGamma = 1.0f / gamma;
+                red = pow(red, invGamma);
+                green = pow(green, invGamma);
+                blue = pow(blue, invGamma);
+
+                red *= 255;
+                green *= 255;
+                blue *= 255;
+
+                red = std::min(red, 255.0f);
+                green = std::min(green, 255.0f);
+                blue = std::min(blue, 255.0f);
             }
 
-            red *= config.ISO;
-            green *= config.ISO;
-            blue *= config.ISO;
-
-            // Apply gamma correction
-            float gamma = 2.2f;
-            float invGamma = 1.0f / gamma;
-            red = pow(red, invGamma);
-            green = pow(green, invGamma);
-            blue = pow(blue, invGamma);
-
-            red *= 255;
-            green *= 255;
-            blue *= 255;
-
-            red = std::min(red, 255.0f);
-            green = std::min(green, 255.0f);
-            blue = std::min(blue, 255.0f);
-
-            // Upscale and store in RGB buffer considering aspect ratio
+            // upscale and store in RGB buffer considering aspect ratio
             for (int i = 0; i < config.upScale; i++) {
                 for (int j = 0; j < config.upScale; j++) {
                     int outX = static_cast<int>(x * config.upScale + i);
@@ -302,7 +317,7 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
     }
 }
 
-void Render::computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, std::mutex &mutex) const {
+void Render::computePrimaryRay(int xstart, int xend, int ystart, int yend, std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = primaryRay[internalResX * y + x];
@@ -317,9 +332,9 @@ void Render::computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNo
                 cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
                 cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
             ray->getDir().normalise();
-            BVHNode *leafNode = rootNode.searchBVHTree(*ray);
+            BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
             ray->setHit(false);
-            if (leafNode != nullptr) {
+            if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
                 // did we make it to a leaf node?
                 SceneObject *BVHSceneObject = leafNode->getSceneObject();
                 std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
@@ -333,7 +348,7 @@ void Render::computePrimaryRay(int xstart, int xend, int ystart, int yend, BVHNo
     }
 }
 
-void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVHNode &rootNode, int its, std::mutex &mutex) const {
+void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
     std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
@@ -372,7 +387,7 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                     // initialize secondary ray
                     Ray *nthRay = secondaryRay[internalResX * y + x];
                     nthRay->initialize(*primRay);
-                    for (int currentBounce = 1; currentBounce <= config.bounceDepth; currentBounce++) {
+                    for (int currentBounce = 1; currentBounce <= config.bounceDepth && nthRay->getHit() == true; currentBounce++) {
                         // BOUNCES PER RAY
                         float randomSample = dist(rng); // monte carlo sampling
                         if (randomSample >= nthRay->getHitObject()->getTransp()) {
@@ -380,15 +395,15 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                         } else {
                             sampleRefractionDirection(*nthRay, *nthRay->getHitObject(), false);
                         }
-                        BVHNode *leafNode = rootNode.searchBVHTree(*nthRay);
-                        //nthRay->setHit(false);
+                        BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*nthRay);
+                        nthRay->setHit(false);
                         if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
                             SceneObject *BVHSceneObject = leafNode->getSceneObject();
                             std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*nthRay);
                             float distanceClose = objectDistance[0];
                             nthRay->march(distanceClose);
                             nthRay->getHitPoint().set(nthRay->getPos());
-                            //nthRay->setHit(true);
+                            nthRay->setHit(true);
                             nthRay->setHitObject(BVHSceneObject);
                             nthRay->getOrigin().set(nthRay->getPos());
                             // store hit data
@@ -432,6 +447,105 @@ void Render::computeSecondaryRay(int xstart, int xend, int ystart, int yend, BVH
                     lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                     lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
                 }
+            }
+        }
+    }
+}
+
+void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
+    std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+    std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+    std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
+    std::vector<float> lum(3, 0.0f);
+    std::vector<float> col(3, 0.0f);
+
+    for (int y = ystart; y <= yend; y++) {
+        for (int x = xstart; x <= xend; x++) {
+            Ray *ray = rays[internalResX * y + x];
+            ray->setHit(true);
+            for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
+                for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
+                    if (ray->getHit()) {
+                        if (currentBounce == 0) { // primary Ray
+                            // reset hit bool
+                            for (int i = 0; i < config.bounceDepth + 1; i++) {
+                                for (int j = 0; j <= 3; j++) {
+                                    depthRed[i][j] = 0;
+                                    depthGreen[i][j] = 0;
+                                    depthBlue[i][j] = 0;
+                                }
+                            }
+                            ray->getOrigin().set(cam.getPos());
+                            ray->getPos().set(cam.getPos());
+                            // calculate position of pixel on image plane
+                            Vector3 pixelPosPlane(((((x + 0.5f) / internalResX) * 2) - 1) * aspectRatio, 1 - (((y + 0.5f) / internalResY) * 2), 0);
+                            Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
+                            // point ray according to pixel position (ray starts from camera origin)
+                            ray->getDir().set(
+                                cam.getDir().getX() + cam.getRight().getX() * pixelPosScene.getX() + cam.getUp().getX() * pixelPosScene.getY(),
+                                cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
+                                cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
+                            ray->getDir().normalise();
+                        } else { // secondary Ray
+                            float randomSample = dist(rng); // monte carlo sampling
+                            if (randomSample >= ray->getHitObject()->getTransp()) {
+                                sampleReflectionDirection(*ray, *ray->getHitObject(), false);
+                            } else {
+                                sampleRefractionDirection(*ray, *ray->getHitObject(), false);
+                            }
+                        }
+                        BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
+                        ray->setHit(false);
+                        if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
+                            // did we make it to a leaf node?
+                            SceneObject *BVHSceneObject = leafNode->getSceneObject();
+                            std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
+                            float distanceClose = objectDistance[0];
+                            ray->march(distanceClose);
+                            ray->getHitPoint().set(ray->getPos());
+                            ray->setHit(true);
+                            ray->setHitObject(BVHSceneObject);
+                            ray->getOrigin().set(ray->getPos());
+                            // store hit data
+                            BVHSceneObject->getNormal(*ray); // update normal vector
+                            float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
+                            lum = BVHSceneObject->getLum();
+                            col = BVHSceneObject->getCol();
+                            depthRed[currentBounce][0] = lum[0];
+                            depthRed[currentBounce][1] = lambertCosineLaw;
+                            depthRed[currentBounce][2] = col[0];
+                            depthRed[currentBounce][3] = 1;
+                            depthGreen[currentBounce][0] = lum[1];
+                            depthGreen[currentBounce][1] = lambertCosineLaw;
+                            depthGreen[currentBounce][2] = col[1];
+                            depthGreen[currentBounce][3] = 1;
+                            depthBlue[currentBounce][0] = lum[2];
+                            depthBlue[currentBounce][1] = lambertCosineLaw;
+                            depthBlue[currentBounce][2] = col[2];
+                            depthBlue[currentBounce][3] = 1;
+                        }
+                    }
+                }
+                float redAmplitude = 0;
+                float greenAmplitude = 0;
+                float blueAmplitude = 0;
+                for (int index = depthRed.size() - 1; index >= 0; index--) {
+                    if (depthRed[index][3] == 1) {
+                        redAmplitude = ((depthRed[index][0] + redAmplitude) * depthRed[index][1]) * depthRed[index][2];
+                    }
+                    if (depthGreen[index][3] == 1) {
+                        greenAmplitude = ((depthGreen[index][0] + greenAmplitude) * depthGreen[index][1]) * depthGreen[index][2];
+                    }
+                    if (depthBlue[index][3] == 1) {
+                        blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
+                    }
+                }
+                absR[y * internalResX + x] += redAmplitude;
+                absG[y * internalResX + x] += greenAmplitude;
+                absB[y * internalResX + x] += blueAmplitude;
+                lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
             }
         }
     }
@@ -576,7 +690,8 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         for (int i = 0; i < BVHNodes.size(); i++) {
             for (int j = i + 1; j < BVHNodes.size(); j++) {
                 combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
+                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (
+                           BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -745,6 +860,7 @@ void Render::intialiseObjects() {
     for (int i = 0; i < internalResX * internalResY; i++) {
         secondaryRay[i] = new Ray();
         primaryRay[i] = new Ray();
+        rays[i] = new Ray();
     }
     RGBBuffer = new uint8_t[resX * resY * 3];
 }
@@ -758,6 +874,7 @@ void Render::deleteObjects() {
     for (int i = 0; i < resX * resY; i++) {
         delete primaryRay[i];
         delete secondaryRay[i];
+        delete rays[i];
     }
     delete RGBBuffer;
 }
