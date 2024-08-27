@@ -31,10 +31,7 @@ public:
     void BVHProfiling();
 
     // traversal logic
-    void computePrimaryRay(int xstart, int xend, int ystart, int yend, std::mutex &mutex) const;
-    void computeSecondaryRay(int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
     void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
-
 
     // bounce logic
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
