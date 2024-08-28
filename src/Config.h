@@ -39,11 +39,11 @@ struct Config {
         if (fOV < 0) {fOV = 0;}
     }
 
-    void increaseApeture() {
+    void increaseAperture() {
         apertureRadius += (apertureRadius * 0.01f);
     }
 
-    void decreaseApeture() {
+    void decreaseAperture() {
         apertureRadius -= apertureRadius * 0.01f;
         if (apertureRadius < 0) {apertureRadius = 0;}
     }

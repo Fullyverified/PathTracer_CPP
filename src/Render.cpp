@@ -188,11 +188,11 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
                 camMoved = true;
             }
             if (inputState[SDL_SCANCODE_SEMICOLON]) {
-                config.increaseApeture();
+                config.increaseAperture();
                 camMoved = true;
             }
             if (inputState[SDL_SCANCODE_APOSTROPHE]) {
-                config.decreaseApeture();
+                config.decreaseAperture();
                 camMoved = true;
             }
             if (inputState[SDL_SCANCODE_W]) {
