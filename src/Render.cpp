@@ -44,6 +44,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
+    int presents = 0;
+
     // render loop code
     while (running) {
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
@@ -115,7 +117,11 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
-        window.presentScreen(RGBBuffer, resX);
+
+        if (presents == 0) {
+            window.presentScreen(RGBBuffer, resX);
+        }
+        presents++;
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
         //-----------------------
@@ -282,8 +288,8 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = rays[internalResX * y + x];
-            ray->setHit(true);
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
+                ray->setHit(true);
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
                     if (ray->getHit()) {
                         if (currentBounce == 0) {
@@ -299,7 +305,11 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             ray->getOrigin().set(cam.getPos());
                             ray->getPos().set(cam.getPos());
                             // calculate position of pixel on image plane
-                            Vector3 pixelPosPlane(((((x + 0.5f) / internalResX) * 2) - 1) * aspectRatio, 1 - (((y + 0.5f) / internalResY) * 2), 0);
+                            // jitter the pixel position for MSAA
+                            float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
+                            float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
+                            Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
+                                                  1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
                             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
                             // point ray according to pixel position (ray starts from camera origin)
                             ray->getDir().set(
@@ -482,9 +492,9 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
             ((1 - roughness) * reflection.getX()) + roughness * sampledD.getX(),
             ((1 - roughness) * reflection.getY()) + roughness * sampledD.getY(),
             ((1 - roughness) * reflection.getZ()) + roughness * sampledD.getZ());
-    }
-    else { // pure reflection direction if rough = 0
-        ray.getDir().set(reflection.getX(), reflection.getY(),reflection.getZ());
+    } else {
+        // pure reflection direction if rough = 0
+        ray.getDir().set(reflection.getX(), reflection.getY(), reflection.getZ());
     }
     ray.getDir().normalise();
     if (ray.getDir().dot(ray.getNormal()) < 0) {
