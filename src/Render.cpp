@@ -44,8 +44,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
     constructBVHST(sceneobjectsList);
     BVHNode *BVHrootNode = BVHNodes.at(0);
 
-    int presents = 0;
-
     // render loop code
     while (running) {
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
@@ -117,11 +115,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
-
-        if (presents == 0) {
-            window.presentScreen(RGBBuffer, resX);
-        }
-        presents++;
+        window.presentScreen(RGBBuffer, resX);
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
         //-----------------------
