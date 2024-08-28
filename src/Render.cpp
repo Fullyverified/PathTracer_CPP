@@ -91,22 +91,20 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         //-----------------------
 
         // tone mapping
-        maxR = 0;
-        maxG = 0;
-        maxB = 0;
+        maxLuminance = 0;
+        currentLuminance = 0;
         for (int i = 0; i < internalResX * internalResY; i++) {
             // determine brightest amplitude in scene
-            maxR = lumR[i] > maxR ? lumR[i] : maxR;
-            maxG = lumG[i] > maxG ? lumG[i] : maxG;
-            maxB = lumB[i] > maxB ? lumB[i] : maxB;
+            currentLuminance = 0.2126f * lumR[i] + 0.7152f * lumG[i] + 0.0722f * lumB[i];
+            maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
         }
-        maxLuminance = (0.2126f * maxR + 0.7152f * maxG + 0.0722f * maxB) * config.ISO;
+        maxLuminance *= config.ISO;
         auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(internalResX, segments, boundsX, i);
                 boundsY = threadSegments(internalResY, segments, boundsY, j);
-                threads.emplace_back(std::async(std::launch::async, &Render::toneMap, this, std::ref(maxLuminance),
+                threads.emplace_back(std::async(std::launch::async, &Render::toneMap, this, maxLuminance,
                                                 boundsX.first, boundsX.second, boundsY.first,
                                                 boundsY.second, std::ref(mutex)));
             }
@@ -233,7 +231,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
     window.destroyWindow(); // delete SDL objects
 }
 
-void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
+void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
@@ -246,14 +244,18 @@ void Render::toneMap(float &maxLuminance, int xstart, int xend, int ystart, int 
                 // Extended Reinhard Tone Mapping - returns value [0, 1]
                 float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
+                /*red *= mappedLuminance;
+                green *= mappedLuminance;
+                blue *= mappedLuminance;*/
+
                 red *= mappedLuminance / luminance;
                 green *= mappedLuminance / luminance;
                 blue *= mappedLuminance / luminance;
 
-
-                red *= config.ISO;
+                /*red *= config.ISO;
                 green *= config.ISO;
                 blue *= config.ISO;
+                */
 
                 // Apply gamma correction
                 float gamma = 2.2f;
