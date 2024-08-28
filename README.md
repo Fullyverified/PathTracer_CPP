@@ -9,9 +9,10 @@ Multithreading
 BVH Acceleration  
 Cosine Weighted Importance Sampling  
 Refraction (Transparency)  
-Controls - WASD and Mouse - UP and DOWN for exposure - numPad -, + for fOV  
+Controls - WASD and Mouse - UP and DOWN for exposure | numPad -, + for fOV | [ ] for apertureRadius | ; " for focal Distance  
   input can be locked with Del key for longer renders
 Extended Reinhard Tone Mapping
+Depth of Field
 
 Settings can be altered in the Config.h file. I will add a UI soon.
 
@@ -22,7 +23,6 @@ SIMD Instructions to find more paralellism
 GPU Acceleration with Vulkan  
 GUI to control options  
 Meshes, image textures, rougness maps, etc  
-Depth of Field  
 
 # Improvments
 BVH Tree Construction supports both multithreaded and singlethreaded modes. Multithreaded tree construction is only faster for scenes with hundreds of objects, so ST is default.  
