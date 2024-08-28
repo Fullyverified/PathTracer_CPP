@@ -16,6 +16,7 @@ Extended Reinhard Tone Mapping
 Settings can be altered in the Config.h file. I will add a UI soon.
 
 # To Do  
+Russian Roulette Termination - (currently ray bounces are a fixed amount)
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
 GPU Acceleration with Vulkan  
