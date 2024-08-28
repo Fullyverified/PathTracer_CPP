@@ -9,8 +9,9 @@ struct Config {
     float fOV = 53;
     int raysPerPixel = 1;
     int bounceDepth = 7;
-    float apertureRadius = 0.001f;
-    float focalDistance = 2.0f;;
+    bool DepthOfField = false;
+    float apertureRadius = 0.0001f;
+    float focalDistance = 7.0f;;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;

@@ -69,10 +69,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             camMoved = false;
         }
 
-        std::cout << "FocalDistance: "<<config.focalDistance<<std::endl;
-        std::cout << "Apeture: "<<config.apertureRadius<<std::endl;
-
-        auto startTimeSR = std::chrono::high_resolution_clock::now();
+        auto startTimeRays = std::chrono::high_resolution_clock::now();
         //std::cout << "Starting Secondary Rays: " << std::endl;
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
@@ -88,8 +85,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
-        auto durationTimeSR = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeSR);
-        //std::cout << config.raysPerPixel * iterations << " Secondary Ray(s) Time: " << durationTimeSR.count() << "ms" << std::endl;
+        auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
+        std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << std::endl;
         iterations++;
         //-----------------------
 
@@ -120,7 +117,7 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         threads.clear();
         window.presentScreen(RGBBuffer, resX);
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
-        //std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
+        std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
         //-----------------------
     }
 }
@@ -307,7 +304,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         if (currentBounce == 0) {
                             // primary Ray
                             // reset hit bool
-                            for (int i = 0; i < config.bounceDepth + 1; i++) {
+                            for (int i = 0; i <= config.bounceDepth; i++) {
                                 for (int j = 0; j <= 3; j++) {
                                     depthRed[i][j] = 0;
                                     depthGreen[i][j] = 0;
@@ -315,6 +312,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                                 }
                             }
                             ray->getOrigin().set(cam.getPos());
+                            ray->getPos().set(cam.getPos());
                             // calculate position of pixel on image plane
                             // jitter the pixel position for MSAA
                             float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
@@ -323,19 +321,19 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
                             // point ray according to pixel position (ray starts from camera origin)
                             ray->getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
-
                             ray->getDir().normalise();
-                            // compute Focal Point
-                            Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
-                            // Randomly sample a point within the aperture
-                            float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                            float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                            Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
-                            ray->getOrigin().set(cam.getPos() + lensOffset);
-                            ray->getPos().set(cam.getPos() + lensOffset);
-                            ray->getDir().set(focalPoint - ray->getOrigin());
-                            ray->getDir().normalise();
-
+                            if (config.DepthOfField) {
+                                // compute Focal Point
+                                Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
+                                // Randomly sample a point within the aperture
+                                float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                                float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                                Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
+                                ray->getOrigin().set(cam.getPos() + lensOffset);
+                                ray->getPos().set(cam.getPos() + lensOffset);
+                                ray->getDir().set(focalPoint - ray->getOrigin());
+                                ray->getDir().normalise();
+                            }
                         } else {
                             // secondary Ray
                             float randomSample = dist(rng); // monte carlo sampling
