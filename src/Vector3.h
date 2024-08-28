@@ -12,10 +12,12 @@ public:
     Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {}
 
     // adding
-    void add(const Vector3& second) {
-        x += second.x;
-        y += second.y;
-        z += second.z;
+    [[nodiscard]] Vector3 operator+(const Vector3& second) const{
+        return {x + second.x, y + second.y, z + second.z};
+    }
+
+    Vector3 operator+(float scalar) {
+        return {x + scalar, y + scalar, z + scalar};
     }
 
     /*void addSIMD(const Vector3& second) {
@@ -33,21 +35,25 @@ public:
         _mm_store_ss(&z, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 2)));
     }*/
 
-    [[nodiscard]] Vector3 addNew(const Vector3& second) const{
-        return {x + second.x, y + second.y, z + second.z};
-    }
-
     // subtracting
-    void subtract(const Vector3& second) {
-        x -= second.x;
-        y -= second.y;
-        z -= second.z;
-    }
-
-    [[nodiscard]] Vector3 subtractNew(const Vector3& second) const{
+    [[nodiscard]] Vector3 operator-(const Vector3& second) const{
         return {x - second.x, y - second.y, z - second.z};
     }
 
+    Vector3 operator-(float scalar) {
+        return {x - scalar, y - scalar, z - scalar};
+    }
+
+    // multiplying
+    [[nodiscard]] Vector3 operator*(const Vector3& second) const {
+        return {x * second.x, y * second.y, z * second.z};
+    }
+
+    Vector3 operator*(float scalar) const {
+        return {x * scalar, y * scalar, z * scalar};
+    }
+
+    // vector operations
     [[nodiscard]] float dot(const Vector3& second) const {
         return x * second.x + y * second.y + z * second.z;
     }

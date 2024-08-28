@@ -302,15 +302,20 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             // jitter the pixel position for MSAA
                             float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
                             float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
-                            Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
-                                                  1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
+                            Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio, 1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
                             Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
                             // point ray according to pixel position (ray starts from camera origin)
-                            ray->getDir().set(
-                                cam.getDir().getX() + cam.getRight().getX() * pixelPosScene.getX() + cam.getUp().getX() * pixelPosScene.getY(),
-                                cam.getDir().getY() + cam.getRight().getY() * pixelPosScene.getX() + cam.getUp().getY() * pixelPosScene.getY(),
-                                cam.getDir().getZ() + cam.getRight().getZ() * pixelPosScene.getX() + cam.getUp().getZ() * pixelPosScene.getY());
+                            ray->getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
+
                             ray->getDir().normalise();
+                            // compute Focal Point
+                            Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
+                            // Randomly sample a point within the aperture
+                            float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                            float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                            Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
+
+
                         } else {
                             // secondary Ray
                             float randomSample = dist(rng); // monte carlo sampling
@@ -394,10 +399,8 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         // valid refreaction into next medium
         float cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
         sceneObject.getNormal(ray); // update normal
-        Vector3 refraction(
-            ray.getDir().getX() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getX(),
-            ray.getDir().getY() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getY(),
-            ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
+        Vector3 refraction(ray.getDir() * (n1 / n2) + ray.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
+
         ray.getDir().set(refraction);
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
@@ -420,10 +423,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         }
         cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
         sceneObject.getNormal(ray); // update normal
-        refraction.set(
-            ray.getDir().getX() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getX(),
-            ray.getDir().getY() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getY(),
-            ray.getDir().getZ() * (n1 / n2) + ((n1 / n2) * cosTheta1 - cosTheta2) * ray.getNormal().getZ());
+        refraction.set(ray.getDir() * (n1 / n2) + ray.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.01f);
     }
@@ -437,6 +437,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().getX() - 2 * dotProduct * ray.getNormal().getX(),
         ray.getDir().getY() - 2 * dotProduct * ray.getNormal().getY(),
         ray.getDir().getZ() - 2 * dotProduct * ray.getNormal().getZ());
+
     if (roughness > 0) {
         if (flipNormal) {
             ray.getNormal().flip();
