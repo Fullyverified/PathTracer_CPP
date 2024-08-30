@@ -46,6 +46,8 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
 
     // render loop code
     while (running) {
+        auto frameTime = std::chrono::high_resolution_clock::now();
+
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
 
@@ -86,7 +88,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         }
         threads.clear();
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
-        std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << std::endl;
         iterations++;
         //-----------------------
 
@@ -115,7 +116,10 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         threads.clear();
         window.presentScreen(RGBBuffer, resX);
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
-        std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << std::endl;
+        auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameTime);
+        std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << "\n";
+        std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << "\n";
+        std::cout << "Frametime: " << finalFrameTime.count() << "ms" << std::endl;
         //-----------------------
     }
 }
@@ -296,100 +300,99 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
     std::vector<float> lum(3, 0.0f);
     std::vector<float> col(3, 0.0f);
 
+
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = rays[internalResX * y + x];
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 ray->setHit(true);
-                for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
-                    if (ray->getHit()) {
-                        if (currentBounce == 0) {
-                            // primary Ray
-                            // reset hit bool
-                            for (int i = 0; i <= config.bounceDepth; i++) {
-                                for (int j = 0; j <= 3; j++) {
-                                    depthRed[i][j] = 0;
-                                    depthGreen[i][j] = 0;
-                                    depthBlue[i][j] = 0;
-                                }
+                double contribution = 1;
+                float probability = 0;
+                std::vector<BounceInfo> bounceInfo;
+                for (int currentBounce = 0; ray->getHit() && (/*currentBounce <= config.bounceDepth || */contribution > 0.01); currentBounce++) {
+                    if (currentBounce == 0) {
+                        // primary Ray
+                        // reset hit bool
+                        for (int i = 0; i <= config.bounceDepth; i++) {
+                            for (int j = 0; j <= 3; j++) {
+                                depthRed[i][j] = 0;
+                                depthGreen[i][j] = 0;
+                                depthBlue[i][j] = 0;
                             }
-                            ray->getOrigin().set(cam.getPos());
-                            ray->getPos().set(cam.getPos());
-                            // calculate position of pixel on image plane
-                            // jitter the pixel position for MSAA
-                            float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
-                            float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
-                            Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio, 1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
-                            Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
-                            // point ray according to pixel position (ray starts from camera origin)
-                            ray->getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
+                        }
+                        ray->getOrigin().set(cam.getPos());
+                        ray->getPos().set(cam.getPos());
+                        // calculate position of pixel on image plane
+                        // jitter the pixel position for MSAA
+                        float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
+                        float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
+                        Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
+                                              1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
+                        Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
+                        // point ray according to pixel position (ray starts from camera origin)
+                        ray->getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
+                        ray->getDir().normalise();
+                        if (config.DepthOfField) {
+                            // compute Focal Point
+                            Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
+                            // Randomly sample a point within the aperture
+                            float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                            float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                            Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
+                            ray->getOrigin().set(cam.getPos() + lensOffset);
+                            ray->getPos().set(cam.getPos() + lensOffset);
+                            ray->getDir().set(focalPoint - ray->getOrigin());
                             ray->getDir().normalise();
-                            if (config.DepthOfField) {
-                                // compute Focal Point
-                                Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
-                                // Randomly sample a point within the aperture
-                                float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                                float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                                Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
-                                ray->getOrigin().set(cam.getPos() + lensOffset);
-                                ray->getPos().set(cam.getPos() + lensOffset);
-                                ray->getDir().set(focalPoint - ray->getOrigin());
-                                ray->getDir().normalise();
-                            }
+                        }
+                    } else {
+                        // secondary Ray
+                        float randomSample = dist(rng); // monte carlo sampling
+                        if (randomSample >= ray->getHitObject()->getTransp()) {
+                            sampleReflectionDirection(*ray, *ray->getHitObject(), false);
                         } else {
-                            // secondary Ray
-                            float randomSample = dist(rng); // monte carlo sampling
-                            if (randomSample >= ray->getHitObject()->getTransp()) {
-                                sampleReflectionDirection(*ray, *ray->getHitObject(), false);
-                            } else {
-                                sampleRefractionDirection(*ray, *ray->getHitObject(), false);
-                            }
+                            sampleRefractionDirection(*ray, *ray->getHitObject(), false);
                         }
-                        BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
-                        ray->setHit(false);
-                        if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
-                            // did we make it to a leaf node?
-                            SceneObject *BVHSceneObject = leafNode->getSceneObject();
-                            std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
-                            float distanceClose = objectDistance[0];
-                            ray->march(distanceClose);
-                            ray->getHitPoint().set(ray->getPos());
-                            ray->setHit(true);
-                            ray->setHitObject(BVHSceneObject);
-                            ray->getOrigin().set(ray->getPos());
-                            // store hit data
-                            BVHSceneObject->getNormal(*ray); // update normal vector
-                            float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
-                            lum = BVHSceneObject->getLum();
-                            col = BVHSceneObject->getCol();
-                            depthRed[currentBounce][0] = lum[0];
-                            depthRed[currentBounce][1] = lambertCosineLaw;
-                            depthRed[currentBounce][2] = col[0];
-                            depthRed[currentBounce][3] = 1;
-                            depthGreen[currentBounce][0] = lum[1];
-                            depthGreen[currentBounce][1] = lambertCosineLaw;
-                            depthGreen[currentBounce][2] = col[1];
-                            depthGreen[currentBounce][3] = 1;
-                            depthBlue[currentBounce][0] = lum[2];
-                            depthBlue[currentBounce][1] = lambertCosineLaw;
-                            depthBlue[currentBounce][2] = col[2];
-                            depthBlue[currentBounce][3] = 1;
-                        }
+                    }
+                    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
+                    ray->setHit(false);
+                    if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
+                        // did we make it to a leaf node?
+                        SceneObject *BVHSceneObject = leafNode->getSceneObject();
+                        std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
+                        float distanceClose = objectDistance[0];
+                        ray->march(distanceClose);
+                        ray->getHitPoint().set(ray->getPos());
+                        ray->setHit(true);
+                        ray->setHitObject(BVHSceneObject);
+                        ray->getOrigin().set(ray->getPos());
+                        // store hit data
+                        BVHSceneObject->getNormal(*ray); // update normal vector
+                        float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
+                        float roughnessFactor = std::max(0.1f, 1.0f - BVHSceneObject->getRough()); // Ensure a minimum scaling factor
+                        contribution *= lambertCosineLaw * roughnessFactor;
+                        probability = dist(rng);
+                        lum = BVHSceneObject->getLum();
+                        col = BVHSceneObject->getCol();
+                        BounceInfo currentBounceInfo{};
+                        currentBounceInfo.brightnessR = lum[0];
+                        currentBounceInfo.brightnessG = lum[1];
+                        currentBounceInfo.brightnessB = lum[2];
+                        currentBounceInfo.dotProduct = lambertCosineLaw;
+                        currentBounceInfo.colourR = col[0];
+                        currentBounceInfo.colourG = col[1];
+                        currentBounceInfo.colourB = col[2];
+                        currentBounceInfo.rouletteProbability = probability;
+                        bounceInfo.push_back(currentBounceInfo);
                     }
                 }
                 float redAmplitude = 0;
                 float greenAmplitude = 0;
                 float blueAmplitude = 0;
-                for (int index = depthRed.size() - 1; index >= 0; index--) {
-                    if (depthRed[index][3] == 1) {
-                        redAmplitude = ((depthRed[index][0] + redAmplitude) * depthRed[index][1]) * depthRed[index][2];
-                    }
-                    if (depthGreen[index][3] == 1) {
-                        greenAmplitude = ((depthGreen[index][0] + greenAmplitude) * depthGreen[index][1]) * depthGreen[index][2];
-                    }
-                    if (depthBlue[index][3] == 1) {
-                        blueAmplitude = ((depthBlue[index][0] + blueAmplitude) * depthBlue[index][1]) * depthBlue[index][2];
-                    }
+                for (int index = bounceInfo.size() - 1; index >= 0; index--) {
+                    float weight = bounceInfo[index].dotProduct/* / bounceInfo[index].rouletteProbability*/;
+                    redAmplitude = (bounceInfo[index].brightnessR + redAmplitude) * bounceInfo[index].colourR * weight;
+                    greenAmplitude = (bounceInfo[index].brightnessG + greenAmplitude) * bounceInfo[index].colourG * weight;
+                    blueAmplitude = (bounceInfo[index].brightnessB + blueAmplitude) *  bounceInfo[index].colourB * weight;
                 }
                 absR[y * internalResX + x] += redAmplitude;
                 absG[y * internalResX + x] += greenAmplitude;

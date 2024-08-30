@@ -65,6 +65,19 @@ private:
     bool running, sceneUpdated, camMoved, lockInput;
     static thread_local std::mt19937 rng;  // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
+
+
+    struct BounceInfo {
+        float brightnessR;
+        float brightnessG;
+        float brightnessB;
+        float dotProduct;
+        float colourR;
+        float colourG;
+        float colourB;
+        float rouletteProbability;
+    };
+
 };
 
 #endif //RENDER_H
