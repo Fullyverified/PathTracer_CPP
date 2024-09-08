@@ -128,6 +128,8 @@ add_executable(PathTracer_CPP
         Vulkan/vk_types.h
         src/SDLWindow.h
         src/SDLWindow.cpp
+        src/Mesh.h
+        src/Mesh.cpp
 
 )
 

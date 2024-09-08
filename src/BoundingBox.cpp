@@ -23,61 +23,69 @@ BoundingBox::~BoundingBox() = default;
 
 bool BoundingBox::objectCulling(Ray &ray) const {
     // pre calculate inverse
-    // Precompute inverse direction
     float invDirX = 1.0f / ray.getDir().getX();
     float invDirY = 1.0f / ray.getDir().getY();
     float invDirZ = 1.0f / ray.getDir().getZ();
+    float tmp;
 
-    float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
+    Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
 
-    // Calculate intersection distances along X axis
-    if (invDirX >= 0) {
-        tMin = (minBounds.getX() - ray.getPos().getX()) * invDirX;
-        tMax = (maxBounds.getX() - ray.getPos().getX()) * invDirX;
+    if (ray.getDir().getX() == 0) {
+        if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
+            tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setX(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setX(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setX(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tMin = (maxBounds.getX() - ray.getPos().getX()) * invDirX;
-        tMax = (minBounds.getX() - ray.getPos().getX()) * invDirX;
+        tMin.setX((minBounds.getX() - ray.getPos().getX()) * invDirX);
+        tMax.setX((maxBounds.getX() - ray.getPos().getX()) * invDirX);
+        if (tMin.getX() > tMax.getX()) {
+            tmp = tMax.getX();
+            tMax.setX(tMin.getX());
+            tMin.setX(tmp);
+        }
     }
 
-    // Calculate intersection distances along Y axis
-    if (invDirY >= 0) {
-        tyMin = (minBounds.getY() - ray.getPos().getY()) * invDirY;
-        tyMax = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
+    if (ray.getDir().getY() == 0) {
+        if (ray.getPos().getY() < minBounds.getY() || ray.getPos().getY() > maxBounds.getY()) {
+            tMin.setY(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setY(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setY(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setY(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tyMin = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
-        tyMax = (minBounds.getY() - ray.getPos().getY()) * invDirY;
+        tMin.setY((minBounds.getY() - ray.getPos().getY()) * invDirY);
+        tMax.setY((maxBounds.getY() - ray.getPos().getY()) * invDirY);
+        if (tMin.getY() > tMax.getY()) {
+            tmp = tMax.getY();
+            tMax.setY(tMin.getY());
+            tMin.setY(tmp);
+        }
     }
 
-    // Early exit if there is no intersection along Y axis
-    if ((tMin > tyMax) || (tyMin > tMax)) return {};
-
-    // Update tMin and tMax to the intersection interval along both X and Y axes
-    if (tyMin > tMin) tMin = tyMin;
-    if (tyMax < tMax) tMax = tyMax;
-
-    // Calculate intersection distances along Z axis
-    if (invDirZ >= 0) {
-        tzMin = (minBounds.getZ() - ray.getPos().getZ()) * invDirZ;
-        tzMax = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+    if (ray.getDir().getZ() == 0) {
+        if (ray.getPos().getZ() < minBounds.getZ() || ray.getPos().getZ() > maxBounds.getZ()) {
+            tMin.setZ(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setZ(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setZ(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setZ(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tzMin = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
-        tzMax = (minBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+        tMin.setZ((minBounds.getZ() - ray.getPos().getZ()) * invDirZ);
+        tMax.setZ((maxBounds.getZ() - ray.getPos().getZ()) * invDirZ);
+        if (tMin.getZ() > tMax.getZ()) {
+            tmp = tMax.getZ();
+            tMax.setZ(tMin.getZ());
+            tMin.setZ(tmp);
+        }
     }
-
-    // Early exit if there is no intersection along Z axis
-    if ((tMin > tzMax) || (tzMin > tMax)) return {};
-
-    // Update tMin and tMax to the intersection interval along X, Y, and Z axes
-    if (tzMin > tMin) tMin = tzMin;
-    if (tzMax < tMax) tMax = tzMax;
-
-    // If tMax < 0, the AABB is behind the ray
-    if (tMax < 0) return {};
-
-    // If tMin < 0, ray starts inside the box
-    if (tMin < 0) tMin = 0;
-
-    return tMin <= tMax && tMax >= 0;
+    const float tNear = std::max(tMin.getX(), std::max(tMin.getY(), tMin.getZ()));
+    const float tFar = std::min(tMax.getX(), std::min(tMax.getY(), tMax.getZ()));
+    return tNear <= tFar && tFar >= 0;
 }
 
 bool BoundingBox::intersectionCheck(Ray &ray) const {
@@ -120,57 +128,71 @@ std::vector<float> BoundingBox::getIntersectionDistance(Ray &ray) const {
     float invDirX = 1.0f / ray.getDir().getX();
     float invDirY = 1.0f / ray.getDir().getY();
     float invDirZ = 1.0f / ray.getDir().getZ();
+    float tmp;
 
-    float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
+    Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
 
-    // Calculate intersection distances along X axis
-    if (invDirX >= 0) {
-        tMin = (minBounds.getX() - ray.getPos().getX()) * invDirX;
-        tMax = (maxBounds.getX() - ray.getPos().getX()) * invDirX;
+    if (ray.getDir().getX() == 0) {
+        if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
+            tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setX(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setX(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setX(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tMin = (maxBounds.getX() - ray.getPos().getX()) * invDirX;
-        tMax = (minBounds.getX() - ray.getPos().getX()) * invDirX;
+        tMin.setX((minBounds.getX() - ray.getPos().getX()) * invDirX);
+        tMax.setX((maxBounds.getX() - ray.getPos().getX()) * invDirX);
+        if (tMin.getX() > tMax.getX()) {
+            tmp = tMax.getX();
+            tMax.setX(tMin.getX());
+            tMin.setX(tmp);
+        }
     }
 
-    // Calculate intersection distances along Y axis
-    if (invDirY >= 0) {
-        tyMin = (minBounds.getY() - ray.getPos().getY()) * invDirY;
-        tyMax = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
+    if (ray.getDir().getY() == 0) {
+        if (ray.getPos().getY() < minBounds.getY() || ray.getPos().getY() > maxBounds.getY()) {
+            tMin.setY(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setY(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setY(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setY(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tyMin = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
-        tyMax = (minBounds.getY() - ray.getPos().getY()) * invDirY;
+        tMin.setY((minBounds.getY() - ray.getPos().getY()) * invDirY);
+        tMax.setY((maxBounds.getY() - ray.getPos().getY()) * invDirY);
+        if (tMin.getY() > tMax.getY()) {
+            tmp = tMax.getY();
+            tMax.setY(tMin.getY());
+            tMin.setY(tmp);
+        }
     }
 
-    // Early exit if there is no intersection along Y axis
-    if ((tMin > tyMax) || (tyMin > tMax)) return {};
-
-    // Update tMin and tMax to the intersection interval along both X and Y axes
-    if (tyMin > tMin) tMin = tyMin;
-    if (tyMax < tMax) tMax = tyMax;
-
-    // Calculate intersection distances along Z axis
-    if (invDirZ >= 0) {
-        tzMin = (minBounds.getZ() - ray.getPos().getZ()) * invDirZ;
-        tzMax = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+    if (ray.getDir().getZ() == 0) {
+        if (ray.getPos().getZ() < minBounds.getZ() || ray.getPos().getZ() > maxBounds.getZ()) {
+            tMin.setZ(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setZ(-std::numeric_limits<float>::infinity());
+        } else {
+            tMin.setZ(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
+            tMax.setZ(std::numeric_limits<float>::infinity());
+        }
     } else {
-        tzMin = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
-        tzMax = (minBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+        tMin.setZ((minBounds.getZ() - ray.getPos().getZ()) * invDirZ);
+        tMax.setZ((maxBounds.getZ() - ray.getPos().getZ()) * invDirZ);
+        if (tMin.getZ() > tMax.getZ()) {
+            tmp = tMax.getZ();
+            tMax.setZ(tMin.getZ());
+            tMin.setZ(tmp);
+        }
+    }
+    float tNear = std::max(tMin.getX(), std::max(tMin.getY(), tMin.getZ()));
+    float tFar = std::min(tMax.getX(), std::min(tMax.getY(), tMax.getZ()));
+
+    if (tNear < 0 && tFar >= 0) {
+        return {0, tFar}; // already inside box
     }
 
-    // Early exit if there is no intersection along Z axis
-    if ((tMin > tzMax) || (tzMin > tMax)) return {};
-
-    // Update tMin and tMax to the intersection interval along X, Y, and Z axes
-    if (tzMin > tMin) tMin = tzMin;
-    if (tzMax < tMax) tMax = tzMax;
-
-    // If tMax < 0, the AABB is behind the ray
-    if (tMax < 0) return {};
-
-    // If tMin < 0, ray starts inside the box
-    if (tMin < 0) tMin = 0;
-
-    return {tMin, tMax};
+    return {tNear, tFar};
 }
 
 float BoundingBox::getArea() const {

@@ -2,8 +2,6 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-#include <utility>
-
 Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
 pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp) {
     objID = ++objectCounter;
@@ -107,6 +105,10 @@ std::vector<float> Sphere::getIntersectionDistance(Ray &ray) const {
         float temp = sqrt1;
         sqrt1 = sqrt2;
         sqrt2 = temp;
+    }
+
+    if (sqrt1 < 0 && sqrt2 >= 0) {
+        return {sqrt1, 0}; // ray inside sphere
     }
 
     return {sqrt1, sqrt2};

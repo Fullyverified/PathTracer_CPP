@@ -195,9 +195,6 @@ std::vector<float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
     if (tNear < 0 && tFar >= 0) {
         return {0, tFar};
     }
-    if (tNear < 0) {
-        return {tFar, tNear};
-    }
     return {tNear, tFar};
 }
 

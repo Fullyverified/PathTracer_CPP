@@ -99,7 +99,9 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             currentLuminance = 0.2126f * lumR[i] + 0.7152f * lumG[i] + 0.0722f * lumB[i];
             maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
         }
+        std::cout<<"Original Max Luminance: "<<maxLuminance<<std::endl;
         maxLuminance *= config.ISO;
+        std::cout<<"Altered Max Luminance: "<<maxLuminance<<", ISO: "<<config.ISO<<std::endl;
         auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
@@ -256,11 +258,6 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
                 green *= mappedLuminance / luminance;
                 blue *= mappedLuminance / luminance;
 
-                /*red *= config.ISO;
-                green *= config.ISO;
-                blue *= config.ISO;
-                */
-
                 // Apply gamma correction
                 float gamma = 2.2f;
                 float invGamma = 1.0f / gamma;
@@ -294,32 +291,18 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
 }
 
 void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
-    std::vector<std::vector<float> > depthRed(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
-    std::vector<std::vector<float> > depthGreen(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
-    std::vector<std::vector<float> > depthBlue(config.bounceDepth + 1, std::vector<float>(4, 0.0f));
     std::vector<float> lum(3, 0.0f);
     std::vector<float> col(3, 0.0f);
-
-
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = rays[internalResX * y + x];
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 ray->setHit(true);
                 double contribution = 1;
-                float probability = 0;
                 std::vector<BounceInfo> bounceInfo;
-                for (int currentBounce = 0; ray->getHit() && (/*currentBounce <= config.bounceDepth || */contribution > 0.01); currentBounce++) {
+                for (int currentBounce = 0; ray->getHit() && (currentBounce <= config.bounceDepth/* || contribution < 0.01*/); currentBounce++) {
                     if (currentBounce == 0) {
                         // primary Ray
-                        // reset hit bool
-                        for (int i = 0; i <= config.bounceDepth; i++) {
-                            for (int j = 0; j <= 3; j++) {
-                                depthRed[i][j] = 0;
-                                depthGreen[i][j] = 0;
-                                depthBlue[i][j] = 0;
-                            }
-                        }
                         ray->getOrigin().set(cam.getPos());
                         ray->getPos().set(cam.getPos());
                         // calculate position of pixel on image plane
@@ -353,7 +336,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(*ray, *ray->getHitObject(), false);
                         }
                     }
-                    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
+                    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTreeOLD(*ray);
                     ray->setHit(false);
                     if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
                         // did we make it to a leaf node?
@@ -369,8 +352,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         BVHSceneObject->getNormal(*ray); // update normal vector
                         float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
                         float roughnessFactor = std::max(0.1f, 1.0f - BVHSceneObject->getRough()); // Ensure a minimum scaling factor
-                        contribution *= lambertCosineLaw * roughnessFactor;
-                        probability = dist(rng);
+                        contribution *= lambertCosineLaw/* * roughnessFactor*/;
                         lum = BVHSceneObject->getLum();
                         col = BVHSceneObject->getCol();
                         BounceInfo currentBounceInfo{};
@@ -381,7 +363,6 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         currentBounceInfo.colourR = col[0];
                         currentBounceInfo.colourG = col[1];
                         currentBounceInfo.colourB = col[2];
-                        currentBounceInfo.rouletteProbability = probability;
                         bounceInfo.push_back(currentBounceInfo);
                     }
                 }
@@ -389,10 +370,10 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                 float greenAmplitude = 0;
                 float blueAmplitude = 0;
                 for (int index = bounceInfo.size() - 1; index >= 0; index--) {
-                    float weight = bounceInfo[index].dotProduct/* / bounceInfo[index].rouletteProbability*/;
-                    redAmplitude = (bounceInfo[index].brightnessR + redAmplitude) * bounceInfo[index].colourR * weight;
-                    greenAmplitude = (bounceInfo[index].brightnessG + greenAmplitude) * bounceInfo[index].colourG * weight;
-                    blueAmplitude = (bounceInfo[index].brightnessB + blueAmplitude) *  bounceInfo[index].colourB * weight;
+                    float dotProduct = bounceInfo[index].dotProduct;
+                    redAmplitude = (bounceInfo[index].brightnessR + redAmplitude) * bounceInfo[index].colourR * dotProduct;
+                    greenAmplitude = (bounceInfo[index].brightnessG + greenAmplitude) * bounceInfo[index].colourG * dotProduct;
+                    blueAmplitude = (bounceInfo[index].brightnessB + blueAmplitude) *  bounceInfo[index].colourB * dotProduct;
                 }
                 absR[y * internalResX + x] += redAmplitude;
                 absG[y * internalResX + x] += greenAmplitude;
@@ -525,6 +506,7 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
         BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
     }
+
     std::cout << "Number of leaf nodes: " << BVHNodes.size() << std::endl;
 
     // create tree structure from lead nodes - bottom up
@@ -539,8 +521,7 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         for (int i = 0; i < BVHNodes.size(); i++) {
             for (int j = i + 1; j < BVHNodes.size(); j++) {
                 combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (
-                           BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
+                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
 
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -642,8 +623,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
-                          BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
+void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
     int localIndexLeft = 0, localIndexRight = 0;
@@ -678,7 +658,7 @@ void Render::BVHProfiling() {
     bool hit = false;
     std::cout << "Searching BVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
-    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
+    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTreeRoot(ray1);
     if (leafNode != nullptr) {
         std::cout << "Intersection Test: " << std::endl;;
         leafNode->getSceneObject()->printType();

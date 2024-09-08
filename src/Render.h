@@ -66,7 +66,6 @@ private:
     static thread_local std::mt19937 rng;  // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
 
-
     struct BounceInfo {
         float brightnessR;
         float brightnessG;
@@ -75,9 +74,12 @@ private:
         float colourR;
         float colourG;
         float colourB;
-        float rouletteProbability;
     };
 
+    struct hitObject {
+        SceneObject *sceneObject;
+        float intersectionDistance;
+    };
 };
 
 #endif //RENDER_H

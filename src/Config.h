@@ -2,16 +2,16 @@
 #define CONFIG_H
 
 struct Config {
-    float resX = 2400;
+    float resX = 1200;
     float upScale = 4; // 1 is default - integer scaling - multiples of res X
-    float aspectX = 2;
+    float aspectX = 1;
     float aspectY = 1;
     float fOV = 53;
     int raysPerPixel = 1;
-    int bounceDepth = 4;
+    int bounceDepth = 5;
     bool DepthOfField = false;
-    float apertureRadius = 0.0001f;
-    float focalDistance = 7.0f;;
+    float apertureRadius = 0.05f;
+    float focalDistance = 15.0f;
     int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;

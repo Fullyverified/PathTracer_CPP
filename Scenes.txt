@@ -74,3 +74,54 @@ SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7)
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-1.6),Vector3(2,6,0.5),1,1,1,40,0,0,0.75,1,0)); // right
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,0),Vector3(2,6,0.5),1,1,1,0,40,0,0.75,1,0)); // middle
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,1.6),Vector3(2,6,0.5),1,1,1,0,0,40,0.75,1,0)); // left
+
+
+
+
+Ray Tracing in one weekend DEMO:
+SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(0,-0.5,0),Vector3(200,1,200),1,1,1,0,0,0,0.75,1,0)); // floor
+    SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(-20,100,-20),Vector3(20,101,20),1,1,1,40,40,40,0.75,1,0)); // roof
+
+    SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(100,0,-100),Vector3(101,100,100),0.3,0.6,0.745,0,0,0,0.75,1,0)); // front
+    SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(-101,0,-100),Vector3(-100,100,100),0.3,0.6,0.745,0,0,0,0.75,1,0)); // front
+    SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(-100,0,100),Vector3(100,100,101),0.3,0.6,0.745,0,0,0,0.75,1,0)); // front
+    SceneObjectsList.emplace_back(new AABCubeBounds(Vector3(-100,0,-101),Vector3(100,100,-100),0.3,0.6,0.745,0,0,0,0.75,1,0)); // front
+
+
+    SceneObjectsList.emplace_back(new Sphere(Vector3(-3.5,1.5, 0),1.5,1.5,1.5,1,1,1,0,0,0,0,1,0)); //
+    SceneObjectsList.emplace_back(new Sphere(Vector3(0,1.5, 0),1.5,1.5,1.5,1,1,1,0,0,0,0.1,1.53,0.95)); //
+    SceneObjectsList.emplace_back(new Sphere(Vector3(3.5,1.5, 0),1.5,1.5,1.5,1,1,1,0,0,0,1,1,0)); //
+
+    std::mt19937 rng;
+    std::uniform_real_distribution<float> pos(-50,50);
+    std::uniform_real_distribution<float> col(0,1);
+    for (int i = 0; i < 600; i++) {
+        int x = pos(rng);
+        int z = pos(rng);
+        float r = col(rng);
+        float g = col(rng);
+        float b = col(rng);
+        SceneObjectsList.emplace_back(new Sphere(Vector3(x,0.5, z),0.5,0.5,0.5,r,g,b,0,0,0,0.75,1,0)); // sphre with random pos
+    }
+    
+    Camera *cam = new Camera(Vector3(-10, 1.5, 6), Vector3(1, 0, -0.5));
+
+
+
+
+BVH Test:
+SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // floor
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // roof
+
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),1,1,1,0,0,0,0.75,1,0)); // back wall
+
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,0,0,0,0,0,0.75,1,0)); // left wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
+
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2,0),1,1,1,1,0,0,0,0,0,1,1,0)); // left sphere on floor
+    //SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(5,-1.7,1),Vector3(1,1,1),1,1,1,0,0,0,0,1,0)); // left cube on floor
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.2,-0.7),0.1,0.1,0.1,0,0,1,0,0,0,1,1,0)); // right sphere on floor
+
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
+
+    Camera *cam = new Camera(Vector3(-8, 0, 0), Vector3(1, 0, 0));
