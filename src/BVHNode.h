@@ -20,22 +20,23 @@ public:
     ~BVHNode(); // deconstructor
 
     [[nodiscard]] int getNumChildren() const;
-    [[nodiscard]] std::vector<float> getIntersectionDistance(Ray &ray) const;
-    [[nodiscard]] BVHNode* searchBVHTreeRoot(Ray &ray);
-    [[nodiscard]] BVHNode* searchBVHTreeRecursive(Ray &ray, std::unordered_map<BVHNode*, traversalData>& cache);
-    [[nodiscard]] BVHNode* searchBVHTreeOLD(Ray &ray);
+    [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const;
+    [[nodiscard]] std::pair<BVHNode*, float> searchBVHTree(Ray &ray);
     [[nodiscard]] float getArea() const;
+
     [[nodiscard]] BoundingBox* getBoundingBox() const;
     [[nodiscard]] SceneObject* getSceneObject() const;
     [[nodiscard]] BVHNode* getNodeLeft() const;
     [[nodiscard]] BVHNode* getNodeRight() const;
 
+    void setLeaf(bool leaf);
+    [[nodiscard]] bool getLeaf();
+
 private:
     BVHNode *nodeLeft, *nodeRight;
     SceneObject *sceneObject;
     BoundingBox *boundingBox;
-    int ID;
+    bool isLeaf;
 };
-
 
 #endif //BVHNODE_H

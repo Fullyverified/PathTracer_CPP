@@ -30,7 +30,7 @@ std::pair<Vector3, Vector3> Mesh::getBounds() const {
     return {min, max};
 }
 
-std::vector<float> Mesh::getIntersectionDistance(Ray &ray) const {
+std::pair<float, float> Mesh::getIntersectionDistance(Ray &ray) const {
     return {0, 0};
 }
 
@@ -39,12 +39,12 @@ Vector3 Mesh::getPos() const {
     return pos;
 }
 
-std::vector<float> Mesh::getCol() const {
-    return std::vector<float> {R, G, B};
+Vector3 Mesh::getCol() const {
+    return colour;
 }
 
-std::vector<float> Mesh::getLum() const {
-    return std::vector<float> {RL, GL, BL};
+Vector3 Mesh::getLum() const {
+    return luminance;
 }
 
 float Mesh::getRough() const {

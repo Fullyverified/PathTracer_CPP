@@ -5,8 +5,8 @@
 #include <utility>
 #include <limits>
 
-AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) : minBounds(minBounds), maxBounds(maxBounds), R(R), G(G),
-B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp) {
+AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
+minBounds(minBounds), maxBounds(maxBounds), colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp) {
     objID = ++objectCounter;
 }
 
@@ -119,7 +119,7 @@ void AABCubeBounds::getNormal(Ray &ray) const {
     }
 }
 
-std::vector<float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
+std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
@@ -201,12 +201,12 @@ Vector3 AABCubeBounds::getPos() const {
     return pos;
 }
 
-std::vector<float> AABCubeBounds::getCol() const {
-    return std::vector<float> {R, G, B};
+Vector3 AABCubeBounds::getLum() const {
+    return luminance;
 }
 
-std::vector<float> AABCubeBounds::getLum() const {
-    return std::vector<float> {RL, GL, BL};
+Vector3 AABCubeBounds::getCol() const {
+    return colour;
 }
 
 float AABCubeBounds::getRough() const {

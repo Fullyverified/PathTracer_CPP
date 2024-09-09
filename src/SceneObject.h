@@ -10,13 +10,13 @@ class SceneObject {
 public:
 
     [[nodiscard]] virtual bool objectCulling(Ray& ray) const = 0;
-    [[nodiscard]] virtual std::vector<float> getIntersectionDistance(Ray &ray) const = 0;
+    [[nodiscard]] virtual std::pair<float, float> getIntersectionDistance(Ray &ray) const = 0;
     [[nodiscard]] virtual bool intersectionCheck(Ray& ray) const = 0;
     [[nodiscard]] virtual Vector3 getPos() const = 0;
     virtual void getNormal(Ray &ray) const = 0;
     [[nodiscard]] virtual std::pair<Vector3, Vector3> getBounds() const = 0;
-    [[nodiscard]] virtual std::vector<float> getCol() const = 0;
-    [[nodiscard]] virtual std::vector<float> getLum() const = 0;
+    [[nodiscard]] virtual Vector3 getCol() const = 0;
+    [[nodiscard]] virtual Vector3 getLum() const = 0;
     [[nodiscard]] virtual float getRough() const = 0;
     [[nodiscard]] virtual float getRefrac() const = 0;
     [[nodiscard]] virtual float getTransp() const = 0;

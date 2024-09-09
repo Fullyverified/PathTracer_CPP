@@ -291,8 +291,8 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
 }
 
 void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
-    std::vector<float> lum(3, 0.0f);
-    std::vector<float> col(3, 0.0f);
+    Vector3 lum;
+    Vector3 col;
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             Ray *ray = rays[internalResX * y + x];
@@ -336,14 +336,13 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(*ray, *ray->getHitObject(), false);
                         }
                     }
-                    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTreeOLD(*ray);
+                    //BVHNode *leafNode = BVHNodes.at(0)->searchBVHTreeOLD(*ray);
+                    std::pair<BVHNode*, float> leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
                     ray->setHit(false);
-                    if (leafNode != nullptr && leafNode->getSceneObject() != nullptr) {
+                    if (leafNode.first != nullptr && leafNode.first->getLeaf()) {
                         // did we make it to a leaf node?
-                        SceneObject *BVHSceneObject = leafNode->getSceneObject();
-                        std::vector<float> objectDistance = BVHSceneObject->getIntersectionDistance(*ray);
-                        float distanceClose = objectDistance[0];
-                        ray->march(distanceClose);
+                        SceneObject *BVHSceneObject = leafNode.first->getSceneObject();
+                        ray->march(leafNode.second);
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
                         ray->setHitObject(BVHSceneObject);
@@ -356,13 +355,13 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         lum = BVHSceneObject->getLum();
                         col = BVHSceneObject->getCol();
                         BounceInfo currentBounceInfo{};
-                        currentBounceInfo.brightnessR = lum[0];
-                        currentBounceInfo.brightnessG = lum[1];
-                        currentBounceInfo.brightnessB = lum[2];
+                        currentBounceInfo.brightnessR = lum.getX();
+                        currentBounceInfo.brightnessG = lum.getY();
+                        currentBounceInfo.brightnessB = lum.getZ();
                         currentBounceInfo.dotProduct = lambertCosineLaw;
-                        currentBounceInfo.colourR = col[0];
-                        currentBounceInfo.colourG = col[1];
-                        currentBounceInfo.colourB = col[2];
+                        currentBounceInfo.colourR = col.getX();
+                        currentBounceInfo.colourG = col.getY();
+                        currentBounceInfo.colourB = col.getZ();
                         bounceInfo.push_back(currentBounceInfo);
                     }
                 }
@@ -407,7 +406,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
 
         ray.getDir().set(refraction);
         ray.getDir().normalise();
-        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
+        ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second); // march the ray to the other side of the object
         n1 = sceneObject.getRefrac();
         n2 = 1.0003;
         // cosine of incident angle
@@ -418,7 +417,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         while (sinTheta2 >= 1) {
             sampleReflectionDirection(ray, sceneObject, true); // inside object so flipped normal
             ray.updateOrigin(-0.01f); // undo the march from the previous method
-            ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1]); // march the ray to the other side of the object
+            ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second); // march the ray to the other side of the object
             // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
             sceneObject.getNormal(ray); // update normal
             cosTheta1 = -(ray.getNormal().dot(ray.getDir()));
@@ -429,7 +428,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         sceneObject.getNormal(ray); // update normal
         refraction.set(ray.getDir() * (n1 / n2) + ray.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
         ray.getDir().normalise();
-        ray.updateOrigin(sceneObject.getIntersectionDistance(ray)[1] + 0.01f);
+        ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second + 0.01f);
     }
 }
 
@@ -505,6 +504,7 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
         BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
         BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
+        BVHNodes.at(BVHNodes.size()-1)->setLeaf(true);
     }
 
     std::cout << "Number of leaf nodes: " << BVHNodes.size() << std::endl;
@@ -558,6 +558,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
         BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
         BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
+        BVHNodes.at(BVHNodes.size()-1)->setLeaf(true);
     }
     std::cout << "Number of leaf nodes: " << BVHNodes.size() << std::endl;
 
@@ -658,13 +659,13 @@ void Render::BVHProfiling() {
     bool hit = false;
     std::cout << "Searching BVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
-    BVHNode *leafNode = BVHNodes.at(0)->searchBVHTreeRoot(ray1);
-    if (leafNode != nullptr) {
+    std::pair<BVHNode*, float> leafNode = BVHNodes.at(0)->searchBVHTree(ray1);
+    if (leafNode.first != nullptr) {
         std::cout << "Intersection Test: " << std::endl;;
-        leafNode->getSceneObject()->printType();
+        leafNode.first->getSceneObject()->printType();
         std::cout << "SceneObject Pos";
-        leafNode->getSceneObject()->getPos().print();
-        hit = leafNode->getSceneObject()->objectCulling(ray1);
+        leafNode.first->getSceneObject()->getPos().print();
+        hit = leafNode.first->getSceneObject()->objectCulling(ray1);
     } else { hit = false; }
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;

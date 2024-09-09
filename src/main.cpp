@@ -24,7 +24,7 @@ int main() {
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.5,0),1,1,1,1,0,0,0,0,0,1,1,0)); // big
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-0.8,-0.8),0.1,0.1,0.1,0,0,1,0,0,0,1,1,0)); // small
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-0.75,-0.85),0.15,0.15,0.15,0,0,1,0,0,0,1,1,0)); // small
     //SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.5,-3),1,1,1,1,0,0,0,0,0,0,1,0)); // reflection
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling

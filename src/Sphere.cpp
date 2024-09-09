@@ -3,7 +3,7 @@
 #include "Ray.h"
 
 Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
-pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), R(R), G(G), B(B), RL(RL), GL(GL), BL(BL), roughness(roughness), refrac(refrac), transp(transp) {
+pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp) {
     objID = ++objectCounter;
 }
 
@@ -78,7 +78,7 @@ std::pair<Vector3, Vector3> Sphere::getBounds() const {
     return std::make_pair(min, max);
 }
 
-std::vector<float> Sphere::getIntersectionDistance(Ray &ray) const {
+std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos() - pos;
     const float invXR = 1.0f / (radiusx * radiusx);
     const float invYR = 1.0f / (radiusy * radiusy);
@@ -119,12 +119,12 @@ Vector3 Sphere::getPos() const {
     return pos;
 }
 
-std::vector<float> Sphere::getCol() const {
-    return std::vector<float> {R, G, B};
+Vector3 Sphere::getCol() const {
+    return colour;
 }
 
-std::vector<float> Sphere::getLum() const {
-    return std::vector<float> {RL, GL, BL};
+Vector3 Sphere::getLum() const {
+    return luminance;
 }
 
 float Sphere::getRough() const {
