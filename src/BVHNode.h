@@ -1,19 +1,11 @@
 #ifndef BVHNODE_H
 #define BVHNODE_H
 
-#include <unordered_map>
-
 #include "BoundingBox.h"
 #include "SceneObject.h"
 
 class BVHNode {
 public:
-    struct traversalData {
-        std::vector<float> bboxDistance;
-        std::vector<float> objDistance;
-        BVHNode* node;
-    };
-
     // two constructors
     BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject);
     BVHNode(BoundingBox* boundingBox, BVHNode* left, BVHNode* right);

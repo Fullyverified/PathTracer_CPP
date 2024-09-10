@@ -6,6 +6,7 @@
 #include <mutex>
 #include <random>
 
+#include "BoundingBox.h"
 #include "SceneObject.h"
 #include "BVHNode.h"
 #include "Camera.h"
@@ -28,10 +29,13 @@ public:
     void constructBVHMT(const std::vector<SceneObject*> &sceneObjectsList);
     void findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex, BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex);
 
-    void BVHProfiling();
+    void constructLinearBVH(const std::vector<SceneObject*> &sceneObjectsList);
+    std::pair<int, float> searchLinearBVH(Ray &ray, const std::vector<SceneObject*> &sceneObjectsList) const;
+
+    void BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList);
 
     // traversal logic
-    void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
+    void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::vector<SceneObject*> &sceneobjectsList, std::mutex &mutex) const;
 
     // bounce logic
     void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
@@ -41,7 +45,7 @@ public:
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
 
     // multithreading logic
-    std::pair<int, int> threadSegments(float resI, int &numThreads, std::pair<int, int>, int i);
+    std::pair<int, int> threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int i);
 
     // cleanup
     void intialiseObjects();
@@ -76,10 +80,16 @@ private:
         float colourB;
     };
 
-    struct hitObject {
-        SceneObject *sceneObject;
-        float intersectionDistance;
+    struct LinearBVHNode {
+        BoundingBox bounds;
+        int leftChild;
+        int rightChild;
+        int objectIndex;
+        bool isLeaf;
+        int numChildren;
     };
+    std::vector<LinearBVHNode> bvhNodes;
+
 };
 
 #endif //RENDER_H

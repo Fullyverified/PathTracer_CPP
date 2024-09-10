@@ -212,3 +212,12 @@ void BoundingBox::updateBounds(const BoundingBox& left, const BoundingBox& right
     minBounds.setZ(std::min(left.minBounds.getZ(), right.minBounds.getZ()));
     maxBounds.setZ(std::max(left.maxBounds.getZ(), right.maxBounds.getZ()));
 }
+
+void BoundingBox::updateBounds(const BoundingBox* left, const BoundingBox* right) {
+    minBounds.setX(std::min(left->minBounds.getX(), right->minBounds.getX()));
+    maxBounds.setX(std::max(left->maxBounds.getX(), right->maxBounds.getX()));
+    minBounds.setY(std::min(left->minBounds.getY(), right->minBounds.getY()));
+    maxBounds.setY(std::max(left->maxBounds.getY(), right->maxBounds.getY()));
+    minBounds.setZ(std::min(left->minBounds.getZ(), right->minBounds.getZ()));
+    maxBounds.setZ(std::max(left->maxBounds.getZ(), right->maxBounds.getZ()));
+}

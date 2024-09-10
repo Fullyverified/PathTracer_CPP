@@ -189,12 +189,11 @@ std::pair<float, float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
     float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
     float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
 
-    //std::cout << "tNear: "<<tNear<<", tFar: "<<tFar<<"\n";
-
     // if tNear < 0, return tFar, else return tNear
     if (tNear < 0 && tFar >= 0) {
         return {0, tFar};
     }
+
     return {tNear, tFar};
 }
 

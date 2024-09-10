@@ -3,12 +3,13 @@
 
 struct Config {
     float resX = 1200;
-    float upScale = 4; // 1 is default - integer scaling - multiples of res X
+    float upScale = 6; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
-    float fOV = 53;
+    float fOV = 52;
     int raysPerPixel = 1;
-    int bounceDepth = 5;
+    int bounceDepth = 4;
+    int tileSize = 32;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;

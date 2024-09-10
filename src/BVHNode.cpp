@@ -1,19 +1,17 @@
 #include "BVHNode.h"
 
-#include <unordered_map>
-
 #include "BoundingBox.h"
 #include "SceneObject.h"
 
 // leaf node
-BVHNode::BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject) :
-boundingBox(boundingBox), sceneObject(&sceneObject),
-nodeLeft(nullptr), nodeRight(nullptr), isLeaf(false) {}
+BVHNode::BVHNode(BoundingBox *boundingBox, SceneObject &sceneObject) : boundingBox(boundingBox), sceneObject(&sceneObject),
+                                                                       nodeLeft(nullptr), nodeRight(nullptr), isLeaf(false) {
+}
 
 // other node
-BVHNode::BVHNode(BoundingBox* boundingBox, BVHNode* left, BVHNode* right) :
-boundingBox(boundingBox), sceneObject(nullptr),
-nodeLeft(left), nodeRight(right), isLeaf(false) {}
+BVHNode::BVHNode(BoundingBox *boundingBox, BVHNode *left, BVHNode *right) : boundingBox(boundingBox), sceneObject(nullptr),
+                                                                            nodeLeft(left), nodeRight(right), isLeaf(false) {
+}
 
 // deconstructor
 BVHNode::~BVHNode() {
@@ -48,24 +46,23 @@ float BVHNode::getArea() const {
     return boundingBox->getArea();
 }
 
-BoundingBox* BVHNode::getBoundingBox() const {
+BoundingBox *BVHNode::getBoundingBox() const {
     return boundingBox;
 }
 
-SceneObject* BVHNode::getSceneObject() const {
+SceneObject *BVHNode::getSceneObject() const {
     return sceneObject;
 }
 
-BVHNode* BVHNode::getNodeLeft() const {
+BVHNode *BVHNode::getNodeLeft() const {
     return nodeLeft;
 }
 
-BVHNode* BVHNode::getNodeRight() const {
+BVHNode *BVHNode::getNodeRight() const {
     return nodeRight;
 }
 
 std::pair<BVHNode*, float> BVHNode::searchBVHTree(Ray &ray) {
-
     std::pair<float, float> distance = boundingBox->getIntersectionDistance(ray);
     if (!(distance.first <= distance.second && distance.second >= 0)) {
         //std::cout << "returning nullptr"<<std::endl;
@@ -81,29 +78,23 @@ std::pair<BVHNode*, float> BVHNode::searchBVHTree(Ray &ray) {
     }
 
     //std::cout <<"Determining left and right nodes"<<std::endl;
-    std::pair<BVHNode*, float> hitLeft = nodeLeft == nullptr ? std::make_pair(nullptr, -1.0f) : nodeLeft->searchBVHTree(ray);
-    std::pair<BVHNode*, float> hitRight = nodeRight == nullptr ? std::make_pair(nullptr, -1.0f) : nodeRight->searchBVHTree(ray);
+    std::pair<BVHNode *, float> hitLeft = nodeLeft == nullptr ? std::make_pair(nullptr, -1.0f) : nodeLeft->searchBVHTree(ray);
+    std::pair<BVHNode *, float> hitRight = nodeRight == nullptr ? std::make_pair(nullptr, -1.0f) : nodeRight->searchBVHTree(ray);
 
-    if (hitLeft.first != nullptr && hitRight.first != nullptr) {
-
-        if (hitLeft.first->isLeaf && hitRight.first->isLeaf) {
-            //std::cout <<"Returning closest Obj"<<std::endl;
-            return hitLeft.second < hitRight.second ? hitLeft : hitRight;
-        }
-
-        //std::cout <<"Returning closest"<<std::endl;
-        return  hitLeft.first->getIntersectionDistance(ray).first <hitRight.first->getIntersectionDistance(ray).first ? hitLeft : hitRight;
+    if (hitLeft.first != nullptr && hitRight.first != nullptr) { // both valid nodes
+        //std::cout <<"Returning closest Obj"<<std::endl;
+        return hitLeft.second < hitRight.second ? hitLeft : hitRight;
     }
 
-    if (hitLeft.first == nullptr && hitRight.first == nullptr) {
+    if (hitLeft.first == nullptr && hitRight.first == nullptr) { // both nullptr
         //std::cout <<"Both null"<<std::endl;
         return {nullptr, -1.0f};
     }
 
     //std::cout <<"One null, returning other"<<std::endl;
-    return (hitLeft.first != nullptr) ? hitLeft : hitRight;
+    return (hitLeft.first != nullptr) ? hitLeft : hitRight; // one is null
 }
 
-void BVHNode::setLeaf(bool leaf) {isLeaf = leaf;}
+void BVHNode::setLeaf(bool leaf) { isLeaf = leaf; }
 
-[[nodiscard]] bool BVHNode::getLeaf() {return isLeaf;}
+[[nodiscard]] bool BVHNode::getLeaf() { return isLeaf; }
