@@ -62,6 +62,40 @@ BVHNode *BVHNode::getNodeRight() const {
     return nodeRight;
 }
 
+std::pair<BVHNode*, float> BVHNode::searchBVHTreeTest(Ray &ray, long &numIterations) {
+    std::pair<float, float> distance = boundingBox->getIntersectionDistance(ray);
+    if (!(distance.first <= distance.second && distance.second >= 0)) {
+        //std::cout << "returning nullptr"<<std::endl;
+        return {nullptr, -1}; // ray does not intersect at all
+    }
+
+    if (sceneObject != nullptr) { // only return the node if the ray actually points at the object itself
+        numIterations++;
+        //std::cout << "Returning this"<<std::endl;
+        std::pair<float, float> distanceObj = sceneObject->getIntersectionDistance(ray);
+        if (distanceObj.first <= distanceObj.second && distanceObj.second >= 0) {
+            return {this, distanceObj.first};
+        }
+    }
+
+    //std::cout <<"Determining left and right nodes"<<std::endl;
+    std::pair<BVHNode *, float> hitLeft = nodeLeft == nullptr ? std::make_pair(nullptr, -1.0f) : nodeLeft->searchBVHTreeTest(ray, numIterations);
+    std::pair<BVHNode *, float> hitRight = nodeRight == nullptr ? std::make_pair(nullptr, -1.0f) : nodeRight->searchBVHTreeTest(ray, numIterations);
+
+    if (hitLeft.first != nullptr && hitRight.first != nullptr) { // both valid nodes
+        //std::cout <<"Returning closest Obj"<<std::endl;
+        return hitLeft.second < hitRight.second ? hitLeft : hitRight;
+    }
+
+    if (hitLeft.first == nullptr && hitRight.first == nullptr) { // both nullptr
+        //std::cout <<"Both null"<<std::endl;
+        return {nullptr, -1.0f};
+    }
+
+    //std::cout <<"One null, returning other"<<std::endl;
+    return (hitLeft.first != nullptr) ? hitLeft : hitRight; // one is null
+}
+
 std::pair<BVHNode*, float> BVHNode::searchBVHTree(Ray &ray) {
     std::pair<float, float> distance = boundingBox->getIntersectionDistance(ray);
     if (!(distance.first <= distance.second && distance.second >= 0)) {

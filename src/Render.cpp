@@ -15,6 +15,7 @@
 
 #include "Ray.h"
 #include "BVHNode.h"
+#include "fastgltf/types.hpp"
 //#include "SDLWindow.h"
 
 Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (config.aspectX / config.aspectY)), internalResX(config.resX / config.upScale),
@@ -35,10 +36,10 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
 void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow &window) {
     // initialise objects
     std::mutex mutex;
-    std::vector<std::future<void> > threads;
+    std::vector<std::future<void>> threads;
     // create all ray and luminance vector objects
     std::cout << "Constructing Objects: " << std::endl;
-    intialiseObjects();
+    initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
 
     constructBVHST(sceneobjectsList);
@@ -92,6 +93,40 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
+
+        /*int tilesX = (internalResX + config.tileSize - 1) / config.tileSize;
+        int tilesY = (internalResY + config.tileSize - 1) / config.tileSize;
+
+        for (int j = 0; j < tilesY; j++) {
+            for (int i = 0; i < tilesX; i++) {
+                // Create the tile bounds
+                int startX = i * config.tileSize;
+                int endX = std::min(startX + config.tileSize, internalResX-1);
+                int startY = j * config.tileSize;
+                int endY = std::min(startY + config.tileSize, internalResY-1);
+                //std::cout<<"X:"<<startX<<", X:"<<endX<<std::endl;
+                //std::cout<<"Y:"<<startY<<", Y:"<<endY<<std::endl;
+                // Add the new thread task
+                threads.emplace_back(std::async(std::launch::async, &Render::traceRay, this,
+                                                cam, startX, endX, startY, endY,
+                                                iterations, std::ref(sceneobjectsList), std::ref(mutex)));
+
+                // If we have reached the maximum number of active threads, wait for them to finish
+                if (threads.size() >= numThreads) {
+                    for (auto &thread : threads) {
+                        thread.get(); // Wait for all threads in the current batch to complete
+                    }
+                    threads.clear(); // Clear the completed batch
+                }
+            }
+        }
+
+        // Handle any remaining threads if there are still tasks left
+        for (auto &thread : threads) {
+            thread.get();
+        }
+        threads.clear();*/
+
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         //-----------------------
 
@@ -506,111 +541,6 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
     ray.updateOrigin(0.01f); // march the ray a tiny amount to move it off the object
 }
 
-void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList) {
-    // create a leaf node for each scene object
-    for (int i = 0; i < sceneObjectsList.size(); i++) {
-        std::pair<Vector3, Vector3> bounds = sceneObjectsList[i]->getBounds();
-        LinearBVHNode leafNode;
-        leafNode.bounds = BoundingBox(bounds.first, bounds.second);
-        leafNode.objectIndex = i;
-        leafNode.isLeaf = true;
-        leafNode.leftChild = -1;
-        leafNode.rightChild = -1;
-        leafNode.numChildren = 1;
-        bvhNodes.push_back(leafNode);
-    }
-
-    // a list of indexs to the bvhNodes vector for nodes that have not yet been merged
-    std::vector<int> activeNodes;
-    for (int i = 0; i < bvhNodes.size(); i++) {
-        activeNodes.push_back(i);
-    }
-
-    while (activeNodes.size() > 1) {
-        // use SAH to find best pair
-        float cost = 0, bestCost = std::numeric_limits<float>::infinity();
-        BoundingBox combinedBox{};
-        int bestLeft = -1, bestRight = -1;
-
-        for (int i = 0; i < activeNodes.size(); i++) {
-            for (int j = i + 1; j < activeNodes.size(); j++) {
-                int left = activeNodes[i];
-                int right = activeNodes[j];
-                combinedBox.updateBounds(bvhNodes[left].bounds, bvhNodes[right].bounds);
-                cost = (combinedBox.getArea() / (bvhNodes[left].bounds.getArea() + bvhNodes[right].bounds.getArea())) * (
-                           bvhNodes[left].numChildren + bvhNodes[right].numChildren);
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestLeft = i;
-                    bestRight = j;
-                }
-            }
-        }
-
-        // Merge the two best nodes
-        LinearBVHNode parentNode;
-        combinedBox.updateBounds(bvhNodes[activeNodes[bestLeft]].bounds, bvhNodes[activeNodes[bestRight]].bounds);
-        parentNode.bounds = BoundingBox(combinedBox);
-        parentNode.isLeaf = false;
-        parentNode.leftChild = activeNodes[bestLeft];
-        parentNode.rightChild = activeNodes[bestRight];
-        parentNode.numChildren = bvhNodes[activeNodes[bestLeft]].numChildren + bvhNodes[activeNodes[bestRight]].numChildren;
-
-        int parentIndex = bvhNodes.size();
-        bvhNodes.push_back(parentNode); // add the new parent node to the list
-
-        // remove the merged nodes from activeNodes and add the new parent node
-        if (bestLeft < bestRight) {
-            std::swap(bestLeft, bestRight); // Ensure bestLeft is always smaller
-        }
-        activeNodes.erase(activeNodes.begin() + bestLeft); // Erase the larger index first
-        activeNodes.erase(activeNodes.begin() + bestRight); // Then erase the smaller index
-        activeNodes.push_back(parentIndex);
-    }
-}
-
-std::pair<int, float> Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
-    std::stack<int> nodeStack; // list of nodes to check, by index to node vector
-    nodeStack.push(bvhNodes.size() - 1); // start at root node
-
-    int closestObject = -1;
-    float closestDistance = std::numeric_limits<float>::infinity();
-
-    while (!nodeStack.empty()) {
-        int nodeIndex = nodeStack.top();
-        nodeStack.pop(); // remove the node we are checking from the list
-
-        const LinearBVHNode &node = bvhNodes[nodeIndex];
-
-        std::pair<float, float> nodeDistance = node.bounds.getIntersectionDistance(ray);
-        std::pair<float, float> objDistance = {-1.0f, -1.0f};
-
-        if (!(nodeDistance.first <= nodeDistance.second && nodeDistance.second >= 0)) {
-            continue; // if the ray doesnt intersect the nodes bounding box skip it
-        }
-        if (node.isLeaf) {
-            objDistance = sceneObjectsList[node.objectIndex]->getIntersectionDistance(ray);
-            if (objDistance.first <= objDistance.second && objDistance.second >= 0) {
-                // check if the ray intersects the object
-                if (objDistance.first < closestDistance) {
-                    // if the intersection point is closer than the previous best, record it
-                    closestDistance = objDistance.first;
-                    closestObject = node.objectIndex;
-                }
-            }
-        } else {
-            // if the node is not a leaf, but we intersect it, add its children to the list but only if its closer than the current best
-            if (nodeDistance.first < closestDistance) {
-                nodeStack.push(node.rightChild);
-                nodeStack.push(node.leftChild);
-            }
-        }
-    }
-    if (closestDistance == std::numeric_limits<float>::infinity()) { closestDistance = -1; }
-
-    return {closestObject, closestDistance}; // return the index of the closest object, and the intersection distance
-}
-
 void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
     // create leaf nodes
     for (SceneObject *sceneObject: sceneObjectsList) {
@@ -771,12 +701,13 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
 void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     constructBVHST(sceneObjectsList);
 
-    Ray ray1(Vector3(-2, 0, 0), Vector3(1, 0, 0));
+    Ray ray1(Vector3(0, -1.7, 1), Vector3(1, 0, 0));
     ray1.getDir().normalise();
     std::cout << "------------" << std::endl;
     std::cout << "Searching RecursiveBVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
-    std::pair<BVHNode *, float> leafNodeRecursive = BVHNodes.at(0)->searchBVHTree(ray1);
+    long numIterations = 0;
+    std::pair<BVHNode *, float> leafNodeRecursive = BVHNodes.at(0)->searchBVHTreeTest(ray1, numIterations);
     if (leafNodeRecursive.first != nullptr) {
         //std::cout << "Intersection Test: " << std::endl;;
         //leafNodeRecursive.first->getSceneObject()->printType();
@@ -785,6 +716,7 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     } //else {std::cout << "Miss"<<std::endl;}
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
+    std::cout<<"num Iterations: "<<numIterations<<std::endl;
     std::cout << "------------" << std::endl;
     constructLinearBVH(sceneObjectsList);
     std::cout << "Searching linearBVH" << std::endl;
@@ -801,7 +733,7 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
 
 }
 
-void Render::intialiseObjects() {
+void Render::initialiseObjects() {
     for (int i = 0; i < internalResX * internalResY; i++) {
         rays[i] = new Ray();
     }
@@ -813,8 +745,7 @@ void Render::deleteObjects() {
         delete node;
     }
     BVHNodes.clear();
-
-    for (int i = 0; i < resX * resY; i++) {
+    for (int i = 0; i < internalResX * internalResY; i++) {
         delete rays[i];
     }
     delete RGBBuffer;
@@ -829,4 +760,113 @@ std::pair<int, int> Render::threadSegments(float start, float end, int &numThrea
     int endPixel = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
 
     return std::make_pair(startPixel, endPixel);
+}
+
+void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList) {
+    // create a leaf node for each scene object
+    for (int i = 0; i < sceneObjectsList.size(); i++) {
+        std::pair<Vector3, Vector3> bounds = sceneObjectsList[i]->getBounds();
+        LinearBVHNode leafNode;
+        leafNode.bounds = BoundingBox(bounds.first, bounds.second);
+        leafNode.objectIndex = i;
+        leafNode.isLeaf = true;
+        leafNode.leftChild = -1;
+        leafNode.rightChild = -1;
+        leafNode.numChildren = 1;
+        bvhNodes.push_back(leafNode);
+    }
+
+    // a list of indexs to the bvhNodes vector for nodes that have not yet been merged
+    std::vector<int> activeNodes;
+    for (int i = 0; i < bvhNodes.size(); i++) {
+        activeNodes.push_back(i);
+    }
+
+    while (activeNodes.size() > 1) {
+        // use SAH to find best pair
+        float cost = 0, bestCost = std::numeric_limits<float>::infinity();
+        BoundingBox combinedBox{};
+        int bestLeft = -1, bestRight = -1;
+
+        for (int i = 0; i < activeNodes.size(); i++) {
+            for (int j = i + 1; j < activeNodes.size(); j++) {
+                int left = activeNodes[i];
+                int right = activeNodes[j];
+                combinedBox.updateBounds(bvhNodes[left].bounds, bvhNodes[right].bounds);
+                cost = (combinedBox.getArea() / (bvhNodes[left].bounds.getArea() + bvhNodes[right].bounds.getArea())) * (
+                           bvhNodes[left].numChildren + bvhNodes[right].numChildren);
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestLeft = i;
+                    bestRight = j;
+                }
+            }
+        }
+
+        // Merge the two best nodes
+        LinearBVHNode parentNode;
+        combinedBox.updateBounds(bvhNodes[activeNodes[bestLeft]].bounds, bvhNodes[activeNodes[bestRight]].bounds);
+        parentNode.bounds = BoundingBox(combinedBox);
+        parentNode.isLeaf = false;
+        parentNode.leftChild = activeNodes[bestLeft];
+        parentNode.rightChild = activeNodes[bestRight];
+        parentNode.numChildren = bvhNodes[activeNodes[bestLeft]].numChildren + bvhNodes[activeNodes[bestRight]].numChildren;
+
+        int parentIndex = bvhNodes.size();
+        bvhNodes.push_back(parentNode); // add the new parent node to the list
+
+        // remove the merged nodes from activeNodes and add the new parent node
+        if (bestLeft < bestRight) {
+            std::swap(bestLeft, bestRight); // Ensure bestLeft is always smaller
+        }
+        activeNodes.erase(activeNodes.begin() + bestLeft); // Erase the larger index first
+        activeNodes.erase(activeNodes.begin() + bestRight); // Then erase the smaller index
+        activeNodes.push_back(parentIndex);
+    }
+}
+
+std::pair<int, float> Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
+    std::stack<int> nodeStack; // list of nodes to check, by index to node vector
+    nodeStack.push(bvhNodes.size() - 1); // start at root node
+    int numIterations = 0;
+
+    int closestObject = -1;
+    float closestDistance = std::numeric_limits<float>::infinity();
+
+    while (!nodeStack.empty()) {
+        int nodeIndex = nodeStack.top();
+        nodeStack.pop(); // remove the node we are checking from the list
+
+        const LinearBVHNode &node = bvhNodes[nodeIndex];
+
+        std::pair<float, float> nodeDistance = node.bounds.getIntersectionDistance(ray);
+        std::pair<float, float> objDistance = {-1.0f, -1.0f};
+
+        if (!(nodeDistance.first <= nodeDistance.second && nodeDistance.second >= 0)) {
+            continue; // if the ray doesnt intersect the nodes bounding box skip it
+        }
+        if (node.isLeaf) {
+            numIterations++;
+            objDistance = sceneObjectsList[node.objectIndex]->getIntersectionDistance(ray);
+            if (objDistance.first <= objDistance.second && objDistance.second >= 0) {
+                // check if the ray intersects the object
+                if (objDistance.first < closestDistance) {
+                    // if the intersection point is closer than the previous best, record it
+                    closestDistance = objDistance.first;
+                    closestObject = node.objectIndex;
+                }
+            }
+        } else {
+            // if the node is not a leaf, but we intersect it, add its children to the list but only if its closer than the current best
+            if (nodeDistance.first < closestDistance) {
+                nodeStack.push(node.rightChild);
+                nodeStack.push(node.leftChild);
+            }
+        }
+    }
+    if (closestDistance == std::numeric_limits<float>::infinity()) { closestDistance = -1; }
+
+    std::cout<<"numIterations: "<<numIterations<<std::endl;
+
+    return {closestObject, closestDistance}; // return the index of the closest object, and the intersection distance
 }

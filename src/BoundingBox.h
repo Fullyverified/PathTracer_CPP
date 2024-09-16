@@ -15,7 +15,6 @@ public:
 
     void updateBounds(const BoundingBox& left, const BoundingBox& right);
     void updateBounds(const BoundingBox* left, const BoundingBox* right);
-    [[nodiscard]] bool objectCulling(Ray &ray) const;
     [[nodiscard]] bool intersectionCheck(Ray &ray) const;
     void getNormal(Ray &ray) const;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const;

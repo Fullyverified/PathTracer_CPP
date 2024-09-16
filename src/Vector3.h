@@ -9,6 +9,7 @@ class Vector3 {
 public:
     Vector3() : x(0), y(0), z(0) {} // default constructor
     Vector3(const float &x, const float &y, const float &z) : x(x), y(y), z(z) {}
+    Vector3(const float &value) : x(value), y(value), z(value) {}
     Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {}
 
     // adding
@@ -74,6 +75,10 @@ public:
         x = -x;
         y = -y;
         z = -z;
+    }
+
+    void flipY() {
+        y = -y;
     }
 
     void set(const float &newX, const float &newY, const float &newZ) {

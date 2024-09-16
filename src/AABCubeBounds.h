@@ -8,12 +8,10 @@
 class AABCubeBounds : public SceneObject {
 public:
     AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
-    [[nodiscard]] bool objectCulling(Ray &ray) const override;
     [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
-    [[nodiscard]] bool intersectionCheck(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
     void getNormal(Ray &ray) const override;
-    [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const override;
+    [[nodiscard]] std::pair<Vector3, Vector3> getBounds() override;
     [[nodiscard]] Vector3 getCol() const override;
     [[nodiscard]] Vector3 getLum() const override;
     [[nodiscard]] float getRough() const override;

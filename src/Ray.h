@@ -27,14 +27,15 @@ public:
     void setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
     [[nodiscard]] SceneObject* getHitObject() const { return sceneObject; }
 
+    [[nodiscard]] Vector3& getBCoords() {return bCoords;}
+
     void initialize(Ray &primaryRay);
 
 private:
-    Vector3 origin, pos, dir, hitpoint, normal;
+    Vector3 origin, pos, dir, hitpoint, normal, bCoords;
+    int trindex;
     bool hit;
     SceneObject* sceneObject;
-
-    float tNear, tFar; // for storing bounding box information
 };
 
 

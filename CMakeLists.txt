@@ -109,6 +109,11 @@ add_executable(PathTracer_CPP
         src/Camera.cpp
         src/Config.h
         src/Config.cpp
+        src/MeshObject.h
+        src/MeshObject.cpp
+        src/LoadMesh.h
+        src/LoadMesh.cpp
+        src/Triangle.h
         # Vulkan and vulkan related dependencies
         Vulkan/vk_main.cpp
         Vulkan/camera.h
@@ -123,22 +128,19 @@ add_executable(PathTracer_CPP
         Vulkan/vk_images.cpp
         Vulkan/vk_initializers.h
         Vulkan/vk_initializers.cpp
-        Vulkan/vk_pipelines.cpp
         Vulkan/vk_pipelines.h
+        Vulkan/vk_pipelines.cpp
         Vulkan/vk_types.h
         src/SDLWindow.h
         src/SDLWindow.cpp
-        src/Mesh.h
-        src/Mesh.cpp
-
 )
 
 # Link Vulkan and glfw libraries
 if (WIN32)
     target_link_libraries(PathTracer_CPP
+            ${tinyObjLoader}
             ${Vulkan_LIBRARY}
             glfw
-            ${tinyObjLoader}
             fmt::fmt
             SDL2::SDL2
             fastgltf::fastgltf

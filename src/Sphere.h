@@ -7,12 +7,10 @@
 class Sphere : public SceneObject {
 public:
     Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
-    [[nodiscard]] bool objectCulling(Ray &ray) const override;
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
-    [[nodiscard]] bool intersectionCheck(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override;
     void getNormal(Ray &ray) const override;
-    [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const override;
+    [[nodiscard]] std::pair<Vector3, Vector3> getBounds() override;
     [[nodiscard]] Vector3 getCol() const override;
     [[nodiscard]] Vector3 getLum() const override;
     [[nodiscard]] float getRough() const override;

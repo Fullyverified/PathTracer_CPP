@@ -12,78 +12,6 @@ AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, floa
     objID = ++objectCounter;
 }
 
-bool AABCubeCenter::objectCulling(Ray &ray) const {
-    // pre calculate inverse
-    float invDirX = 1.0f / ray.getDir().getX();
-    float invDirY = 1.0f / ray.getDir().getY();
-    float invDirZ = 1.0f / ray.getDir().getZ();
-    float tmp;
-
-    Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
-
-    if (ray.getDir().getX() == 0) {
-        if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
-            tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setX(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setX(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setX(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setX((minBounds.getX() - ray.getPos().getX()) * invDirX);
-        tMax.setX((maxBounds.getX() - ray.getPos().getX()) * invDirX);
-        if (tMin.getX() > tMax.getX()) {
-            tmp = tMax.getX();
-            tMax.setX(tMin.getX());
-            tMin.setX(tmp);
-        }
-    }
-
-    if (ray.getDir().getY() == 0) {
-        if (ray.getPos().getY() < minBounds.getY() || ray.getPos().getY() > maxBounds.getY()) {
-            tMin.setY(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setY(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setY(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setY(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setY((minBounds.getY() - ray.getPos().getY()) * invDirY);
-        tMax.setY((maxBounds.getY() - ray.getPos().getY()) * invDirY);
-        if (tMin.getY() > tMax.getY()) {
-            tmp = tMax.getY();
-            tMax.setY(tMin.getY());
-            tMin.setY(tmp);
-        }
-    }
-
-    if (ray.getDir().getZ() == 0) {
-        if (ray.getPos().getZ() < minBounds.getZ() || ray.getPos().getZ() > maxBounds.getZ()) {
-            tMin.setZ(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setZ(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setZ(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setZ(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setZ((minBounds.getZ() - ray.getPos().getZ()) * invDirZ);
-        tMax.setZ((maxBounds.getZ() - ray.getPos().getZ()) * invDirZ);
-        if (tMin.getZ() > tMax.getZ()) {
-            tmp = tMax.getZ();
-            tMax.setZ(tMin.getZ());
-            tMin.setZ(tmp);
-        }
-    }
-    const float tNear = std::max(tMin.getX(), std::max(tMin.getY(), tMin.getZ()));
-    const float tFar = std::min(tMax.getX(), std::min(tMax.getY(), tMax.getZ()));
-    return tNear <= tFar && tFar >= 0;
-}
-
-bool AABCubeCenter::intersectionCheck(Ray &ray) const {
-    return minBounds.getX() <= ray.getPos().getX() && maxBounds.getX() >= ray.getPos().getX() &&
-           minBounds.getY() <= ray.getPos().getY() && maxBounds.getY() >= ray.getPos().getY() &&
-           minBounds.getZ() <= ray.getPos().getZ() && maxBounds.getZ() >= ray.getPos().getZ();
-}
 
 void AABCubeCenter::getNormal(Ray &ray) const {
     const float px = ray.getPos().getX();
@@ -197,7 +125,7 @@ std::pair<float, float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
     return {tNear, tFar};
 }
 
-std::pair<Vector3, Vector3> AABCubeCenter::getBounds() const {
+std::pair<Vector3, Vector3> AABCubeCenter::getBounds() {
     return std::make_pair(minBounds, maxBounds);
 }
 

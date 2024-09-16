@@ -48,7 +48,7 @@ public:
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int i);
 
     // cleanup
-    void intialiseObjects();
+    void initialiseObjects();
     void deleteObjects();
 
 

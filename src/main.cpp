@@ -8,10 +8,15 @@
 #include "Sphere.h"
 #include "AABCubeBounds.h"
 #include "AABCubeCenter.h"
+#include "LoadMesh.h"
+#include "MeshObject.h"
 #include "Render.h"
 
 
 int main() {
+
+    LoadMesh object;
+    object.load("../meshes/weirdTriangle.obj");
 
     std::vector<SceneObject*> SceneObjectsList;
 
@@ -23,18 +28,20 @@ int main() {
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,0,0,0,0,0,0.75,1,0)); // left wall
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,0,0,0,1,1,0)); // left sphere on floor
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(5,-1.7,1),Vector3(1,1,1),1,1,1,0,0,0,0,1,0)); // left cube on floor
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,0,0,0,0,1,0)); // right sphere on floor
+    //SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,1,1,1,0,0,0,1,1,0)); // left sphere on floor
+    //SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(5,-1.7,1),Vector3(1,1,1),1,1,1,0,0,0,0,1,0)); // left cube on floor
+    //SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,0,0,0,0,1,0)); // right sphere on floor
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
 
+    SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2,0),Vector3(0,0,0),Vector3(0.5,0.5,0.5),object,1,1,1,0,0,0,1,1,0, false));
+    //ceneObjectsList.emplace_back(new AABCubeCenter(Vector3(0,0,0),Vector3(2,2,2),1,1,1,0,0,0,0.75,1,0)); // left cube on floor
 
     Camera *cam = new Camera(Vector3(-2, 0, 0), Vector3(1, 0, 0));
 
     Render render(*cam);
     render.computePixels(SceneObjectsList);
-    //render.BVHProfiling(SceneObjectsList);
+
 
     for (SceneObject *obj: SceneObjectsList) {
         delete obj; // delete sceneObjects from heap
