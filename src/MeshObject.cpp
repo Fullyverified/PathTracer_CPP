@@ -1,9 +1,11 @@
 #include "MeshObject.h"
+
+#include "BVHNode.h"
 #include "Vector3.h"
 #include "Ray.h"
 
-MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp, bool flipY) :
-pos(pos), dir(dir), scale(scale), loadedMesh(mesh) ,colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp), flipY(flipY) {
+MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
+pos(pos), dir(dir), scale(scale), loadedMesh(mesh) ,colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp) {
     objID = ++objectCounter;
 
     triangles = loadedMesh.getTriangles();
@@ -17,34 +19,33 @@ void MeshObject::getNormal(Ray &ray) const {
     float v = bCoords.getY();
     float w = 1.0f - u - v;
 
-    const Triangle* triangle = triangles[ray.getBCoords().getZ()];
-
+    const Triangle* triangle = ray.getTriangle();
     ray.getNormal().set(triangle->n0 * w + triangle->n1 * u + triangle->n2 * v);
-
-    if (flipY) {ray.getNormal().flipY();}
-
     ray.getNormal().normalise();
 }
 
 std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
+    Transform transform = {pos, dir, scale, this};
+    BVHNode::BVHResult result = getMeshNode()->searchBVHTreeMesh(ray, transform);
+    return {result.close, result.far};
+}
+
+std::pair<float, float> MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
     Vector3 rayDirection = ray.getDir();
     float closest_t = std::numeric_limits<float>::infinity();
-    float t, u, v, f;
-    int bestIndex;
-    for (int i = 0; i < triangles.size(); i++) {
-        Vector3 v0 = triangles[i]->v0;
-        Vector3 v1 = triangles[i]->v1;
-        Vector3 v2 = triangles[i]->v2;
+    float furthest_t = -std::numeric_limits<float>::infinity();
+    float t = 0, u = 0, v = 0, f = 0;
+    int bestIndex = 0;
 
-        v0 = v0 * scale + pos;
-        v1 = v1 * scale + pos;
-        v2 = v2 * scale + pos;
+    for (int i = 0; i < leafNode->getTriangles().size(); i++) {
+        Triangle* triangle = leafNode->getTriangles()[i];
+        Vector3 v0 = triangle->v0;
+        Vector3 v1 = triangle->v1;
+        Vector3 v2 = triangle->v2;
 
-        if (flipY) {
-            v0.flipY();
-            v1.flipY();
-            v2.flipY();
-        }
+        v0 = (v0 + pos) / scale;
+        v1 = (v1 + pos) / scale;
+        v2 = (v2 + pos) / scale;
 
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
@@ -75,6 +76,9 @@ std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
             closest_t = t;
             bestIndex = i;
         }
+        if (t > std::numeric_limits<float>::epsilon() && t > furthest_t) {
+            furthest_t = t;
+        }
     }
 
     if (closest_t == std::numeric_limits<float>::infinity()) {
@@ -82,8 +86,10 @@ std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
     }
 
     ray.getBCoords().set(u, v, bestIndex);
-    return {closest_t, closest_t};
+    ray.setTriangles(leafNode->getTriangles()[bestIndex]);
+    return {closest_t, furthest_t};
 }
+
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
     auto bounds = loadedMesh.getBounds();

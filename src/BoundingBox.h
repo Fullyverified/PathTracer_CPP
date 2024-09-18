@@ -16,10 +16,9 @@ public:
     void updateBounds(const BoundingBox& left, const BoundingBox& right);
     void updateBounds(const BoundingBox* left, const BoundingBox* right);
     [[nodiscard]] bool intersectionCheck(Ray &ray) const;
-    void getNormal(Ray &ray) const;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() const;
     [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const;
-    [[nodiscard]] float getArea() const;
+    [[nodiscard]] float getArea();
 
     Vector3 minBounds, maxBounds;
 private:

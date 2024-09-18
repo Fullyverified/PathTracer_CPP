@@ -54,6 +54,15 @@ public:
         return {x * scalar, y * scalar, z * scalar};
     }
 
+    // dividing
+    [[nodiscard]] Vector3 operator/(const Vector3& second) const {
+        return {x / second.x, y / second.y, z / second.z};
+    }
+
+    Vector3 operator/(float scalar) const {
+        return {x / scalar, y / scalar, z / scalar};
+    }
+
     // vector operations
     [[nodiscard]] float dot(const Vector3& second) const {
         return x * second.x + y * second.y + z * second.z;
@@ -70,6 +79,27 @@ public:
         y /= magnitude;
         z /= magnitude;
     }
+
+    // operator[]
+    float& operator[](int index) {
+        switch (index) {
+            case 0 : return x;
+            case 1 : return y;
+            case 2 : return z;
+            default: throw std::out_of_range("Index out of range for Vector3");
+        }
+    }
+
+    const float& operator[](int index) const {
+        switch (index) {
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
+            default: throw std::out_of_range("Index out of range for Vector3");
+        }
+    }
+
+    // generic functions
 
     void flip() {
         x = -x;

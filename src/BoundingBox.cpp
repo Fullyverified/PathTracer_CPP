@@ -27,32 +27,6 @@ bool BoundingBox::intersectionCheck(Ray &ray) const {
            minBounds.getZ() <= ray.getPos().getZ() && maxBounds.getZ() >= ray.getPos().getZ();
 }
 
-void BoundingBox::getNormal(Ray &ray) const {
-    float epsilon = 0.05;
-    float px = ray.getDir().getX();
-    float py = ray.getDir().getY();
-    float pz = ray.getDir().getZ();
-
-    // x
-    if (std::abs(px - minBounds.getX()) < epsilon) {
-        ray.getNormal().set(-1, 0, 0);
-    } else if (std::abs(px - maxBounds.getX()) < epsilon) {
-        ray.getNormal().set(1, 0, 0);
-    }
-    // y
-    else if (std::abs(py - minBounds.getY()) < epsilon) {
-        ray.getNormal().set(0, -1, 0);
-    } else if (std::abs(py - maxBounds.getY()) < epsilon) {
-        ray.getNormal().set(0, 1, 0);
-    }
-    // z
-    else if (std::abs(pz - minBounds.getZ()) < epsilon) {
-        ray.getNormal().set(0, 0, -1);
-    } else if (std::abs(pz - maxBounds.getZ()) < epsilon) {
-        ray.getNormal().set(0, 0, 1);
-    }
-}
-
 std::pair<float, float> BoundingBox::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
@@ -128,9 +102,8 @@ std::pair<float, float> BoundingBox::getIntersectionDistance(Ray &ray) const {
     return {tNear, tFar};
 }
 
-float BoundingBox::getArea() const {
-    return std::abs(
-        (maxBounds.getX() - minBounds.getX()) * (maxBounds.getY() - minBounds.getY()) * (maxBounds.getZ() - minBounds.getZ()));
+float BoundingBox::getArea() {
+    return std::abs((maxBounds.getX() - minBounds.getX()) * (maxBounds.getY() - minBounds.getY()) * (maxBounds.getZ() - minBounds.getZ()));
 }
 
 std::pair<Vector3, Vector3> BoundingBox::getBounds() const {

@@ -4,9 +4,10 @@
 #include <vector>
 #include <array>
 
-#include "Config.h"
 #include "Vector3.h"
+#include "Triangle.h"
 
+class BVHNode;
 class SceneObject;
 
 class Ray {
@@ -29,6 +30,9 @@ public:
 
     [[nodiscard]] Vector3& getBCoords() {return bCoords;}
 
+    void setTriangles(Triangle* triangle) {this->triangle = triangle;}
+    const  Triangle* getTriangle() {return triangle;}
+
     void initialize(Ray &primaryRay);
 
 private:
@@ -36,6 +40,7 @@ private:
     int trindex;
     bool hit;
     SceneObject* sceneObject;
+    Triangle* triangle;
 };
 
 

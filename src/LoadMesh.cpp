@@ -1,6 +1,11 @@
 #include "LoadMesh.h"
+#include "config.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
+#include <algorithm>
+#include <queue>
+
+#include "BVHNode.h"
 #include "tiny_obj_loader.h"
 
 void LoadMesh::load(const std::string &filename) {
@@ -63,13 +68,13 @@ void LoadMesh::load(const std::string &filename) {
             triangles.emplace_back(new Triangle(v0, v1, v2, n0, n1, n2));
         }
     }
+    computeBounds();
+    createBVH();
 }
 
-std::pair<Vector3, Vector3> LoadMesh::getBounds() {
-
-    minBounds = std::numeric_limits<float>::infinity();
-    maxBounds = -std::numeric_limits<float>::infinity();
-
+void LoadMesh::computeBounds() {
+    minBounds.set(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+    maxBounds.set(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
 
     for (const Triangle* triangle : triangles) {
         Vector3 vertices[] = {triangle->v0, triangle->v1, triangle->v2};
@@ -84,15 +89,140 @@ std::pair<Vector3, Vector3> LoadMesh::getBounds() {
             if (vertex.getZ() > maxBounds.getZ()) maxBounds.setZ(vertex.getZ());
         }
     }
+}
 
-    std::cout<<"Bounds"<<std::endl;
-    minBounds.print();
-    maxBounds.print();
+
+std::pair<Vector3, Vector3> LoadMesh::getBounds() {
     return {minBounds, maxBounds};
 }
 
-void createBVH() {
+void LoadMesh::createBVH() {
+    // top down construction
+    auto bounds = getBounds();
+    BoundingBox* parentBox = new BoundingBox(bounds.first, bounds.second);
+    rootNode = new BVHNode(parentBox, triangles, false);
 
+    std::queue<BVHNode*> nodes;
+    nodes.push(rootNode);
 
+    while (!nodes.empty()) {
+        BVHNode* currentNode = nodes.front();
+        nodes.pop();
 
+        std::vector<Triangle*> currentTriangles = currentNode->getTriangles();
+        if (currentTriangles.size() <= config.trisPerNode) {
+            currentNode->setLeaf(true);
+            continue; // node is already a leaf node
+        }
+
+        auto currentBounds = currentNode->getBounds();
+        // find split axis
+        Vector3 size = currentBounds.second - currentBounds.first;
+        int axis = 0;
+        if (size.getY() >= size.getX() && size.getY() >= size.getZ()) {
+            axis = 1;
+        } else if (size.getZ() >= size.getX() && size.getZ() >= size.getY()) {
+            axis = 2;
+        }
+
+        std::pair<std::vector<Triangle*>, std::vector<Triangle*>> subdividedTriangles = partitionTriangles(currentTriangles, axis);
+
+        // create child nodes
+        std::pair<Vector3, Vector3> newBounds = BVHTriBounds(subdividedTriangles.first);
+        BoundingBox* leftBox = new BoundingBox(newBounds.first, newBounds.second);
+        newBounds = BVHTriBounds(subdividedTriangles.second);
+        BoundingBox* rightBox = new BoundingBox(newBounds.first, newBounds.second);
+
+        BVHNode* leftChild = new BVHNode(leftBox, subdividedTriangles.first, false);
+        BVHNode* rightChild = new BVHNode(rightBox,  subdividedTriangles.second, false);
+
+        currentNode->setLeft(leftChild);
+        currentNode->setRight(rightChild);
+
+        nodes.push(leftChild);
+        nodes.push(rightChild);
+    }
+    int num = 0;
+    numChildren(rootNode, num);
+    std::cout<<"Num Children"<<num<<std::endl;
+    cleanBVH(rootNode);
+}
+
+std::pair<std::vector<Triangle*>, std::vector<Triangle*>> LoadMesh::partitionTriangles(std::vector<Triangle*> triangles, int axis) {
+    std::vector<Triangle*> left;
+    std::vector<Triangle*> right;
+
+    // Calculate median centroid along the selected axis
+    std::vector<float> centroids;
+    for (const auto& triangle : triangles) {
+        centroids.push_back(triangle->getCentroid()[axis]);
+    }
+    std::nth_element(centroids.begin(), centroids.begin() + centroids.size() / 2, centroids.end());
+    float median = centroids[centroids.size() / 2];
+
+    // Partition triangles based on median
+    for (const auto& triangle : triangles) {
+        if (triangle->getCentroid()[axis] < median) {
+            left.push_back(triangle);
+        } else {
+            right.push_back(triangle);
+        }
+    }
+
+    // Handle cases where all triangles fall on one side
+    if (left.empty() || right.empty()) {
+        size_t mid = triangles.size() / 2;
+        left.assign(triangles.begin(), triangles.begin() + mid);
+        right.assign(triangles.begin() + mid, triangles.end());
+    }
+
+    return {left, right};
+}
+
+std::pair<Vector3, Vector3> LoadMesh::BVHTriBounds(std::vector<Triangle*> triangles) {
+    if (triangles.empty()) {
+        // Handle empty triangle list
+        return {Vector3(0, 0, 0), Vector3(0, 0, 0)};
+    }
+
+    Vector3 minBoundsTri(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+    Vector3 maxBoundsTri(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+
+    for (const Triangle* triangle : triangles) {
+        Vector3 vertices[] = {triangle->v0, triangle->v1, triangle->v2};
+
+        for (const auto& vertex : vertices) {
+            if (vertex.getX() < minBoundsTri.getX()) minBoundsTri.setX(vertex.getX());
+            if (vertex.getY() < minBoundsTri.getY()) minBoundsTri.setY(vertex.getY());
+            if (vertex.getZ() < minBoundsTri.getZ()) minBoundsTri.setZ(vertex.getZ());
+
+            if (vertex.getX() > maxBoundsTri.getX()) maxBoundsTri.setX(vertex.getX());
+            if (vertex.getY() > maxBoundsTri.getY()) maxBoundsTri.setY(vertex.getY());
+            if (vertex.getZ() > maxBoundsTri.getZ()) maxBoundsTri.setZ(vertex.getZ());
+        }
+    }
+    return {minBoundsTri, maxBoundsTri};
+}
+
+void LoadMesh::cleanBVH(BVHNode *node) {
+    if (!node->getLeaf()) {
+        node->getTriangles().clear();
+    }
+    if (node->getNodeLeft() != nullptr) {
+        cleanBVH(node->getNodeLeft());
+    }
+    if (node->getNodeRight() != nullptr) {
+        cleanBVH(node->getNodeRight());
+    }
+}
+
+void LoadMesh::numChildren(BVHNode* node, int &num) {
+    if (node->getNodeLeft() != nullptr) {
+        num++;
+        numChildren(node->getNodeLeft(), num);
+    }
+    if (node->getNodeRight() != nullptr) {
+        num++;
+        numChildren(node->getNodeRight(), num);
+    }
 }

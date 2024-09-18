@@ -376,14 +376,14 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(*ray, *ray->getHitObject(), false);
                         }
                     }
-                    std::pair<BVHNode*, float> leafNode = BVHNodes.at(0)->searchBVHTree(*ray);
+                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(*ray);
                     //std::pair<int, float> leafNode = searchLinearBVH(*ray, sceneobjectsList);
                     ray->setHit(false);
-                    if (leafNode.first != nullptr && leafNode.first->getLeaf()) {
+                    if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
                     //if (leafNode.second != -1) {
-                        SceneObject *BVHSceneObject = leafNode.first->getSceneObject();
+                        SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
                         //SceneObject *BVHSceneObject = sceneobjectsList[leafNode.first];
-                        ray->march(leafNode.second);
+                        ray->march(leafNode.close);
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
                         ray->setHitObject(BVHSceneObject);
@@ -707,8 +707,8 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     std::cout << "Searching RecursiveBVH" << std::endl;
     auto startTime = std::chrono::high_resolution_clock::now();
     long numIterations = 0;
-    std::pair<BVHNode *, float> leafNodeRecursive = BVHNodes.at(0)->searchBVHTreeTest(ray1, numIterations);
-    if (leafNodeRecursive.first != nullptr) {
+    BVHNode::BVHResult leafNodeRecursive = BVHNodes.at(0)->searchBVHTreeScene(ray1);
+    if (leafNodeRecursive.node != nullptr) {
         //std::cout << "Intersection Test: " << std::endl;;
         //leafNodeRecursive.first->getSceneObject()->printType();
         //std::cout << "SceneObject Pos";
