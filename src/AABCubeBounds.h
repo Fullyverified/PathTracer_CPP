@@ -9,7 +9,6 @@ class AABCubeBounds : public SceneObject {
 public:
     AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
     [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
-    [[nodiscard]] std::pair<float, float> intersectTriangles(Ray &ray, BVHNode* leafNode) const override {return {0.0f, 0.0f};}
     [[nodiscard]] Vector3 getPos() const override;
     [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
     void getNormal(Ray &ray) const override;

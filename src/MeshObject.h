@@ -8,9 +8,18 @@
 
 class MeshObject : public SceneObject {
 public:
+
+    struct meshIntersection {
+        BVHNode* node;
+        float close;
+        float far;
+        Triangle* triangle;
+        Vector3 bcoords;
+    };
+
     MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
-    [[nodiscard]] std::pair<float, float> intersectTriangles(Ray &ray, BVHNode* leafNode) const override;
+    [[nodiscard]] MeshObject::meshIntersection intersectTriangles(Ray &ray, BVHNode* leafNode) const;
     [[nodiscard]] Vector3 getPos() const override;
     [[nodiscard]] Vector3 getScale() const override {return scale;}
     void getNormal(Ray &ray) const override;

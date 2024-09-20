@@ -70,6 +70,7 @@ void LoadMesh::load(const std::string &filename) {
     }
     computeBounds();
     createBVH();
+    cleanBVH(rootNode);
 }
 
 void LoadMesh::computeBounds() {
@@ -100,7 +101,7 @@ void LoadMesh::createBVH() {
     // top down construction
     auto bounds = getBounds();
     BoundingBox* parentBox = new BoundingBox(bounds.first, bounds.second);
-    rootNode = new BVHNode(parentBox, triangles, false);
+    rootNode = new BVHNode(parentBox, triangles);
 
     std::queue<BVHNode*> nodes;
     nodes.push(rootNode);
@@ -128,13 +129,13 @@ void LoadMesh::createBVH() {
         std::pair<std::vector<Triangle*>, std::vector<Triangle*>> subdividedTriangles = partitionTriangles(currentTriangles, axis);
 
         // create child nodes
-        std::pair<Vector3, Vector3> newBounds = BVHTriBounds(subdividedTriangles.first);
-        BoundingBox* leftBox = new BoundingBox(newBounds.first, newBounds.second);
-        newBounds = BVHTriBounds(subdividedTriangles.second);
-        BoundingBox* rightBox = new BoundingBox(newBounds.first, newBounds.second);
+        std::pair<Vector3, Vector3> boundsLeft = triangleBounds(subdividedTriangles.first);
+        BoundingBox* leftBox = new BoundingBox(boundsLeft.first, boundsLeft.second);
+        std::pair<Vector3, Vector3> boundsRight = triangleBounds(subdividedTriangles.second);
+        BoundingBox* rightBox = new BoundingBox(boundsRight.first, boundsRight.second);
 
-        BVHNode* leftChild = new BVHNode(leftBox, subdividedTriangles.first, false);
-        BVHNode* rightChild = new BVHNode(rightBox,  subdividedTriangles.second, false);
+        BVHNode* leftChild = new BVHNode(leftBox, subdividedTriangles.first);
+        BVHNode* rightChild = new BVHNode(rightBox,  subdividedTriangles.second);
 
         currentNode->setLeft(leftChild);
         currentNode->setRight(rightChild);
@@ -142,10 +143,6 @@ void LoadMesh::createBVH() {
         nodes.push(leftChild);
         nodes.push(rightChild);
     }
-    int num = 0;
-    numChildren(rootNode, num);
-    std::cout<<"Num Children"<<num<<std::endl;
-    cleanBVH(rootNode);
 }
 
 std::pair<std::vector<Triangle*>, std::vector<Triangle*>> LoadMesh::partitionTriangles(std::vector<Triangle*> triangles, int axis) {
@@ -179,7 +176,7 @@ std::pair<std::vector<Triangle*>, std::vector<Triangle*>> LoadMesh::partitionTri
     return {left, right};
 }
 
-std::pair<Vector3, Vector3> LoadMesh::BVHTriBounds(std::vector<Triangle*> triangles) {
+std::pair<Vector3, Vector3> LoadMesh::triangleBounds(std::vector<Triangle*> triangles) {
     if (triangles.empty()) {
         // Handle empty triangle list
         return {Vector3(0, 0, 0), Vector3(0, 0, 0)};
@@ -217,12 +214,26 @@ void LoadMesh::cleanBVH(BVHNode *node) {
 }
 
 void LoadMesh::numChildren(BVHNode* node, int &num) {
+    if (node->getLeaf()) {
+        std::cout<<"Triangles size: "<<node->getTriangles().size()<<std::endl;
+        std::cout<<"Object Bounds"<<std::endl;
+        node->getBounds().first.print();
+        node->getBounds().second.print();
+        std::cout<<"Vertex Positions"<<std::endl;
+        for (Triangle* triangle : node->getTriangles()) {
+            triangle->v0.print();
+            triangle->v1.print();
+            triangle->v2.print();
+        }
+        std::cout<<"------------"<<std::endl;
+    }
+
     if (node->getNodeLeft() != nullptr) {
-        num++;
+        //num++;
         numChildren(node->getNodeLeft(), num);
     }
     if (node->getNodeRight() != nullptr) {
-        num++;
+        //num++;
         numChildren(node->getNodeRight(), num);
     }
 }

@@ -12,7 +12,7 @@ public:
         : v0(v0), v1(v1), v2(v2), n0(n0), n1(n1), n2(n2) {}
 
 
-    Vector3 getCentroid() const {return (v0 + v1 + v2) / 3.0f;}
+    [[nodiscard]] Vector3 getCentroid() const {return (v0 + v1 + v2) / 3.0f;}
 
 };
 

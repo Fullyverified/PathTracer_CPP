@@ -14,23 +14,34 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh) ,colour(R, G, B), luminance(R
 
 void MeshObject::getNormal(Ray &ray) const {
 
+    if (ray.getTriangle() == nullptr) {
+        ray.getNormal().set(1, 0, 0);
+        return;
+    }
     Vector3 bCoords = ray.getBCoords();
+    const Triangle* triangle = ray.getTriangle();
+
     float u = bCoords.getX();
     float v = bCoords.getY();
-    float w = 1.0f - u - v;
+    float w = bCoords.getZ();
 
-    const Triangle* triangle = ray.getTriangle();
     ray.getNormal().set(triangle->n0 * w + triangle->n1 * u + triangle->n2 * v);
     ray.getNormal().normalise();
 }
 
 std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
     Transform transform = {pos, dir, scale, this};
-    BVHNode::BVHResult result = getMeshNode()->searchBVHTreeMesh(ray, transform);
+    transform.rayToObj(ray); // transform ray to object space
+    MeshObject::meshIntersection result = getMeshNode()->searchBVHTreeMesh(ray, transform);
+    transform.rayToWorld(ray); // revert transformation
+
+    ray.setTriangle(result.triangle);
+    ray.getBCoords().set(result.bcoords);
+
     return {result.close, result.far};
 }
 
-std::pair<float, float> MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
+MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
     Vector3 rayDirection = ray.getDir();
     float closest_t = std::numeric_limits<float>::infinity();
     float furthest_t = -std::numeric_limits<float>::infinity();
@@ -82,12 +93,10 @@ std::pair<float, float> MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNo
     }
 
     if (closest_t == std::numeric_limits<float>::infinity()) {
-        return {-1.0f, -1.0f};
+        return {nullptr, -1.0f, -1.0f, nullptr};
     }
 
-    ray.getBCoords().set(u, v, bestIndex);
-    ray.setTriangles(leafNode->getTriangles()[bestIndex]);
-    return {closest_t, furthest_t};
+    return {nullptr, closest_t, furthest_t, leafNode->getTriangles()[bestIndex], (u, v, 1.0f - u - v)};
 }
 
 

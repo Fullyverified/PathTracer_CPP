@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] Vector3& getBCoords() {return bCoords;}
 
-    void setTriangles(Triangle* triangle) {this->triangle = triangle;}
+    void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     const  Triangle* getTriangle() {return triangle;}
 
     void initialize(Ray &primaryRay);

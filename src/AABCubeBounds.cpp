@@ -50,74 +50,34 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
+    // pre calculate inverse
     float invDirX = 1.0f / ray.getDir().getX();
     float invDirY = 1.0f / ray.getDir().getY();
     float invDirZ = 1.0f / ray.getDir().getZ();
-    float tmp;
 
-    Vector3 tMin(0, 0, 0), tMax(0, 0, 0);
+    float txmin = (minBounds.getX() - ray.getPos().getX()) * invDirX;
+    float txmax = (maxBounds.getX() - ray.getPos().getX()) * invDirX;
+    if (txmin > txmax) std::swap(txmin, txmax);
 
-    if (ray.getDir().getX() == 0) {
-        if (ray.getPos().getX() < minBounds.getX() || ray.getPos().getX() > maxBounds.getX()) {
-            tMin.setX(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setX(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setX(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setX(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setX((minBounds.getX() - ray.getPos().getX()) * invDirX);
-        tMax.setX((maxBounds.getX() - ray.getPos().getX()) * invDirX);
-        if (tMin.getX() > tMax.getX()) {
-            tmp = tMax.getX();
-            tMax.setX(tMin.getX());
-            tMin.setX(tmp);
-        }
-    }
+    float tymin = (minBounds.getY() - ray.getPos().getY()) * invDirY;
+    float tymax = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
+    if (tymin > tymax) std::swap(tymin, tymax);
 
-    if (ray.getDir().getY() == 0) {
-        if (ray.getPos().getY() < minBounds.getY() || ray.getPos().getY() > maxBounds.getY()) {
-            tMin.setY(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setY(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setY(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setY(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setY((minBounds.getY() - ray.getPos().getY()) * invDirY);
-        tMax.setY((maxBounds.getY() - ray.getPos().getY()) * invDirY);
-        if (tMin.getY() > tMax.getY()) {
-            tmp = tMax.getY();
-            tMax.setY(tMin.getY());
-            tMin.setY(tmp);
-        }
-    }
+    if ((txmin > tymax) || (tymin > txmax)) return {-1.0f, -1.0f}; // early exit
 
-    if (ray.getDir().getZ() == 0) {
-        if (ray.getPos().getZ() < minBounds.getZ() || ray.getPos().getZ() > maxBounds.getZ()) {
-            tMin.setZ(std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setZ(-std::numeric_limits<float>::infinity());
-        } else {
-            tMin.setZ(-std::numeric_limits<float>::infinity()); // No intersection possible on this axis
-            tMax.setZ(std::numeric_limits<float>::infinity());
-        }
-    } else {
-        tMin.setZ((minBounds.getZ() - ray.getPos().getZ()) * invDirZ);
-        tMax.setZ((maxBounds.getZ() - ray.getPos().getZ()) * invDirZ);
-        if (tMin.getZ() > tMax.getZ()) {
-            tmp = tMax.getZ();
-            tMax.setZ(tMin.getZ());
-            tMin.setZ(tmp);
-        }
-    }
+    if (tymin > txmin) txmin = tymin;
+    if (tymax < txmax) txmax = tymax;
 
-    float tNear = std::max(tMin.getZ(), std::max(tMin.getX(), tMin.getY()));
-    float tFar = std::min(tMax.getZ(), std::min(tMax.getX(), tMax.getY()));
+    float tzmin = (minBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+    float tzmax = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
+    if (tzmin > tzmax) std::swap(tzmin, tzmax);
 
-    if (tNear < 0 && tFar >= 0) {
-        return {0, tFar}; // ray starting inside object
-    }
-    return {tNear, tFar};
+    if ((txmin > tzmax) || (tzmin > txmax)) return {-1.0f, -1.0f};
+
+    if (tzmin > txmin) txmin = tzmin;
+    if (tzmax < txmax) txmax = tzmax;
+
+    return {txmin, txmax};
 }
 
 std::pair<Vector3, Vector3> AABCubeBounds::getBounds() {

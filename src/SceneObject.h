@@ -8,7 +8,6 @@ class SceneObject {
 public:
 
     [[nodiscard]] virtual std::pair<float, float> getIntersectionDistance(Ray &ray) const = 0;
-    [[nodiscard]] virtual std::pair<float, float> intersectTriangles(Ray &ray, BVHNode* leafNode) const = 0;
     [[nodiscard]] virtual Vector3 getPos() const = 0;
     [[nodiscard]] virtual Vector3 getScale() const = 0;
     virtual void getNormal(Ray &ray) const = 0;

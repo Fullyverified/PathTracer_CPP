@@ -17,27 +17,27 @@ public:
     // two constructors
     BVHNode(BoundingBox* boundingBox, SceneObject& sceneObject);
     BVHNode(BoundingBox* boundingBox, BVHNode* left, BVHNode* right);
-    BVHNode(BoundingBox *boundingBox, std::vector<Triangle*> triangles, bool isLeaf);
+    BVHNode(BoundingBox *boundingBox, std::vector<Triangle*> triangles);
 
     ~BVHNode(); // deconstructor
 
     [[nodiscard]] int getNumChildren() const;
     [[nodiscard]] struct BVHResult searchBVHTreeScene(Ray &ray);
-    [[nodiscard]] struct BVHResult searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform);
-    [[nodiscard]] float getArea();
+    [[nodiscard]] struct MeshObject::meshIntersection searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform);
+    [[nodiscard]] float getArea() {return boundingBox->getArea();}
     std::pair<Vector3, Vector3> getBounds();
 
     [[nodiscard]] BoundingBox* getBoundingBox() const;
-    [[nodiscard]] SceneObject* getSceneObject() const;
-    [[nodiscard]] std::vector<Triangle*> getTriangles();
-    void setTriangles(std::vector<Triangle*> triangles);
+    [[nodiscard]] SceneObject* getSceneObject() const {return sceneObject;}
+    [[nodiscard]] std::vector<Triangle*> getTriangles() {return triangles;}
+    void setTriangles(std::vector<Triangle*> triangles) {this->triangles = triangles;}
     void setLeft(BVHNode* left);
     void setRight(BVHNode* right);
-    [[nodiscard]] BVHNode* getNodeLeft() const;
-    [[nodiscard]] BVHNode* getNodeRight() const;
+    [[nodiscard]] BVHNode* getNodeLeft() const {return nodeLeft;}
+    [[nodiscard]] BVHNode* getNodeRight() const { return nodeRight;}
 
     void setLeaf(bool isLeaf);
-    [[nodiscard]] bool getLeaf();
+    [[nodiscard]] bool getLeaf() {return isLeaf;}
 
 private:
     BVHNode *nodeLeft, *nodeRight;

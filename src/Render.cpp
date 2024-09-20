@@ -94,38 +94,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
         }
         threads.clear();
 
-        /*int tilesX = (internalResX + config.tileSize - 1) / config.tileSize;
-        int tilesY = (internalResY + config.tileSize - 1) / config.tileSize;
-
-        for (int j = 0; j < tilesY; j++) {
-            for (int i = 0; i < tilesX; i++) {
-                // Create the tile bounds
-                int startX = i * config.tileSize;
-                int endX = std::min(startX + config.tileSize, internalResX-1);
-                int startY = j * config.tileSize;
-                int endY = std::min(startY + config.tileSize, internalResY-1);
-                //std::cout<<"X:"<<startX<<", X:"<<endX<<std::endl;
-                //std::cout<<"Y:"<<startY<<", Y:"<<endY<<std::endl;
-                // Add the new thread task
-                threads.emplace_back(std::async(std::launch::async, &Render::traceRay, this,
-                                                cam, startX, endX, startY, endY,
-                                                iterations, std::ref(sceneobjectsList), std::ref(mutex)));
-
-                // If we have reached the maximum number of active threads, wait for them to finish
-                if (threads.size() >= numThreads) {
-                    for (auto &thread : threads) {
-                        thread.get(); // Wait for all threads in the current batch to complete
-                    }
-                    threads.clear(); // Clear the completed batch
-                }
-            }
-        }
-
-        // Handle any remaining threads if there are still tasks left
-        for (auto &thread : threads) {
-            thread.get();
-        }
-        threads.clear();*/
 
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         //-----------------------
@@ -340,7 +308,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                 ray->setHit(true);
                 double contribution = 1;
                 std::vector<BounceInfo> bounceInfo;
-                for (int currentBounce = 0; ray->getHit() && (currentBounce <= config.bounceDepth/* || contribution < 0.01*/); currentBounce++) {
+                for (int currentBounce = 0; ray->getHit() && (currentBounce <= config.bounceDepth); currentBounce++) {
                     if (currentBounce == 0) {
                         // primary Ray
                         ray->getOrigin().set(cam.getPos());
@@ -376,13 +344,10 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(*ray, *ray->getHitObject(), false);
                         }
                     }
-                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(*ray);
-                    //std::pair<int, float> leafNode = searchLinearBVH(*ray, sceneobjectsList);
                     ray->setHit(false);
+                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(*ray);
                     if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
-                    //if (leafNode.second != -1) {
                         SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
-                        //SceneObject *BVHSceneObject = sceneobjectsList[leafNode.first];
                         ray->march(leafNode.close);
                         ray->getHitPoint().set(ray->getPos());
                         ray->setHit(true);
@@ -391,8 +356,6 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         // store hit data
                         BVHSceneObject->getNormal(*ray); // update normal vector
                         float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
-                        //float roughnessFactor = std::max(0.1f, 1.0f - BVHSceneObject->getRough()); // Ensure a minimum scaling factor
-                        //contribution *= lambertCosineLaw /** roughnessFactor*/;
                         lum = BVHSceneObject->getLum();
                         col = BVHSceneObject->getCol();
                         BounceInfo currentBounceInfo{};
@@ -721,8 +684,8 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     constructLinearBVH(sceneObjectsList);
     std::cout << "Searching linearBVH" << std::endl;
     startTime = std::chrono::high_resolution_clock::now();
-    std::pair<int, float> leafNodeLinear = searchLinearBVH(ray1, sceneObjectsList);
-    if (leafNodeLinear.second != -1) {
+    Render::BVHResult leafNodeLinear = searchLinearBVH(ray1, sceneObjectsList);
+    if (leafNodeLinear.close != -1) {
         //std::cout << "Intersection Test: " << std::endl;;
         //sceneObjectsList[leafNodeLinear.first]->printType();
         //std::cout << "SceneObject Pos";
@@ -825,13 +788,13 @@ void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsLi
     }
 }
 
-std::pair<int, float> Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
+Render::BVHResult Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
     std::stack<int> nodeStack; // list of nodes to check, by index to node vector
-    nodeStack.push(bvhNodes.size() - 1); // start at root node
-    int numIterations = 0;
+    nodeStack.push(bvhNodes.size()-1); // start at root node
 
     int closestObject = -1;
     float closestDistance = std::numeric_limits<float>::infinity();
+    float closestExit = std::numeric_limits<float>::infinity();
 
     while (!nodeStack.empty()) {
         int nodeIndex = nodeStack.top();
@@ -846,13 +809,13 @@ std::pair<int, float> Render::searchLinearBVH(Ray &ray, const std::vector<SceneO
             continue; // if the ray doesnt intersect the nodes bounding box skip it
         }
         if (node.isLeaf) {
-            numIterations++;
             objDistance = sceneObjectsList[node.objectIndex]->getIntersectionDistance(ray);
             if (objDistance.first <= objDistance.second && objDistance.second >= 0) {
                 // check if the ray intersects the object
                 if (objDistance.first < closestDistance) {
                     // if the intersection point is closer than the previous best, record it
                     closestDistance = objDistance.first;
+                    closestExit = objDistance.second;
                     closestObject = node.objectIndex;
                 }
             }
@@ -866,7 +829,5 @@ std::pair<int, float> Render::searchLinearBVH(Ray &ray, const std::vector<SceneO
     }
     if (closestDistance == std::numeric_limits<float>::infinity()) { closestDistance = -1; }
 
-    std::cout<<"numIterations: "<<numIterations<<std::endl;
-
-    return {closestObject, closestDistance}; // return the index of the closest object, and the intersection distance
+    return BVHResult{closestObject, closestDistance, closestExit}; // return the index of the closest object, and the intersection distance
 }
