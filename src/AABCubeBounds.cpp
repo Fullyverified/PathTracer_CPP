@@ -5,8 +5,8 @@
 #include <utility>
 #include <limits>
 
-AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
-minBounds(minBounds), maxBounds(maxBounds), colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp) {
+AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material &material) :
+minBounds(minBounds), maxBounds(maxBounds), material(material) {
     objID = ++objectCounter;
 }
 
@@ -83,30 +83,6 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
 std::pair<Vector3, Vector3> AABCubeBounds::getBounds() {
     return std::make_pair(minBounds, maxBounds);
     }
-
-Vector3 AABCubeBounds::getPos() const {
-    return pos;
-}
-
-Vector3 AABCubeBounds::getLum() const {
-    return luminance;
-}
-
-Vector3 AABCubeBounds::getCol() const {
-    return colour;
-}
-
-float AABCubeBounds::getRough() const {
-    return roughness;
-}
-
-float AABCubeBounds::getRefrac() const {
-    return refrac;
-}
-
-float AABCubeBounds::getTransp() const {
-    return transp;
-}
 
 void AABCubeBounds::printType() const {
     std::cout<<"Type: AABCubeBounds"<<std::endl;

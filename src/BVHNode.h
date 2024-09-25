@@ -39,10 +39,14 @@ public:
     void setLeaf(bool isLeaf);
     [[nodiscard]] bool getLeaf() {return isLeaf;}
 
+    void setTriangle(Triangle* triangle) {this->triangle = triangle;}
+    Triangle* getTriangle() {return triangle;}
+
 private:
     BVHNode *nodeLeft, *nodeRight;
     SceneObject *sceneObject;
     std::vector<Triangle*> triangles;
+    Triangle* triangle;
     BoundingBox *boundingBox;
     bool isLeaf;
 };

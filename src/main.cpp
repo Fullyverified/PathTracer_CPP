@@ -10,32 +10,41 @@
 #include "AABCubeCenter.h"
 #include "LoadMesh.h"
 #include "MeshObject.h"
+#include "Material.h"
 #include "Render.h"
 
 
 int main() {
 
+    Material white{Vector3(1, 1, 1), 0.75, 0, 1, 0, 0};
+    Material red{Vector3(1, 0, 0), 0.75, 0, 1, 0, 0};
+    Material green{Vector3(0, 1, 0), 0.75, 0, 1, 0, 0};
+    Material light{Vector3(1, 1, 1), 0.75, 0, 1, 0, 40};
+
+    Material metal{Vector3(1, 1, 1), 0.05, 1, 1, 0, 0};
+    Material plastic{Vector3(1, 1, 1), 0.05, 0, 1, 0, 0};
+
+
     LoadMesh object;
-    object.load("../meshes/torus.obj");
+    object.load("../meshes/companionCubeLow.obj");
 
     std::vector<SceneObject*> SceneObjectsList;
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // floor
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // roof
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),white)); // floor
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),white)); // roof
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),1,1,1,0,0,0,0.75,1,0)); // back wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),white)); // back wall
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,0,0,0,0,0,0.75,1,0)); // left wall
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),red)); // left wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),green)); // right wall
 
-    //SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(5,-2,1),Vector3(2,2,2),1,1,1,0,0,0,0.5,1,0)); // left cube on floor
-    SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-1,1),Vector3(0,0,0),Vector3(1,1,1),object,1,1,1,0,0,0,1,1,0));
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,1,1,1,0,0,0,0,1,0)); // right sphere on floor
+    //SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2,1),Vector3(0,0,0),Vector3(1,1,1),object,white));
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,metal)); // left sphere on floor
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,plastic)); // right sphere on floor
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
+    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,light)); // light on ceiling
 
 
     Camera *cam = new Camera(Vector3(-2, 0, 0), Vector3(1, 0, 0));
-
 
 
     Render render(*cam);

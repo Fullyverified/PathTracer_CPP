@@ -30,14 +30,17 @@ public:
 
     [[nodiscard]] Vector3& getBCoords() {return bCoords;}
 
+    void setBounceDot(float bounceAngle) {this->bounceDot = bounceAngle;}
+    [[nodiscard]] float getBounceAngle() const {return bounceDot;}
+
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
-    const  Triangle* getTriangle() {return triangle;}
+    [[nodiscard]] Triangle* getTriangle() const {return triangle;}
 
     void initialize(Ray &primaryRay);
 
 private:
     Vector3 origin, pos, dir, hitpoint, normal, bCoords;
-    int trindex;
+    float bounceDot;
     bool hit;
     SceneObject* sceneObject;
     Triangle* triangle;

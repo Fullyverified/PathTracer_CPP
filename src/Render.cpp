@@ -36,14 +36,13 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
 void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow &window) {
     // initialise objects
     std::mutex mutex;
-    std::vector<std::future<void>> threads;
+    std::vector<std::future<void> > threads;
     // create all ray and luminance vector objects
     std::cout << "Constructing Objects: " << std::endl;
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
 
     constructBVHST(sceneobjectsList);
-    BVHNode *BVHrootNode = BVHNodes.at(0);
     std::cout << "Constructing BVH: " << std::endl;
     constructLinearBVH(sceneobjectsList);
     std::cout << "Finished constructing BVH: " << std::endl;
@@ -78,7 +77,6 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
 
         std::cout << "Starting Rays" << std::endl;
         auto startTimeRays = std::chrono::high_resolution_clock::now();
-        //std::cout << "Starting Secondary Rays: " << std::endl;
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(0, internalResX, segments, boundsX, i);
@@ -306,7 +304,6 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
             Ray *ray = rays[internalResX * y + x];
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 ray->setHit(true);
-                double contribution = 1;
                 std::vector<BounceInfo> bounceInfo;
                 for (int currentBounce = 0; ray->getHit() && (currentBounce <= config.bounceDepth); currentBounce++) {
                     if (currentBounce == 0) {
@@ -338,7 +335,7 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                     } else {
                         // secondary Ray
                         float randomSample = dist(rng); // monte carlo sampling
-                        if (randomSample >= ray->getHitObject()->getTransp()) {
+                        if (randomSample >= ray->getHitObject()->getMaterial().transmission) {
                             sampleReflectionDirection(*ray, *ray->getHitObject(), false);
                         } else {
                             sampleRefractionDirection(*ray, *ray->getHitObject(), false);
@@ -355,35 +352,49 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         ray->getOrigin().set(ray->getPos());
                         // store hit data
                         BVHSceneObject->getNormal(*ray); // update normal vector
-                        float lambertCosineLaw = std::abs(ray->getNormal().dot(ray->getDir()));
-                        lum = BVHSceneObject->getLum();
-                        col = BVHSceneObject->getCol();
                         BounceInfo currentBounceInfo{};
-                        currentBounceInfo.brightnessR = lum.getX();
-                        currentBounceInfo.brightnessG = lum.getY();
-                        currentBounceInfo.brightnessB = lum.getZ();
-                        currentBounceInfo.dotProduct = lambertCosineLaw;
-                        currentBounceInfo.colourR = col.getX();
-                        currentBounceInfo.colourG = col.getY();
-                        currentBounceInfo.colourB = col.getZ();
+                        currentBounceInfo.emission = BVHSceneObject->getMaterial().emission;
+                        currentBounceInfo.colour = BVHSceneObject->getMaterial().colour;
+                        currentBounceInfo.metallic = BVHSceneObject->getMaterial().metallic;
+                        currentBounceInfo.outAngle = std::abs(ray->getNormal().dot(ray->getDir()));
                         bounceInfo.push_back(currentBounceInfo);
+                        if (currentBounce > 1) { bounceInfo[currentBounce - 1].inAngle = ray->getBounceAngle(); }
                     }
                 }
-                float redAmplitude = 0;
-                float greenAmplitude = 0;
-                float blueAmplitude = 0;
+                float red = 0;
+                float green = 0;
+                float blue = 0;
                 for (int index = bounceInfo.size() - 1; index >= 0; index--) {
-                    float dotProduct = bounceInfo[index].dotProduct;
-                    redAmplitude = (bounceInfo[index].brightnessR + redAmplitude) * bounceInfo[index].colourR * dotProduct;
-                    greenAmplitude = (bounceInfo[index].brightnessG + greenAmplitude) * bounceInfo[index].colourG * dotProduct;
-                    blueAmplitude = (bounceInfo[index].brightnessB + blueAmplitude) * bounceInfo[index].colourB * dotProduct;
+                    // Mix between diffuse (non-metallic) and specular (metallic) based on metallic value
+                    float dotProduct = bounceInfo[index].outAngle;
+                    float metallic = bounceInfo[index].metallic;
+                    Vector3 baseColour = bounceInfo[index].colour;
+
+                    Vector3 F0 = Vector3(0.04f, 0.04f, 0.04f) * (1.0f - metallic) + baseColour * metallic;
+                    Vector3 fresnel = F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - dotProduct, 5.0f);
+
+                    // diffuse for non-metals
+                    Vector3 diffuse = (1.0f - metallic) * (1.0f - fresnel) * baseColour / std::numbers::pi;
+
+                    Vector3 specular = fresnel;
+
+                    // combined BRDF
+                    Vector3 brdf = diffuse + specular;
+
+                    red = (bounceInfo[index].emission + red) * brdf.x * dotProduct;
+                    green = (bounceInfo[index].emission + green) * brdf.y * dotProduct;
+                    blue = (bounceInfo[index].emission + blue) * brdf.z * dotProduct;
+
+                    /*red = (bounceInfo[index].emission + red) * bounceInfo[index].colour.x * dotProduct;
+                    green = (bounceInfo[index].emission + green) * bounceInfo[index].colour.y * dotProduct;
+                    blue = (bounceInfo[index].emission + blue) * bounceInfo[index].colour.z * dotProduct;*/
                 }
-                absR[y * internalResX + x] += redAmplitude;
-                absG[y * internalResX + x] += greenAmplitude;
-                absB[y * internalResX + x] += blueAmplitude;
-                lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * its);
-                lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * its);
-                lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * its);
+                absR[y * internalResX + x] += red;
+                absG[y * internalResX + x] += green;
+                absB[y * internalResX + x] += blue;
+                lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
+                lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
+                lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
             }
         }
     }
@@ -391,9 +402,9 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
 
 thread_local std::mt19937 Render::rng(std::random_device{}());
 
-void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
+void Render::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
     float n1 = 1.0003f; // refractive index of air
-    float n2 = sceneObject.getRefrac();
+    float n2 = sceneObject.getMaterial().IOR;
     // cosine of incient angle
     float cosTheta1 = -(ray.getNormal().dot(ray.getDir())); // negative of the dot product because normal may be pointing inwards
     float sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
@@ -411,7 +422,7 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().set(refraction);
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second); // march the ray to the other side of the object
-        n1 = sceneObject.getRefrac();
+        n1 = sceneObject.getMaterial().IOR;
         n2 = 1.0003;
         // cosine of incident angle
         sceneObject.getNormal(ray); // update normal
@@ -436,10 +447,11 @@ void Render::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool 
         ray.getDir().normalise();
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second + 0.01f);
     }
+    ray.setBounceDot(1.0f);
 }
 
-void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const {
-    float roughness = sceneObject.getRough();
+void Render::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+    float roughness = sceneObject.getMaterial().roughness;
     // reflection direction
     float dotProduct = ray.getDir().dot(ray.getNormal());
     Vector3 reflection(ray.getDir() - ray.getNormal() * dotProduct * 2);
@@ -455,7 +467,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
         float gamma = dist(rng);
         // convert to sphereical coodinates
         alpha = std::acos(std::sqrt(alpha)); // polar angle - sqrt more likely to be near the pole (z axis)
-        gamma = 2 * std::numbers::pi * gamma; // azimuthal angle
+        gamma = 2.0f * std::numbers::pi * gamma; // azimuthal angle
 
         // convert random direction in spherical coordinates to vector coordinates
         Vector3 random(
@@ -481,7 +493,7 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
 
         // set final sampled direction
         // x = randomX * tangentX + randomY * bitangentX + randomZ * normalX
-        Vector3 sampledD(
+        Vector3 diffuseD(
             random.getX() * tangentT.getX() + random.getY() * bitangent.getX() + random.getZ() * ray.getNormal().getX(),
             random.getX() * tangentT.getY() + random.getY() * bitangent.getY() + random.getZ() * ray.getNormal().getY(),
             random.getX() * tangentT.getZ() + random.getY() * bitangent.getZ() + random.getZ() * ray.getNormal().getZ());
@@ -490,16 +502,20 @@ void Render::sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool 
         // biasedDirection = (1 - roughness) * reflectionDirection + roughness * randomDirection
 
         ray.getDir().set(
-            ((1 - roughness) * reflection.getX()) + roughness * sampledD.getX(),
-            ((1 - roughness) * reflection.getY()) + roughness * sampledD.getY(),
-            ((1 - roughness) * reflection.getZ()) + roughness * sampledD.getZ());
+            ((1 - roughness) * reflection.getX()) + roughness * diffuseD.getX(),
+            ((1 - roughness) * reflection.getY()) + roughness * diffuseD.getY(),
+            ((1 - roughness) * reflection.getZ()) + roughness * diffuseD.getZ());
     } else {
         // pure reflection direction if rough = 0
         ray.getDir().set(reflection.getX(), reflection.getY(), reflection.getZ());
     }
     ray.getDir().normalise();
-    if (ray.getDir().dot(ray.getNormal()) < 0) {
+    float bounceDot = ray.getDir().dot(ray.getNormal());
+    if (bounceDot < 0) {
         ray.getDir().flip();
+        ray.setBounceDot(-bounceDot);
+    } else {
+        ray.setBounceDot(bounceDot);
     }
     ray.updateOrigin(0.01f); // march the ray a tiny amount to move it off the object
 }
@@ -661,7 +677,7 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
     }
 }
 
-void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
+void Render::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
     constructBVHST(sceneObjectsList);
 
     Ray ray1(Vector3(0, -1.7, 1), Vector3(1, 0, 0));
@@ -679,7 +695,7 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     } //else {std::cout << "Miss"<<std::endl;}
     auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
-    std::cout<<"num Iterations: "<<numIterations<<std::endl;
+    std::cout << "num Iterations: " << numIterations << std::endl;
     std::cout << "------------" << std::endl;
     constructLinearBVH(sceneObjectsList);
     std::cout << "Searching linearBVH" << std::endl;
@@ -693,7 +709,6 @@ void Render::BVHProfiling(const std::vector<SceneObject*> &sceneObjectsList) {
     } //else {std::cout << "Miss"<<std::endl;}
     durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
-
 }
 
 void Render::initialiseObjects() {
@@ -790,7 +805,7 @@ void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsLi
 
 Render::BVHResult Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
     std::stack<int> nodeStack; // list of nodes to check, by index to node vector
-    nodeStack.push(bvhNodes.size()-1); // start at root node
+    nodeStack.push(bvhNodes.size() - 1); // start at root node
 
     int closestObject = -1;
     float closestDistance = std::numeric_limits<float>::infinity();

@@ -3,6 +3,7 @@
 
 #include "Vector3.h"
 #include "Ray.h"
+#include "Material.h"
 
 class SceneObject {
 public:
@@ -12,11 +13,8 @@ public:
     [[nodiscard]] virtual Vector3 getScale() const = 0;
     virtual void getNormal(Ray &ray) const = 0;
     [[nodiscard]] virtual std::pair<Vector3, Vector3> getBounds() = 0;
-    [[nodiscard]] virtual Vector3 getCol() const = 0;
-    [[nodiscard]] virtual Vector3 getLum() const = 0;
-    [[nodiscard]] virtual float getRough() const = 0;
-    [[nodiscard]] virtual float getRefrac() const = 0;
-    [[nodiscard]] virtual float getTransp() const = 0;
+    [[nodiscard]] virtual Material getMaterial() const = 0;
+    virtual void setMaterial(Material material) = 0;
     [[nodiscard]] virtual int getObjID() const = 0;
     virtual void printType() const = 0;
     [[nodiscard]] virtual bool isMesh() const = 0;

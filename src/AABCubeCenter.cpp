@@ -5,13 +5,12 @@
 #include <utility>
 #include <limits>
 
-AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp)
-    : pos(pos), length(length), colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp),
+AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, Material &material)
+    : pos(pos), length(length), material(material),
       minBounds(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2),
       maxBounds(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2) {
     objID = ++objectCounter;
 }
-
 
 void AABCubeCenter::getNormal(Ray &ray) const {
     const float px = ray.getPos().getX();
@@ -82,30 +81,6 @@ std::pair<float, float> AABCubeCenter::getIntersectionDistance(Ray &ray) const {
 
 std::pair<Vector3, Vector3> AABCubeCenter::getBounds() {
     return std::make_pair(minBounds, maxBounds);
-}
-
-Vector3 AABCubeCenter::getPos() const {
-    return pos;
-}
-
-Vector3 AABCubeCenter::getCol() const {
-    return colour;
-}
-
-Vector3 AABCubeCenter::getLum() const {
-    return luminance;
-}
-
-float AABCubeCenter::getRough() const {
-    return roughness;
-}
-
-float AABCubeCenter::getRefrac() const {
-    return refrac;
-}
-
-float AABCubeCenter::getTransp() const {
-    return transp;
 }
 
 void AABCubeCenter::printType() const {

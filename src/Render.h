@@ -49,9 +49,9 @@ public:
     void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::vector<SceneObject *> &sceneobjectsList, std::mutex &mutex) const;
 
     // bounce logic
-    void sampleReflectionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
+    void sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    void sampleRefractionDirection(Ray &ray, SceneObject &sceneObject, bool flipNormal) const;
+    void sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
     // tone mapping
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
@@ -83,13 +83,11 @@ private:
     mutable std::uniform_real_distribution<float> dist;
 
     struct BounceInfo {
-        float brightnessR;
-        float brightnessG;
-        float brightnessB;
-        float dotProduct;
-        float colourR;
-        float colourG;
-        float colourB;
+        float outAngle;
+        float inAngle;
+        float metallic;
+        float emission;
+        Vector3 colour;
     };
 
     struct LinearBVHNode {

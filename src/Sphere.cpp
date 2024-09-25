@@ -2,8 +2,8 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, float R, float G, float B, float RL, float GL, float BL, float roughness, float refrac, float transp) :
-pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), colour(R, G, B), luminance(RL, GL, BL), roughness(roughness), refrac(refrac), transp(transp) {
+Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material &material) :
+pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), material(material) {
     objID = ++objectCounter;
 }
 
@@ -60,31 +60,6 @@ std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
     }
 
     return {sqrt1, sqrt2};
-}
-
-
-Vector3 Sphere::getPos() const {
-    return pos;
-}
-
-Vector3 Sphere::getCol() const {
-    return colour;
-}
-
-Vector3 Sphere::getLum() const {
-    return luminance;
-}
-
-float Sphere::getRough() const {
-    return roughness;
-}
-
-float Sphere::getRefrac() const {
-    return refrac;
-}
-
-float Sphere::getTransp() const {
-    return transp;
 }
 
 void Sphere::printType() const {
