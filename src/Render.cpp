@@ -22,7 +22,6 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
                               internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
                               sceneUpdated(false), camMoved(true), lockInput(false), numThreads(0) {
     int res = internalResX * internalResY;
-    rays.resize(res, nullptr);
     lumR.resize(res, 0.0f);
     lumG.resize(res, 0.0f);
     lumB.resize(res, 0.0f);
@@ -299,17 +298,18 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
 void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::vector<SceneObject *> &sceneobjectsList, std::mutex &mutex) const {
     Vector3 lum;
     Vector3 col;
+    Ray ray;
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
-            Ray *ray = rays[internalResX * y + x];
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
-                ray->setHit(true);
+                ray.reset();
+                ray.setHit(true);
                 std::vector<BounceInfo> bounceInfo;
-                for (int currentBounce = 0; ray->getHit() && (currentBounce <= config.bounceDepth); currentBounce++) {
+                for (int currentBounce = 0; ray.getHit() && (currentBounce <= config.bounceDepth); currentBounce++) {
                     if (currentBounce == 0) {
                         // primary Ray
-                        ray->getOrigin().set(cam.getPos());
-                        ray->getPos().set(cam.getPos());
+                        ray.getOrigin().set(cam.getPos());
+                        ray.getPos().set(cam.getPos());
                         // calculate position of pixel on image plane
                         // jitter the pixel position for MSAA
                         float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
@@ -318,47 +318,47 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                                               1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
                         Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
                         // point ray according to pixel position (ray starts from camera origin)
-                        ray->getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
-                        ray->getDir().normalise();
+                        ray.getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
+                        ray.getDir().normalise();
                         if (config.DepthOfField) {
                             // compute Focal Point
-                            Vector3 focalPoint = cam.getPos() + ray->getDir() * config.focalDistance;
+                            Vector3 focalPoint = cam.getPos() + ray.getDir() * config.focalDistance;
                             // Randomly sample a point within the aperture
                             float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
                             float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
                             Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
-                            ray->getOrigin().set(cam.getPos() + lensOffset);
-                            ray->getPos().set(cam.getPos() + lensOffset);
-                            ray->getDir().set(focalPoint - ray->getOrigin());
-                            ray->getDir().normalise();
+                            ray.getOrigin().set(cam.getPos() + lensOffset);
+                            ray.getPos().set(cam.getPos() + lensOffset);
+                            ray.getDir().set(focalPoint - ray.getOrigin());
+                            ray.getDir().normalise();
                         }
                     } else {
                         // secondary Ray
                         float randomSample = dist(rng); // monte carlo sampling
-                        if (randomSample >= ray->getHitObject()->getMaterial().transmission) {
-                            sampleReflectionDirection(*ray, *ray->getHitObject(), false);
+                        if (randomSample >= ray.getHitObject()->getMaterial().transmission) {
+                            sampleReflectionDirection(ray, *ray.getHitObject(), false);
                         } else {
-                            sampleRefractionDirection(*ray, *ray->getHitObject(), false);
+                            sampleRefractionDirection(ray, *ray.getHitObject(), false);
                         }
                     }
-                    ray->setHit(false);
-                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(*ray);
+                    ray.setHit(false);
+                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
                     if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
                         SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
-                        ray->march(leafNode.close);
-                        ray->getHitPoint().set(ray->getPos());
-                        ray->setHit(true);
-                        ray->setHitObject(BVHSceneObject);
-                        ray->getOrigin().set(ray->getPos());
+                        ray.march(leafNode.close);
+                        ray.getHitPoint().set(ray.getPos());
+                        ray.setHit(true);
+                        ray.setHitObject(BVHSceneObject);
+                        ray.getOrigin().set(ray.getPos());
                         // store hit data
-                        BVHSceneObject->getNormal(*ray); // update normal vector
+                        BVHSceneObject->getNormal(ray); // update normal vector
                         BounceInfo currentBounceInfo{};
                         currentBounceInfo.emission = BVHSceneObject->getMaterial().emission;
                         currentBounceInfo.colour = BVHSceneObject->getMaterial().colour;
                         currentBounceInfo.metallic = BVHSceneObject->getMaterial().metallic;
-                        currentBounceInfo.outAngle = std::abs(ray->getNormal().dot(ray->getDir()));
+                        currentBounceInfo.outAngle = std::abs(ray.getNormal().dot(ray.getDir()));
                         bounceInfo.push_back(currentBounceInfo);
-                        if (currentBounce > 1) { bounceInfo[currentBounce - 1].inAngle = ray->getBounceAngle(); }
+                        if (currentBounce > 1) { bounceInfo[currentBounce - 1].inAngle = ray.getBounceAngle(); }
                     }
                 }
                 float red = 0;
@@ -715,9 +715,9 @@ void Render::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
 }
 
 void Render::initialiseObjects() {
-    for (int i = 0; i < internalResX * internalResY; i++) {
+    /*for (int i = 0; i < internalResX * internalResY; i++) {
         rays[i] = new Ray();
-    }
+    }*/
     RGBBuffer = new uint8_t[resX * resY * 3];
 }
 
@@ -726,9 +726,9 @@ void Render::deleteObjects() {
         delete node;
     }
     BVHNodes.clear();
-    for (int i = 0; i < internalResX * internalResY; i++) {
+    /*for (int i = 0; i < internalResX * internalResY; i++) {
         delete rays[i];
-    }
+    }*/
     delete RGBBuffer;
 }
 

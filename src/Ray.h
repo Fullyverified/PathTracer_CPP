@@ -36,6 +36,19 @@ public:
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     [[nodiscard]] Triangle* getTriangle() const {return triangle;}
 
+    void reset() {
+        origin = {0,0,0};
+        pos = {0,0,0};
+        dir = {0,0,0};
+        hitpoint = {0,0,0};
+        normal = {0,0,0};
+        bCoords = {0,0,0};
+        bounceDot = 0;
+        hit = false;
+        sceneObject = nullptr;
+        triangle = nullptr;
+    }
+
 private:
     Vector3 origin, pos, dir, hitpoint, normal, bCoords;
     float bounceDot;

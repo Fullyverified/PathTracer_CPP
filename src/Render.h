@@ -68,7 +68,6 @@ private:
     std::vector<BVHNode *> BVHNodes;
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
-    mutable std::vector<Ray *> rays;
     float maxLuminance, currentLuminance;
     mutable uint8_t *RGBBuffer;
 
