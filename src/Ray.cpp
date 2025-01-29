@@ -29,15 +29,6 @@ void Ray::updateOrigin(const float &distance) {
     pos.set(origin);
 }
 
-void Ray::initialize(Ray &primaryRay) {
-    origin.set(primaryRay.getHitPoint());
-    pos.set(primaryRay.getHitPoint());
-    hitpoint.set(primaryRay.getHitPoint());
-    sceneObject = primaryRay.getHitObject();
-    dir = primaryRay.getDir();
-    hit = primaryRay.getHit();
-}
-
 //Vector3& Ray::getPos() { return pos; }
 
 //Vector3& Ray::getOrigin() { return origin; }

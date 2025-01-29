@@ -256,13 +256,13 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
                 // Extended Reinhard Tone Mapping - returns value [0, 1]
                 float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
-                /*red *= mappedLuminance;
+                red *= mappedLuminance;
                 green *= mappedLuminance;
-                blue *= mappedLuminance;*/
+                blue *= mappedLuminance;
 
-                red *= mappedLuminance / luminance;
+                /*red *= mappedLuminance / luminance;
                 green *= mappedLuminance / luminance;
-                blue *= mappedLuminance / luminance;
+                blue *= mappedLuminance / luminance;*/
 
                 // Apply gamma correction
                 float gamma = 2.2f;
@@ -366,28 +366,31 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                 float blue = 0;
                 for (int index = bounceInfo.size() - 1; index >= 0; index--) {
                     // Mix between diffuse (non-metallic) and specular (metallic) based on metallic value
-                    float dotProduct = bounceInfo[index].outAngle;
+                    float dotProduct = bounceInfo[index].outAngle;  // Ensure this is cosine of the angle
                     float metallic = bounceInfo[index].metallic;
                     Vector3 baseColour = bounceInfo[index].colour;
 
+                    /*// Fresnel reflectance calculation (Schlick's approximation)
                     Vector3 F0 = Vector3(0.04f, 0.04f, 0.04f) * (1.0f - metallic) + baseColour * metallic;
                     Vector3 fresnel = F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - dotProduct, 5.0f);
 
-                    // diffuse for non-metals
-                    Vector3 diffuse = (1.0f - metallic) * (1.0f - fresnel) * baseColour / std::numbers::pi;
+                    // Correct diffuse component (only non-metallic contributes to diffuse)
+                    Vector3 diffuse = (1.0f - metallic) * baseColour / std::numbers::pi;
 
-                    Vector3 specular = fresnel;
+                    // Specular reflection
+                    const Vector3& specular = fresnel;
 
-                    // combined BRDF
+                    // Combined BRDF (diffuse + specular)
                     Vector3 brdf = diffuse + specular;
 
+                    // Accumulate color with dot product weighting
                     red = (bounceInfo[index].emission + red) * brdf.x * dotProduct;
                     green = (bounceInfo[index].emission + green) * brdf.y * dotProduct;
-                    blue = (bounceInfo[index].emission + blue) * brdf.z * dotProduct;
+                    blue = (bounceInfo[index].emission + blue) * brdf.z * dotProduct;*/
 
-                    /*red = (bounceInfo[index].emission + red) * bounceInfo[index].colour.x * dotProduct;
-                    green = (bounceInfo[index].emission + green) * bounceInfo[index].colour.y * dotProduct;
-                    blue = (bounceInfo[index].emission + blue) * bounceInfo[index].colour.z * dotProduct;*/
+                    red = (bounceInfo[index].emission + red) * baseColour.x * dotProduct;
+                    green = (bounceInfo[index].emission + green) * baseColour.y * dotProduct;
+                    blue = (bounceInfo[index].emission + blue) * baseColour.z * dotProduct;
                 }
                 absR[y * internalResX + x] += red;
                 absG[y * internalResX + x] += green;

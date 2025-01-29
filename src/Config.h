@@ -7,8 +7,8 @@ struct Config {
     float aspectX = 1;
     float aspectY = 1;
     float fOV = 52;
-    int raysPerPixel = 4;
-    int bounceDepth = 4;
+    int raysPerPixel = 1;
+    int bounceDepth = 6;
     int trisPerNode = 1;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;

@@ -36,8 +36,6 @@ public:
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     [[nodiscard]] Triangle* getTriangle() const {return triangle;}
 
-    void initialize(Ray &primaryRay);
-
 private:
     Vector3 origin, pos, dir, hitpoint, normal, bCoords;
     float bounceDot;

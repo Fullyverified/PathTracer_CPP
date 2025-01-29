@@ -63,17 +63,17 @@ Extended Room:
 	// suggested fOV: 20
 
 Colour Blending:
-SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // floor
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // roof
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),white)); // floor
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),white)); // roof
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),1,1,1,0,0,0,0.75,1,0)); // back wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),white)); // back wall
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,1,1,0,0,0,0.05,1,0)); // left wall
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),1,1,1,0,0,0,0.05,1,0)); // right wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),white)); // left wall
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),white)); // right wall
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-1.6),Vector3(2,6,0.5),1,1,1,40,0,0,0.75,1,0)); // right
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,0),Vector3(2,6,0.5),1,1,1,0,40,0,0.75,1,0)); // middle
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,1.6),Vector3(2,6,0.5),1,1,1,0,0,40,0.75,1,0)); // left
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-1.6),Vector3(2,6,0.5),redGlow)); // right
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,0),Vector3(2,6,0.5),blueGlow)); // middle
+    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,1.6),Vector3(2,6,0.5),greenGlow)); // left
 
 
 
@@ -109,19 +109,17 @@ SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(0,-0.5,0),Vector3(200,1,
 
 
 
-BVH Test:
-SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // floor
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,0),Vector3(14,1,7),1,1,1,0,0,0,0.75,1,0)); // roof
+Materials:
+    Material white{Vector3(1, 1, 1), 0.75, 0, 1, 0, 0};
+    Material red{Vector3(1, 0, 0), 0.75, 0, 1, 0, 0};
+    Material green{Vector3(0, 1, 0), 0.75, 0, 1, 0, 0};
+    Material light{Vector3(1, 1, 1), 0.75, 0, 1, 0, 40};
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,0),Vector3(1,6,7),1,1,1,0,0,0,0.75,1,0)); // back wall
+    Material metal{Vector3(1, 1, 1), 0.5, 1, 1, 0, 0};
+    Material plastic{Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
 
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),1,0,0,0,0,0,0.75,1,0)); // left wall
-    SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),0,1,0,0,0,0,0.75,1,0)); // right wall wall
+    Material bluePlastic{Vector3(0.4, 0.4, 1), 0.8, 0, 1, 0, 0};
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-2,0),1,1,1,1,0,0,0,0,0,1,1,0)); // left sphere on floor
-    //SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(5,-1.7,1),Vector3(1,1,1),1,1,1,0,0,0,0,1,0)); // left cube on floor
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.2,-0.7),0.1,0.1,0.1,0,0,1,0,0,0,1,1,0)); // right sphere on floor
-
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,1,1,1,40,40,40,0.75,1,0)); // light on ceiling
-
-    Camera *cam = new Camera(Vector3(-8, 0, 0), Vector3(1, 0, 0));
+    Material redGlow{Vector3(1, 0, 0), 0.75, 0, 1, 0, 20};
+    Material blueGlow{Vector3(0, 1, 0), 0.75, 0, 1, 0, 20};
+    Material greenGlow{Vector3(0, 0, 1), 0.75, 0, 1, 0, 20};

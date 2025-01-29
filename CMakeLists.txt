@@ -16,14 +16,6 @@ if (WIN32)  # Windows environment (MinGW)
     set(Vulkan_INCLUDE_DIR "${VULKAN_SDK}/Include")
     set(Vulkan_LIBRARY "${VULKAN_SDK}/Lib/vulkan-1.lib")
     include_directories(${Vulkan_INCLUDE_DIR})
-    # Add GLFW
-    set(GLFW_DIR ${CMAKE_SOURCE_DIR}/libraries/glfw-3.4)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)  # disable Wayland
-    set(GLFW_BUILD_X11 OFF CACHE BOOL "" FORCE)       # disable X11
-    add_subdirectory(${GLFW_DIR})
 
     # Add GLM // if your vulkan SDK doesn't include GLM
     #set(GLM_DIR ${CMAKE_SOURCE_DIR}/libraries/glm) # Adjust this path if necessary
@@ -37,11 +29,6 @@ if (WIN32)  # Windows environment (MinGW)
 elseif (UNIX)   # Linux environment (WSL)
     find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
-
-    # Add GLFW using system packages
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GLFW REQUIRED glfw3)
-    include_directories(${GLFW_INCLUDE_DIRS})
 
     # Add SDL2 using system packages
     find_package(SDL2 REQUIRED)
@@ -136,12 +123,11 @@ add_executable(PathTracer_CPP
         src/Material.h
 )
 
-# Link Vulkan and glfw libraries
+# Link Vulkan and libraries
 if (WIN32)
     target_link_libraries(PathTracer_CPP
             ${tinyObjLoader}
             ${Vulkan_LIBRARY}
-            glfw
             fmt::fmt
             SDL2::SDL2
             fastgltf::fastgltf
@@ -153,8 +139,6 @@ if (WIN32)
 elseif (UNIX)
     target_link_libraries(PathTracer_CPP
             Vulkan::Vulkan
-            ${GLFW_LIBRARIES}
-            glfw
             ${tinyObjLoader}
             fmt::fmt
             ${SDL2_LIBRARIES}  # Use system-installed SDL2 libraries
