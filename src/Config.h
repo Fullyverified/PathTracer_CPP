@@ -3,17 +3,17 @@
 
 struct Config {
     float resX = 1200;
-    float upScale = 3; // 1 is default - integer scaling - multiples of res X
+    float upScale = 1; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
-    float fOV = 52;
+    float fOV = 45;
     int raysPerPixel = 1;
     int bounceDepth = 6;
     int trisPerNode = 1;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;
-    int threads = 0; // 0 = default
+    int threads = 16; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
     float ISO = 1; // up and down keys to modify

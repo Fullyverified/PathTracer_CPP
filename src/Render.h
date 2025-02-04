@@ -82,8 +82,7 @@ private:
     mutable std::uniform_real_distribution<float> dist;
 
     struct BounceInfo {
-        float outAngle;
-        float inAngle;
+        float dot;
         float metallic;
         float emission;
         Vector3 colour;

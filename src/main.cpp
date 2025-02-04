@@ -33,8 +33,16 @@ int main() {
     Material greenGlow{Vector3(0, 0, 1), 0.75, 0, 1, 0, 20};
 
 
+    Material smoothPlastic{Vector3(1, 1, 1), 0.05, 0, 1, 0, 0};
+    Material smoothMetal{Vector3(1, 1, 1), 0.05, 1, 1, 0, 0};
+    Material roughPlastic{Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
+    Material roughMetal{Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
+
     LoadMesh companionCube;
     companionCube.load("../meshes/companionCube.obj");
+
+    LoadMesh lucy;
+    lucy.load("../meshes/lucyScaled.obj");
 
     std::vector<SceneObject*> SceneObjectsList;
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,0),Vector3(14,1,7),white)); // floor
@@ -45,14 +53,17 @@ int main() {
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,3),Vector3(14,12,1),red)); // left wall
     SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-3),Vector3(14,12,1),green)); // right wall wall
 
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,metal)); // left sphere on floor
-    //SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-1.7,1),Vector3(1,1,1),Vector3(1,1,1), companionCube, white)); // left cube on floor
-    SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,-1),0.8,0.8,0.8,plastic)); // right sphere on floor
+    // Spheres
+    //SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,smoothPlastic)); // left sphere on floor
+    SceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1,-1.25),0.8,0.8,0.8,glass)); // right sphere on floor
+
+    // Meshes
+    //SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2.5,1),Vector3(1,1,1),Vector3(1,1,1), companionCube, white)); // companion cube
+    SceneObjectsList.emplace_back(new MeshObject(Vector3(6,-2.7,1),Vector3(1,1,1),Vector3(1,1,1), lucy, white)); // statue
 
     SceneObjectsList.emplace_back(new Sphere(Vector3(5,2.5,0),1,0.1,1,light)); // light on ceiling
 
-
-    Camera *cam = new Camera(Vector3(-2, 0, 0), Vector3(1, 0, 0));
+    Camera *cam = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
 
     Render render(*cam);

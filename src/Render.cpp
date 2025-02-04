@@ -303,9 +303,8 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
         for (int x = xstart; x <= xend; x++) {
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 ray.reset();
-                ray.setHit(true);
                 std::vector<BounceInfo> bounceInfo;
-                for (int currentBounce = 0; ray.getHit() && (currentBounce <= config.bounceDepth); currentBounce++) {
+                for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
                     if (currentBounce == 0) {
                         // primary Ray
                         ray.getOrigin().set(cam.getPos());
@@ -341,13 +340,11 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(ray, *ray.getHitObject(), false);
                         }
                     }
-                    ray.setHit(false);
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
                     if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
                         SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
                         ray.march(leafNode.close);
                         ray.getHitPoint().set(ray.getPos());
-                        ray.setHit(true);
                         ray.setHitObject(BVHSceneObject);
                         ray.getOrigin().set(ray.getPos());
                         // store hit data
@@ -356,9 +353,11 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                         currentBounceInfo.emission = BVHSceneObject->getMaterial().emission;
                         currentBounceInfo.colour = BVHSceneObject->getMaterial().colour;
                         currentBounceInfo.metallic = BVHSceneObject->getMaterial().metallic;
-                        currentBounceInfo.outAngle = std::abs(ray.getNormal().dot(ray.getDir()));
+                        currentBounceInfo.dot = std::abs(ray.getNormal().dot(ray.getDir()));
                         bounceInfo.push_back(currentBounceInfo);
-                        if (currentBounce > 1) { bounceInfo[currentBounce - 1].inAngle = ray.getBounceAngle(); }
+                    }
+                    else {
+                        currentBounce = config.bounceDepth; // end ray
                     }
                 }
                 float red = 0;
@@ -366,27 +365,9 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                 float blue = 0;
                 for (int index = bounceInfo.size() - 1; index >= 0; index--) {
                     // Mix between diffuse (non-metallic) and specular (metallic) based on metallic value
-                    float dotProduct = bounceInfo[index].outAngle;  // Ensure this is cosine of the angle
+                    float dotProduct = bounceInfo[index].dot;  // Ensure this is cosine of the angle
                     float metallic = bounceInfo[index].metallic;
                     Vector3 baseColour = bounceInfo[index].colour;
-
-                    /*// Fresnel reflectance calculation (Schlick's approximation)
-                    Vector3 F0 = Vector3(0.04f, 0.04f, 0.04f) * (1.0f - metallic) + baseColour * metallic;
-                    Vector3 fresnel = F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * pow(1.0f - dotProduct, 5.0f);
-
-                    // Correct diffuse component (only non-metallic contributes to diffuse)
-                    Vector3 diffuse = (1.0f - metallic) * baseColour / std::numbers::pi;
-
-                    // Specular reflection
-                    const Vector3& specular = fresnel;
-
-                    // Combined BRDF (diffuse + specular)
-                    Vector3 brdf = diffuse + specular;
-
-                    // Accumulate color with dot product weighting
-                    red = (bounceInfo[index].emission + red) * brdf.x * dotProduct;
-                    green = (bounceInfo[index].emission + green) * brdf.y * dotProduct;
-                    blue = (bounceInfo[index].emission + blue) * brdf.z * dotProduct;*/
 
                     red = (bounceInfo[index].emission + red) * baseColour.x * dotProduct;
                     green = (bounceInfo[index].emission + green) * baseColour.y * dotProduct;

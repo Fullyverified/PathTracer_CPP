@@ -23,26 +23,24 @@ public:
     [[nodiscard]] Vector3& getDir() { return dir; }
     [[nodiscard]] Vector3& getHitPoint() { return hitpoint; }
     [[nodiscard]] Vector3& getNormal() { return normal; }
-    void setHit(bool hit) { this->hit = hit; }
-    [[nodiscard]] bool getHit() const { return hit; }
     void setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
     [[nodiscard]] SceneObject* getHitObject() const { return sceneObject; }
 
     [[nodiscard]] Vector3& getBCoords() {return bCoords;}
 
-    void setBounceDot(float bounceAngle) {this->bounceDot = bounceAngle;}
-    [[nodiscard]] float getBounceAngle() const {return bounceDot;}
+    void setBounceDot(float bounceDot) {this->bounceDot = bounceDot;}
+    [[nodiscard]] float getBounceDot() const {return bounceDot;}
 
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     [[nodiscard]] Triangle* getTriangle() const {return triangle;}
 
     void reset() {
-        origin = {0,0,0};
-        pos = {0,0,0};
-        dir = {0,0,0};
-        hitpoint = {0,0,0};
-        normal = {0,0,0};
-        bCoords = {0,0,0};
+        origin = {0, 0, 0};
+        pos = {0, 0, 0};
+        dir = {0, 0, 0};
+        hitpoint = {0, 0, 0};
+        normal = {0, 0, 0};
+        bCoords = {0, 0, 0};
         bounceDot = 0;
         hit = false;
         sceneObject = nullptr;
