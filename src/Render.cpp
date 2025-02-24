@@ -1,5 +1,12 @@
 #include "Render.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
+
+#include "Window.h"
+#include "Renderer.h"
+
 #include <atomic>
 #include <algorithm>
 #include <chrono>
@@ -15,8 +22,7 @@
 
 #include "Ray.h"
 #include "BVHNode.h"
-#include "fastgltf/types.hpp"
-//#include "SDLWindow.h"
+#include "UI.h"
 
 Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (config.aspectX / config.aspectY)), internalResX(config.resX / config.upScale),
                               internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
@@ -30,9 +36,20 @@ Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (c
     absB.resize(res, 0.0f);
     std::cout << "External: resX:" << resX << ", internal: resY: " << resY << std::endl;
     std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
+
+    window = new Window("Path Tracer", resX, resY);
+    renderer = new Renderer(*window, resX, resY);
+
+    // --- Initialize ImGui ---
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+    ImGui_ImplSDL2_InitForSDLRenderer(window->getSDLWindow(), renderer->getSDLRenderer());
+    ImGui_ImplSDLRenderer2_Init(renderer->getSDLRenderer());
 }
 
-void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow &window) {
+void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
@@ -52,6 +69,16 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
 
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
+
+        if (UI::camUpdate) {
+            camMoved = true;
+            UI::camUpdate = false;
+        }
+
+        if (UI::sceneUpdate) {
+            sceneUpdated = true;
+            UI::sceneUpdate = false;
+        }
 
         if (camMoved) {
             if (sceneUpdated) {
@@ -120,7 +147,24 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
-        window.presentScreen(RGBBuffer, resX);
+
+        renderer->clearScreen();
+        renderer->pushRGBBuffer(RGBBuffer, resX);
+
+        // Start ImGui frame
+        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui::NewFrame();
+
+        // Render Squadron UI
+        UI::render();
+
+        // Render ImGui
+        ImGui::Render();
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer->getSDLRenderer());
+
+        renderer->presentScreen();
+
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameTime);
         std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << "\n";
@@ -131,21 +175,19 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow 
     }
 }
 
-void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
-    // Create Window
-    SDLWindow window;
-    int width = resX;
-    int height = resY;
-    window.createWindow(width, height);
-    window.createRenderer();
-    window.initializeTexture(width, height);
+void Render::gameLoop(std::vector<SceneObject *> &sceneobjectsList) {
 
     // render loop
-    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList), std::ref(window));
+    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList));
 
     // Main event loop
+    SDL_Event event;
     while (running) {
-        SDL_Event event;
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        //ImGuiIO& io = ImGui::GetIO();
+
+        //if (io.WantCaptureMouse || io.WantCaptureKeyboard) {continue;}
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
@@ -153,7 +195,7 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_DELETE) {
                     lockInput = lockInput == false ? true : false;
-                    window.setRelativeMouse();
+                    window->setRelativeMouse();
                     std::cout << "locking input" << std::endl;
                 }
             }
@@ -232,14 +274,13 @@ void Render::computePixels(std::vector<SceneObject *> &sceneobjectsList) {
         }
 
         // Optional: Limit frame rate or add delay if necessary
-        SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
+        //SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
     }
 
     renderThread.join();
 
     std::cout << "Deleting Objects" << std::endl;
     deleteObjects(); // delete all ray and luminance vectors
-    window.destroyWindow(); // delete SDL objects
 }
 
 void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {

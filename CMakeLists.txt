@@ -21,10 +21,19 @@ if (WIN32)  # Windows environment (MinGW)
     #set(GLM_DIR ${CMAKE_SOURCE_DIR}/libraries/glm) # Adjust this path if necessary
     #include_directories(${GLM_DIR})
 
-    # Add SDL
-    set(SDL_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL)
-    add_subdirectory(${SDL_DIR})
-    include_directories(${SDL_DIR}/include)
+    # Paths to your SDL2 and SDL2_image development folders
+    set(SDL2_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8)
+    set(SDL2_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL2_image-2.8.2)
+
+    # Include SDL2 and SDL2_image headers
+    include_directories(${SDL2_DIR}/include)
+    include_directories(${SDL2_IMAGE_DIR}/include)
+
+    # Link to SDL2 and SDL2_image libraries (adjust to x64 or x86 as needed)
+    link_directories(${SDL2_DIR}/lib/x64)
+    link_directories(${SDL2_IMAGE_DIR}/lib/x64)
+    set(SDL2_LIBRARIES SDL2main.lib SDL2.lib)
+    set(SDL2_IMAGE_LIBRARIES SDL2_image.lib)
 
 elseif (UNIX)   # Linux environment (WSL)
     find_package(Vulkan REQUIRED)
@@ -32,7 +41,9 @@ elseif (UNIX)   # Linux environment (WSL)
 
     # Add SDL2 using system packages
     find_package(SDL2 REQUIRED)
+    find_package(SDL2_image REQUIRED)
     include_directories(${SDL2_INCLUDE_DIRS})
+    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 endif()
 
 # Add TinyObjLoader
@@ -53,7 +64,17 @@ include_directories(${STB_IMAGE_DIR})
 
 # Add IMGUI
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/libraries/imgui)
-include_directories(${IMGUI_DIR})
+add_library(imgui STATIC
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/imgui_impl_sdl2.cpp
+        ${IMGUI_DIR}/imgui_impl_sdlrenderer2.cpp
+)
+
+# Include directories
+target_include_directories(imgui PUBLIC ${IMGUI_DIR})
 
 # Add FMT
 set(FMT_DIR ${CMAKE_SOURCE_DIR}/libraries/fmt)
@@ -118,9 +139,14 @@ add_executable(PathTracer_CPP
         Vulkan/vk_pipelines.h
         Vulkan/vk_pipelines.cpp
         Vulkan/vk_types.h
-        src/SDLWindow.h
-        src/SDLWindow.cpp
+        #src/SDLWindow.h
+        #src/SDLWindow.cpp
         src/Material.h
+        src/PathTracer.h
+        src/UI.cpp
+        src/UI.h
+        src/Window.h
+        src/Renderer.h
 )
 
 # Link Vulkan and libraries
@@ -129,10 +155,13 @@ if (WIN32)
             ${tinyObjLoader}
             ${Vulkan_LIBRARY}
             fmt::fmt
-            SDL2::SDL2
             fastgltf::fastgltf
 
-            ${imgui}
+            ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8/lib/x64/SDL2main.lib
+            ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8/lib/x64/SDL2.lib
+            ${CMAKE_SOURCE_DIR}/libraries/SDL2_image-2.8.2/lib/x64/SDL2_image.lib
+
+            imgui
             ${vkbootstrap}
             ${volk}
     )
@@ -144,7 +173,7 @@ elseif (UNIX)
             ${SDL2_LIBRARIES}  # Use system-installed SDL2 libraries
             fastgltf
 
-            ${imgui}
+            imgui
             ${vkbootstrap}
             ${volk}
     )

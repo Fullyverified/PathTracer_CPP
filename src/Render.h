@@ -12,7 +12,13 @@
 #include "BVHNode.h"
 #include "Camera.h"
 #include "Ray.h"
-#include "SDLWindow.h"
+#include "Window.h"
+#include "Renderer.h"
+
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
+
 
 class Render {
 public:
@@ -24,12 +30,20 @@ public:
 
     Render(Camera &cam);
 
-    ~Render() = default;
+    ~Render() {
+        ImGui_ImplSDLRenderer2_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
+
+        delete window;
+        delete renderer;
+    }
 
     // render loop
-    void renderLoop(std::vector<SceneObject *> &sceneobjectsList, SDLWindow &window);
+    void renderLoop(std::vector<SceneObject *> &sceneobjectsList);
 
-    void computePixels(std::vector<SceneObject *> &sceneobjectsList);
+    // game loop - input, ui, etc, calls the render loop
+    void gameLoop(std::vector<SceneObject *> &sceneobjectsList);
 
     // bvh logic
     void constructBVHST(const std::vector<SceneObject *> &sceneObjectsList);
@@ -65,6 +79,10 @@ public:
     void deleteObjects();
 
 private:
+
+    Window* window;
+    Renderer* renderer;
+
     std::vector<BVHNode *> BVHNodes;
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
