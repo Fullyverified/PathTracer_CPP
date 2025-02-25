@@ -30,7 +30,7 @@ public:
 
         Material metal{Vector3(1, 1, 1), 0, 1, 1, 0, 0};
         Material plastic{Vector3(1, 1, 1), 0, 0, 1, 0, 0};
-        Material mirror{Vector3(1, 1, 1), 0.01, 0, 1, 0, 0};
+        Material mirror{Vector3(1, 1, 1), 0.0, 0, 1, 0, 0};
         Material glass{Vector3(1, 1, 1), 0.05, 0, 1.53, 1, 0};
 
         Material bluePlastic{Vector3(0.4, 0.4, 1), 0.8, 0, 1, 0, 0};

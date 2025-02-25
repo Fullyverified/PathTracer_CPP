@@ -121,7 +121,9 @@ void UI::render() {
 
     ImGui::Separator();
 
-    ImGui::Text("Modify Scene");
+    ImGui::Text("Modify Scene - TBD");
+
+    ImGui::Text("Hint: Press Del to enable mouse look");
 
     ImGui::End();
 
