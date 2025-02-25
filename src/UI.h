@@ -13,9 +13,11 @@ public:
     static bool depthOfField;
     static float apetureRadius;
     static float focalDistance;
+    static float fOV;
 
     static bool camUpdate;
     static bool sceneUpdate;
+    static bool upscalingUpdate;
 
 private:
 

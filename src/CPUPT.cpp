@@ -30,6 +30,20 @@ CPUPT::CPUPT(SystemManager* systemManager) : systemManager(systemManager), dist(
 
 }
 
+void CPUPT::launchRenderThread(std::vector<SceneObject *> &sceneObjectsList) {
+
+    this->sceneObjectsList = sceneObjectsList;
+
+    // launch a thread the handles the render loop
+    renderThread = std::thread(&CPUPT::renderLoop, this);
+}
+
+void CPUPT::joinRenderThread() {
+    if (renderThread.joinable()) {
+        renderThread.join();
+    }
+}
+
 void CPUPT::renderLoop() {
     // initialise objects
     std::mutex mutex;
@@ -54,20 +68,19 @@ void CPUPT::renderLoop() {
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
 
-
         if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
 
             UI::camUpdate = false;
             camera->getCamMoved() = false;
 
+            camera->reInitilize();
+
             if (UI::sceneUpdate) {
 
                 UI::sceneUpdate = false;
 
-                std::cout << "Reconstructing BVH: " << std::endl;
                 constructBVHST(sceneObjectsList);
                 //constructLinearBVH(sceneobjectsList);
-                sceneUpdated = false;
             }
             // reset colour buffer
             for (int i = 0; i < internalResX * internalResY; i++) {
@@ -80,7 +93,13 @@ void CPUPT::renderLoop() {
             }
             aspectRatio = static_cast<float>(internalResX) / internalResY;
             iterations = 1;
-            UI::accumulatedRays = iterations;
+            UI::accumulatedRays = iterations * config.raysPerPixel;
+        }
+
+        if (UI::upscalingUpdate) {
+            UI::upscalingUpdate = false;
+            config.upScale = UI::upscale;
+            updateUpscaling();
         }
 
         Camera cameraCopy = *camera; // dereference camera and copy
@@ -141,29 +160,12 @@ void CPUPT::renderLoop() {
         std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << "\n";
         std::cout << "Frametime: " << finalFrameTime.count() << "ms" << std::endl;
         iterations++;
-        UI::accumulatedRays = iterations;
+        UI::accumulatedRays = iterations * config.raysPerPixel;
         //-----------------------
     }
 }
 
-void CPUPT::launchRenderThread(std::vector<SceneObject *> &sceneObjectsList) {
-
-    this->sceneObjectsList = sceneObjectsList;
-
-    // launch a thread the handles the render loop
-    renderThread = std::thread(&CPUPT::renderLoop, this);
-}
-
-void CPUPT::joinRenderThread() {
-    if (renderThread.joinable()) {
-        renderThread.join();
-    }
-}
-
-
 void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
-
-    std::cout<<"Tone Mapping"<<std::endl;
 
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
@@ -590,40 +592,6 @@ void CPUPT::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end
     }
 }
 
-void CPUPT::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
-    constructBVHST(sceneObjectsList);
-
-    Ray ray1(Vector3(0, -1.7, 1), Vector3(1, 0, 0));
-    ray1.getDir().normalise();
-    std::cout << "------------" << std::endl;
-    std::cout << "Searching RecursiveBVH" << std::endl;
-    auto startTime = std::chrono::high_resolution_clock::now();
-    long numIterations = 0;
-    BVHNode::BVHResult leafNodeRecursive = BVHNodes.at(0)->searchBVHTreeScene(ray1);
-    if (leafNodeRecursive.node != nullptr) {
-        //std::cout << "Intersection Test: " << std::endl;;
-        //leafNodeRecursive.first->getSceneObject()->printType();
-        //std::cout << "SceneObject Pos";
-        //leafNodeRecursive.first->getSceneObject()->getPos().print();
-    } //else {std::cout << "Miss"<<std::endl;}
-    auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
-    std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
-    std::cout << "num Iterations: " << numIterations << std::endl;
-    std::cout << "------------" << std::endl;
-    constructLinearBVH(sceneObjectsList);
-    std::cout << "Searching linearBVH" << std::endl;
-    startTime = std::chrono::high_resolution_clock::now();
-    CPUPT::BVHResult leafNodeLinear = searchLinearBVH(ray1, sceneObjectsList);
-    if (leafNodeLinear.close != -1) {
-        //std::cout << "Intersection Test: " << std::endl;;
-        //sceneObjectsList[leafNodeLinear.first]->printType();
-        //std::cout << "SceneObject Pos";
-        //sceneObjectsList[leafNodeLinear.first]->getPos().print();
-    } //else {std::cout << "Miss"<<std::endl;}
-    durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startTime);
-    std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
-}
-
 void CPUPT::initialiseObjects() {
 
     camera = systemManager->getCamera();
@@ -647,7 +615,41 @@ void CPUPT::initialiseObjects() {
     lumB.resize(res, 0.0f);
     absR.resize(res, 0.0f);
     absG.resize(res, 0.0f);
-    absB.resize(res, 0.0f);}
+    absB.resize(res, 0.0f);
+}
+
+void CPUPT::updateUpscaling() {
+
+    internalResX = config.resX / config.upScale;
+    internalResY = resY / config.upScale;
+    int res = internalResX * internalResY;
+    lumR.resize(res, 0.0f);
+    lumG.resize(res, 0.0f);
+    lumB.resize(res, 0.0f);
+    absR.resize(res, 0.0f);
+    absG.resize(res, 0.0f);
+    absB.resize(res, 0.0f);
+}
+
+void CPUPT::updateResolution() {
+    resX = config.resX;
+    resY = config.resX / (config.aspectX / config.aspectY);
+
+    internalResX = config.resX / config.upScale;
+    internalResY = resY / config.upScale;
+
+    aspectRatio = static_cast<float>(internalResX) / internalResY;
+
+    RGBBuffer = new uint8_t[resX * resY * 3];
+
+    int res = internalResX * internalResY;
+    lumR.resize(res, 0.0f);
+    lumG.resize(res, 0.0f);
+    lumB.resize(res, 0.0f);
+    absR.resize(res, 0.0f);
+    absG.resize(res, 0.0f);
+    absB.resize(res, 0.0f);
+}
 
 void CPUPT::deleteObjects() {
     for (auto node: BVHNodes) {

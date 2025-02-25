@@ -56,7 +56,6 @@ public:
         int resY = config.resX / (config.aspectX / config.aspectY);
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
-        // set RGBBuffer to (0, 0, 0)
     }
 
     void update(float deltaTime) {
@@ -115,6 +114,13 @@ public:
 
     void setIsRunning(bool running) {
         this->running = running;
+    }
+
+    void updateResolution() {
+        int resX = config.resX;
+        int resY = config.resX / (config.aspectX / config.aspectY);
+        int res = resX * resY;
+        RGBBuffer = new uint8_t[res * 3];
     }
 
 private:

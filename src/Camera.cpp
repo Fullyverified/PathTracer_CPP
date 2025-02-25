@@ -45,7 +45,6 @@ void Camera::reInitilize() {
     imagePlane();
 }
 
-
 void Camera::initilizePitchYaw() {
     yaw = std::atan2(dir.getZ(), dir.getX()) * 180.0f / std::numbers::pi; // Convert from radians to degrees
     pitch = std::asin(dir.getY()) * 180.0f / std::numbers::pi; // Convert from radians to degrees

@@ -3,7 +3,7 @@
 
 struct Config {
     float resX = 1200;
-    float upScale = 6; // 1 is default - integer scaling - multiples of res X
+    float upScale = 4; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
     float fOV = 45;

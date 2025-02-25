@@ -9,6 +9,7 @@ int UI::numRays = config.raysPerPixel;
 int UI::numBounces = config.bounceDepth;
 bool UI::accumulateRays = true;
 int UI::upscale = config.upScale;
+float UI::fOV = config.fOV;
 
 bool UI::depthOfField = config.DepthOfField;
 float UI::apetureRadius = config.apertureRadius;
@@ -16,6 +17,7 @@ float UI::focalDistance = config.focalDistance;
 
 bool UI::camUpdate = false;
 bool UI::sceneUpdate = false;
+bool UI::upscalingUpdate = false;
 
 void UI::render() {
 
@@ -32,14 +34,21 @@ void UI::render() {
         camUpdate = true;
     }
 
-    if (ImGui::SliderInt("Number of Rays", &numRays, 1, 100)) {
+    if (ImGui::SliderInt("Rays per frame", &numRays, 1, 100)) {
         camUpdate = true;
         config.raysPerPixel = numRays;
     }
 
-    if (ImGui::SliderInt("Number of Bounces", &numBounces, 0, 100)) {
+    if (ImGui::SliderInt("Ray bounces", &numBounces, 0, 100)) {
         camUpdate = true;
         config.bounceDepth = numBounces;
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
+        camUpdate = true;
+        config.fOV = fOV;
     }
 
     ImGui::Separator();
@@ -49,6 +58,7 @@ void UI::render() {
     if (ImGui::Button("1x")) {
         upscale = 1;
         camUpdate = true;
+        upscalingUpdate = true;
     }
 
     ImGui::SameLine();
@@ -56,6 +66,7 @@ void UI::render() {
     if (ImGui::Button("2x")) {
         upscale = 2;
         camUpdate = true;
+        upscalingUpdate = true;
     }
 
     ImGui::SameLine();
@@ -63,6 +74,7 @@ void UI::render() {
     if (ImGui::Button("4x")) {
         upscale = 4;
         camUpdate = true;
+        upscalingUpdate = true;
     }
 
     ImGui::SameLine();
@@ -70,8 +82,16 @@ void UI::render() {
     if (ImGui::Button("6x")) {
         upscale = 6;
         camUpdate = true;
+        upscalingUpdate = true;
     }
-    config.upScale = upscale;
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("10x")) {
+        upscale = 10;
+        camUpdate = true;
+        upscalingUpdate = true;
+    }
 
     ImGui::Separator();
 

@@ -67,6 +67,8 @@ public:
 
     // cleanup
     void initialiseObjects();
+    void updateUpscaling();
+    void updateResolution();
 
     void deleteObjects();
 
@@ -89,7 +91,6 @@ private:
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
-    bool sceneUpdated, camMoved, lockInput;
     static thread_local std::mt19937 rng; // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
 
