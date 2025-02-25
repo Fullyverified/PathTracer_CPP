@@ -19,7 +19,6 @@ Direct Light Sampling
 Multiple Importance Sampling  
 Next Event Estimation (NEE)  
 Denoising  
-BVH Acceleration for triangles within a mesh  
 Russian Roulette Termination - (currently ray bounces are a fixed amount)  
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
