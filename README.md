@@ -1,5 +1,4 @@
-Remaking my PathTracer in CPP, now with multithreading.  
-
+A CPU Path tracer.  
 ![extended room 2200x 1230 1250 rays](https://github.com/user-attachments/assets/8e964ffb-353f-4e80-96f5-4a1bc75527e2)  
   
 ![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
@@ -10,12 +9,10 @@ BVH Acceleration
 Meshes  
 Cosine Weighted Importance Sampling  
 Refraction (Transparency)  
-Controls - WASD and Mouse - UP and DOWN for exposure | numPad -, + for fOV | [ ] for apertureRadius | ; " for focal Distance  
-  input can be locked with Del key for longer renders  
 Extended Reinhard Tone Mapping
-Depth of Field
-
-Settings can be altered in the Config.h file. I will add a UI soon.
+Depth of Field  
+Controls - WASD and Mouse  
+UI to modify render settings  
 
 # To Do  
 Direct Light Sampling  
@@ -27,7 +24,6 @@ Russian Roulette Termination - (currently ray bounces are a fixed amount)
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
 GPU Acceleration with Vulkan  
-GUI to control options  
 Image textures, rougness maps, etc  
 
 # Improvments
@@ -42,10 +38,8 @@ Cinebench has a 9.7x speed up with multithreading so I think thats not bad.
 Edit - I've noticed a scaling issue, at high resolutions the Java version is still faster in singlethread. Not sure what thats about.
 
 # Building  
-Building requires the vulkan SDK to be installed on your system. The project does not currently use Vulkan but I plan to add GPU Acceleration. In the CMakeLists.txt file find this line:  
-set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version.  
-If you are on Linux use your fancy commands to install the Vulkan SDK and SDL2.  
+I use CLion, I'm not quite sure how building works on other systems. A CMake file is included.
+It uses SDl2, ImGui and SDL2_Img. I disabled Vulkan for now since I still haven't implemented it.
 
 # Known Bugs  
-The SDL2 window does not work properly on Linux  
-Executes 40% faster on Linux  
+Probably doesn't work on Linux at the moment
