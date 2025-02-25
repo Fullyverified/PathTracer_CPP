@@ -13,7 +13,7 @@ struct Config {
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;
-    int threads = 16; // 0 = default
+    int threads = 0; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
     float ISO = 1; // up and down keys to modify

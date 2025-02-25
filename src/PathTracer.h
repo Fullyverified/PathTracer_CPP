@@ -61,7 +61,7 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), green)); // right wall wall
 
         // Spheres
-        //sceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,smoothPlastic)); // left sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,mirror)); // left sphere on floor
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
 
         // Meshes
@@ -111,7 +111,6 @@ public:
 
             // Push RGB buffer and present screen
             systemManager.presentScreen();
-
         }
 
         // End render thread

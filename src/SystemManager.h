@@ -93,7 +93,7 @@ public:
         // present screen - ImGui + RGB Buffer
         renderer->presentScreen();
 
-        running = inputManager->getIsRunning();
+        running = running == false ? false : inputManager->getIsRunning(); // silly little work around to prevent running being overrided
     }
 
     InputManager* getInputManager() {

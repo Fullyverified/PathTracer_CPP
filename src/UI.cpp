@@ -1,5 +1,7 @@
 #include "UI.h"
 
+#include <imgui_internal.h>
+
 #include "ImGui.h"
 #include "Config.h"
 #include "iostream"
@@ -111,6 +113,10 @@ void UI::render() {
         camUpdate = true;
         config.focalDistance = focalDistance;
     }
+
+    ImGui::Separator();
+
+    ImGui::Text("Modify Scene");
 
     ImGui::End();
 
