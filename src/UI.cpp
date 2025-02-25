@@ -1,6 +1,7 @@
 #include "UI.h"
 
 #include <imgui_internal.h>
+#include <tiny_obj_loader.h>
 
 #include "ImGui.h"
 #include "Config.h"
@@ -58,7 +59,8 @@ void UI::render() {
 
     ImGui::Separator();
 
-    ImGui::Text("Upscaling");
+    std::string upscaleString = "Upscaling: " + std::to_string(upscale) + "x";
+    ImGui::Text(upscaleString.c_str());
 
     if (ImGui::Button("1x")) {
         upscale = 1;
