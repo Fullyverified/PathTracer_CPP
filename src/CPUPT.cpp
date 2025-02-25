@@ -52,6 +52,7 @@ void CPUPT::renderLoop() {
     std::cout << "Constructing Objects: " << std::endl;
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
+    config.threads = std::thread::hardware_concurrency();
 
     std::cout << "Constructing BVH: " << std::endl;
     constructBVHST(sceneObjectsList);
@@ -63,7 +64,7 @@ void CPUPT::renderLoop() {
 
     // render loop code
     while (systemManager->getIsRunning()) {
-        auto frameTime = std::chrono::high_resolution_clock::now();
+        auto frameStartTime = std::chrono::high_resolution_clock::now();
 
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
@@ -104,7 +105,6 @@ void CPUPT::renderLoop() {
 
         Camera cameraCopy = *camera; // dereference camera and copy
 
-        std::cout << "Starting Rays" << std::endl;
         auto startTimeRays = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
@@ -122,6 +122,7 @@ void CPUPT::renderLoop() {
         threads.clear();
 
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
+        UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
         //-----------------------
 
         // tone mapping
@@ -132,9 +133,7 @@ void CPUPT::renderLoop() {
             currentLuminance = 0.2126f * lumR[i] + 0.7152f * lumG[i] + 0.0722f * lumB[i];
             maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
         }
-        std::cout << "Original Max Luminance: " << maxLuminance << std::endl;
         maxLuminance *= config.ISO;
-        std::cout << "Altered Max Luminance: " << maxLuminance << ", ISO: " << config.ISO << std::endl;
         auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
@@ -153,15 +152,15 @@ void CPUPT::renderLoop() {
         systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
 
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
-        auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameTime);
-        std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << "\n";
-        std::cout << "Tone Mapping and Buffer update Time: " << durationTimeTM.count() << "ms" << "\n";
-        std::cout << "Frametime: " << finalFrameTime.count() << "ms" << std::endl;
+        auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameStartTime);
+        UI::toneMappingTime = std::chrono::duration<float>(durationTimeTM).count() * 1000;
+        UI::frameTime = std::chrono::duration<float>(finalFrameTime).count() * 1000;
+
         iterations++;
         UI::accumulatedRays = iterations * config.raysPerPixel;
 
-        float frameTimeSec = std::chrono::duration<float>(durationTimeRays).count() / 1000.0f;
-        UI::gigaRays = (config.raysPerPixel * internalResX * internalResY) / (1e9f * frameTimeSec);
+        float frameTimeSec = std::chrono::duration<float>(durationTimeRays).count();
+        UI::RaysPerSecond = (config.raysPerPixel * internalResX * internalResY) / (frameTimeSec);
         //-----------------------
     }
 }

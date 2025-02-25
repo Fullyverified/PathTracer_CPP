@@ -83,8 +83,10 @@ public:
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui::NewFrame();
 
-        // Render Squadron UI
-        UI::render();
+        // Render UI
+        UI::renderSettings();
+        UI::materialEditor();
+        UI::sceneEditor();
 
         // Render ImGui
         ImGui::Render();

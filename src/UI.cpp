@@ -1,17 +1,22 @@
 #include "UI.h"
 
-#include <imgui_internal.h>
+#include <thread>
 #include <tiny_obj_loader.h>
 
 #include "ImGui.h"
 #include "Config.h"
 #include "iostream"
 
+int UI::RaysPerSecond = 0;
+float UI::pathTracingTime = 0;
+float UI::toneMappingTime = 0;
+float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
 int UI::numRays = config.raysPerPixel;
 int UI::numBounces = config.bounceDepth;
 bool UI::accumulateRays = true;
-float UI::gigaRays = 0;
+
+int UI::numThreads = std::thread::hardware_concurrency();
 
 int UI::upscale = config.upScale;
 float UI::fOV = config.fOV;
@@ -24,16 +29,23 @@ bool UI::camUpdate = false;
 bool UI::sceneUpdate = false;
 bool UI::upscalingUpdate = false;
 
-void UI::render() {
+void UI::renderSettings() {
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Render Settings", nullptr, ImGuiWindowFlags_NoCollapse);
+    ImGui::SetNextWindowBgAlpha(0.5f);
 
-    ImGui::SetNextWindowBgAlpha(0.7f);
-    ImGui::SetNextWindowCollapsed(false, ImGuiCond_Always);
+    ImGui::Begin("Render Settings", nullptr, ImGuiWindowFlags_None);
 
+    ImGui::Text("Rays /s: %d", RaysPerSecond);
 
-    ImGui::Text("Gigarays: %f", gigaRays);
+    std::string frameTimeStr = std::to_string(static_cast<int>(frameTime)) + " ms";
+    ImGui::Text("Frame Time: %s", frameTimeStr.c_str());
+
+    std::string pathTraceTimeStr = std::to_string(static_cast<int>(pathTracingTime)) + " ms";
+    ImGui::Text("Path Trace: %s", pathTraceTimeStr.c_str());
+
+    std::string toneMappingTimeStr = std::to_string(static_cast<int>(toneMappingTime)) + " ms";
+    ImGui::Text("Tone Mapping: %s", toneMappingTimeStr);
 
     if (ImGui::Checkbox("Accumulate Rays", &accumulateRays)) {
         camUpdate = true;
@@ -51,6 +63,12 @@ void UI::render() {
     if (ImGui::SliderInt("Ray bounces", &numBounces, 0, 100)) {
         camUpdate = true;
         config.bounceDepth = numBounces;
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::SliderInt("CPU Threads", &numThreads, 1, std::thread::hardware_concurrency())) {
+        config.threads = numThreads;
     }
 
     ImGui::Separator();
@@ -127,7 +145,36 @@ void UI::render() {
     ImGui::Text("Modify Scene - TBD");
 
     ImGui::Text("Hint: Press Del to enable mouse look");
+    ImGui::Text("Hint: WASD + QE");
 
     ImGui::End();
 
+}
+
+void UI::materialEditor() {
+
+    ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.5f);
+
+    ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
+
+
+
+    ImGui::Text("Work In Progress");
+
+    ImGui::End();
+}
+
+void UI::sceneEditor() {
+
+    ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.5f);
+
+    ImGui::Begin("Scene Editor", nullptr, ImGuiWindowFlags_None);
+
+    ImGui::Text("Work In Progress");
+
+
+
+    ImGui::End();
 }

@@ -3,13 +3,20 @@
 
 class UI {
 public:
-    static void render();
+    static void renderSettings();
+    static void materialEditor();
+    static void sceneEditor();
 
+    static int RaysPerSecond;
+    static float pathTracingTime;
+    static float toneMappingTime;
+    static float frameTime;
     static int accumulatedRays;
     static int numRays;
     static int numBounces;
     static bool accumulateRays;
-    static float gigaRays;
+
+    static int numThreads;
 
     static int upscale;
 
