@@ -2,7 +2,7 @@
 #include <numbers>
 
 Camera::Camera(Vector3 pos, Vector3 dir) : aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), worldUp(0,1,0),
-planeWidth(0), planeHeight(0), right(0,0,0), up(0,0,0) {
+planeWidth(0), planeHeight(0), right(0,0,0), up(0,0,0), camMoved(false) {
     reInitilize();
     initilizePitchYaw();
 }
@@ -76,46 +76,54 @@ void Camera::updateDirection(float mouseX, float mouseY) {
     // Update right and up vectors
     rightVector(); // Update right vector based on the new dir and up
     upVector();    // Update up vector if needed
+
+    camMoved = true;
 }
 
-void Camera::moveForward(float elapsedTime) {
-    elapsedTime *= 0.10;
-    pos.set(pos.getX() + dir.getX() * elapsedTime,
-        pos.getY() + dir.getY() * elapsedTime,
-        pos.getZ() + dir.getZ() * elapsedTime);
+void Camera::moveForward(float deltaTime) {
+    pos.set(pos.getX() + dir.getX() * deltaTime * sensitivity,
+        pos.getY() + dir.getY() * deltaTime * sensitivity,
+        pos.getZ() + dir.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }
 
-void Camera::moveBackward(float elapsedTime) {
-    elapsedTime *= -0.10;
-    pos.set(pos.getX() + dir.getX() * elapsedTime,
-        pos.getY() + dir.getY() * elapsedTime,
-        pos.getZ() + dir.getZ() * elapsedTime);
+void Camera::moveBackward(float deltaTime) {
+    pos.set(pos.getX() - dir.getX() * deltaTime * sensitivity,
+        pos.getY() - dir.getY() * deltaTime * sensitivity,
+        pos.getZ() - dir.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }
 
-void Camera::moveLeft(float elapsedTime) {
-    elapsedTime *= -0.10;
-    pos.set(pos.getX() + right.getX() * elapsedTime,
-        pos.getY() + right.getY() * elapsedTime,
-        pos.getZ() + right.getZ() * elapsedTime);
+void Camera::moveLeft(float deltaTime) {
+    pos.set(pos.getX() - right.getX() * deltaTime * sensitivity,
+        pos.getY() - right.getY() * deltaTime * sensitivity,
+        pos.getZ() - right.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }
 
-void Camera::moveRight(float elapsedTime) {
-    elapsedTime *= 0.10;
-    pos.set(pos.getX() + right.getX() * elapsedTime,
-        pos.getY() + right.getY() * elapsedTime,
-        pos.getZ() + right.getZ() * elapsedTime);
+void Camera::moveRight(float deltaTime) {
+    pos.set(pos.getX() + right.getX() * deltaTime * sensitivity,
+        pos.getY() + right.getY() * deltaTime * sensitivity,
+        pos.getZ() + right.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }
 
-void Camera::moveUp(float elapsedTime) {
-    elapsedTime *= 0.10;
-    pos.set(pos.getX() + up.getX() * elapsedTime,
-        pos.getY() + up.getY() * elapsedTime,
-        pos.getZ() + up.getZ() * elapsedTime);
+void Camera::moveUp(float deltaTime) {
+    pos.set(pos.getX() + up.getX() * deltaTime * sensitivity,
+        pos.getY() + up.getY() * deltaTime * sensitivity,
+        pos.getZ() + up.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }
 
-void Camera::moveDown(float elapsedTime) {
-    elapsedTime *= 0.10;
-    pos.set(pos.getX() - up.getX() * elapsedTime,
-        pos.getY() - up.getY() * elapsedTime,
-        pos.getZ() - up.getZ() * elapsedTime);
+void Camera::moveDown(float deltaTime) {
+    pos.set(pos.getX() - up.getX() * deltaTime * sensitivity,
+        pos.getY() - up.getY() * deltaTime * sensitivity,
+        pos.getZ() - up.getZ() * deltaTime * sensitivity);
+
+    camMoved = true;
 }

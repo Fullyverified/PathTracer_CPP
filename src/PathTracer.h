@@ -2,7 +2,6 @@
 #define PATHTRACER_H
 
 #include "SDL.h"
-#include "vulkan/vulkan.h"
 
 #include <vector>
 #include "Vector3.h"
@@ -13,7 +12,7 @@
 #include "LoadMesh.h"
 #include "MeshObject.h"
 #include "Material.h"
-#include "Render.h"
+#include "SystemManager.h"
 
 class PathTracer {
 public:
@@ -52,36 +51,75 @@ public:
         LoadMesh lucy;
         lucy.load("../meshes/lucyScaled.obj");
 
-        std::vector<SceneObject *> SceneObjectsList;
-        SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), white)); // floor
-        SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 0), Vector3(14, 1, 7), white)); // roof
+        std::vector<SceneObject *> sceneObjectsList;
+        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), white)); // floor
+        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 0), Vector3(14, 1, 7), white)); // roof
 
-        SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8, 0, 0), Vector3(1, 6, 7), white)); // back wall
+        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8, 0, 0), Vector3(1, 6, 7), white)); // back wall
 
-        SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 3), Vector3(14, 12, 1), red)); // left wall
-        SceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), green)); // right wall wall
+        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 3), Vector3(14, 12, 1), red)); // left wall
+        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), green)); // right wall wall
 
         // Spheres
-        //SceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,smoothPlastic)); // left sphere on floor
-        SceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
+        //sceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,smoothPlastic)); // left sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
 
         // Meshes
-        //SceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2.5,1),Vector3(1,1,1),Vector3(1,1,1), companionCube, white)); // companion cube
-        //SceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 1), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, white)); // statue
+        //sceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2.5,1),Vector3(1,1,1),Vector3(1,1,1), companionCube, white)); // companion cube
+        //sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 1), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, white)); // statue
 
-        SceneObjectsList.emplace_back(new Sphere(Vector3(5, 2.5, 0), 1, 0.1, 1, light)); // light on ceiling
+        sceneObjectsList.emplace_back(new Sphere(Vector3(5, 2.5, 0), 1, 0.1, 1, light)); // light on ceiling
 
-        Camera *cam = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
+        Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
+        SystemManager systemManager;
+        systemManager.initialize(sceneObjectsList, camera);
 
-        Render render(*cam);
-        render.gameLoop(SceneObjectsList);
+        // start render thread
+        systemManager.render();
+        std::cout << "Render thread started" << std::endl;
 
+        systemManager.setIsRunning(true);
+        SDL_Event event;
+        auto lastTime = SDL_GetTicks();
 
-        for (SceneObject *obj: SceneObjectsList) {
+        while (systemManager.getIsRunning()) {
+            // Calculate delta time
+            auto currentTime = SDL_GetTicks();
+            float deltaTime = (currentTime - lastTime) / 1000.0f;
+            lastTime = currentTime;
+
+            while (SDL_PollEvent(&event)) {
+                // Send inputs to ImGui
+                ImGui_ImplSDL2_ProcessEvent(&event);
+
+                if (event.type == SDL_QUIT) {
+                    systemManager.setIsRunning(false);
+                } else if (event.type == SDL_WINDOWEVENT) {
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                        /*std::cout << "Window Resized" << std::endl;
+                        systemManager.setWindowRes(event.window.data1, event.window.data2);*/
+                    }
+                } else {
+                    systemManager.getInputManager()->processInput(event);
+                }
+            }
+            systemManager.getInputManager()->processInputContinuous(systemManager.getCamera(), deltaTime);
+
+            // Physics
+            systemManager.update(deltaTime);
+
+            // Push RGB buffer and present screen
+            systemManager.presentScreen();
+
+        }
+
+        // End render thread
+        systemManager.renderCleanUp();
+
+        for (SceneObject *obj: sceneObjectsList) {
             delete obj; // delete sceneObjects from heap
         }
-        delete cam; // delete cam
     }
 
 private:

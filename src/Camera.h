@@ -1,5 +1,6 @@
 #ifndef CAMERA_H
 #define CAMERA_H
+
 #include "Config.h"
 #include "Vector3.h"
 
@@ -33,9 +34,15 @@ public:
     void moveDown(float elapsedTime);
     void updateDirection(float mouseX, float mouseY);
 
+    bool& getCamMoved() {
+        return camMoved;
+    }
+
 private:
     float planeWidth, planeHeight, aspectX, aspectY, yaw, pitch;
     Vector3 pos, dir, up, right, worldUp;
+    bool camMoved;
+    float sensitivity = 10;
 };
 
 

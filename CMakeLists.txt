@@ -111,8 +111,8 @@ add_executable(PathTracer_CPP
         src/BoundingBox.cpp
         src/BVHNode.h
         src/BVHNode.cpp
-        src/Render.h
-        src/Render.cpp
+        src/CPUPT.h
+        src/CPUPT.cpp
         src/Camera.h
         src/Camera.cpp
         src/Config.h
@@ -122,6 +122,13 @@ add_executable(PathTracer_CPP
         src/LoadMesh.h
         src/LoadMesh.cpp
         src/Triangle.h
+        src/Material.h
+        src/PathTracer.h
+        src/UI.cpp
+        src/UI.h
+        src/Window.h
+        src/Renderer.h
+        src/InputManager.h
         # Vulkan and vulkan related dependencies
         Vulkan/vk_main.cpp
         Vulkan/camera.h
@@ -139,29 +146,23 @@ add_executable(PathTracer_CPP
         Vulkan/vk_pipelines.h
         Vulkan/vk_pipelines.cpp
         Vulkan/vk_types.h
-        #src/SDLWindow.h
-        #src/SDLWindow.cpp
-        src/Material.h
-        src/PathTracer.h
-        src/UI.cpp
-        src/UI.h
-        src/Window.h
-        src/Renderer.h
+        src/SystemManager.h
+        src/InputManager.cpp
 )
 
 # Link Vulkan and libraries
 if (WIN32)
     target_link_libraries(PathTracer_CPP
-            ${tinyObjLoader}
-            ${Vulkan_LIBRARY}
-            fmt::fmt
-            fastgltf::fastgltf
-
             ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8/lib/x64/SDL2main.lib
             ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8/lib/x64/SDL2.lib
             ${CMAKE_SOURCE_DIR}/libraries/SDL2_image-2.8.2/lib/x64/SDL2_image.lib
 
             imgui
+            ${tinyObjLoader}
+
+            ${Vulkan_LIBRARY}
+            fmt::fmt
+            fastgltf::fastgltf
             ${vkbootstrap}
             ${volk}
     )

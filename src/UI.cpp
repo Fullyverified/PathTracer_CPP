@@ -5,14 +5,14 @@
 #include "iostream"
 
 int UI::accumulatedRays = 0;
-int UI::numRays = 1;
-int UI::numBounces = 10;
+int UI::numRays = config.raysPerPixel;
+int UI::numBounces = config.bounceDepth;
 bool UI::accumulateRays = true;
-int UI::upscale = 2;
+int UI::upscale = config.upScale;
 
-bool UI::depthOfField = false;
-float UI::apetureRadius = 0;
-float UI::focalDistance = 0;
+bool UI::depthOfField = config.DepthOfField;
+float UI::apetureRadius = config.apertureRadius;
+float UI::focalDistance = config.focalDistance;
 
 bool UI::camUpdate = false;
 bool UI::sceneUpdate = false;
@@ -26,7 +26,7 @@ void UI::render() {
     ImGui::SetNextWindowCollapsed(false, ImGuiCond_Always);
 
 
-    ImGui::Text("Accumlated Rays: %d", accumulateRays);
+    ImGui::Text("Accumlated Rays: %d", accumulatedRays);
 
     if (ImGui::Checkbox("Accumulate Rays", &accumulateRays)) {
         camUpdate = true;
@@ -79,6 +79,7 @@ void UI::render() {
 
     if (ImGui::Checkbox("Depth of Field", &depthOfField)) {
         config.DepthOfField = depthOfField;
+        camUpdate = true;
     }
 
     if (ImGui::SliderFloat("Aperture Radius", &apetureRadius, 0, 1000)) {

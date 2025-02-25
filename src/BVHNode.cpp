@@ -50,14 +50,18 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
         }
     }
 
+    //std::cout<<"Ray does not intersect !leaf node"<<std::endl;
+
     // only return the node if the ray actually points at the object itself
 
     if (isLeaf) {
         if (!sceneObject->isMesh()) { // skip final bounding box for primatives
             std::pair<float, float> distanceObj = sceneObject->getIntersectionDistance(ray);
             if (distanceObj.first <= distanceObj.second && distanceObj.second >= 0) {
+                //std::cout<<"Ray intersects leaf node"<<std::endl;
                 return {this, distanceObj.first, distanceObj.second};
             }
+            //std::cout<<"Ray does not intersect leaf node"<<std::endl;
             return {nullptr, -1.0f, -1.0f}; // early exit
         }
 
@@ -75,7 +79,9 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
     }
 
     BVHResult hitLeft = nodeLeft == nullptr ? BVHResult(nullptr, -1.0f, -1.0f) : nodeLeft->searchBVHTreeScene(ray);
+    //std::cout<<"Recursive search left"<<std::endl;
     BVHResult hitRight = nodeRight == nullptr ? BVHResult(nullptr, -1.0f, -1.0f) : nodeRight->searchBVHTreeScene(ray);
+    //std::cout<<"Recursive search right"<<std::endl;
 
     if (hitLeft.node != nullptr && hitRight.node != nullptr) {
         // both valid nodes

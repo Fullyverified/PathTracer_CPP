@@ -15,12 +15,9 @@
 #include "Window.h"
 #include "Renderer.h"
 
-#include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
+class SystemManager;
 
-
-class Render {
+class CPUPT {
 public:
     struct BVHResult {
         int sceneObject;
@@ -28,22 +25,17 @@ public:
         float far;
     };
 
-    Render(Camera &cam);
+    CPUPT(SystemManager* systemManager);
 
-    ~Render() {
-        ImGui_ImplSDLRenderer2_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
-        ImGui::DestroyContext();
-
-        delete window;
-        delete renderer;
+    ~CPUPT() {
     }
 
     // render loop
-    void renderLoop(std::vector<SceneObject *> &sceneobjectsList);
+    void renderLoop();
 
-    // game loop - input, ui, etc, calls the render loop
-    void gameLoop(std::vector<SceneObject *> &sceneobjectsList);
+    // render controller
+    void launchRenderThread(std::vector<SceneObject *> &sceneobjectsList);
+    void joinRenderThread();
 
     // bvh logic
     void constructBVHST(const std::vector<SceneObject *> &sceneObjectsList);
@@ -60,7 +52,7 @@ public:
     void BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList);
 
     // traversal logic
-    void traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::vector<SceneObject *> &sceneobjectsList, std::mutex &mutex) const;
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
 
     // bounce logic
     void sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
@@ -80,24 +72,28 @@ public:
 
 private:
 
-    Window* window;
-    Renderer* renderer;
+    SystemManager* systemManager;
 
+    std::vector<SceneObject *> sceneObjectsList;
     std::vector<BVHNode *> BVHNodes;
+    Camera* camera;
+
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> absR, absG, absB;
     float maxLuminance, currentLuminance;
     mutable uint8_t *RGBBuffer;
 
     int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY;
-    float aspectRatio, fovYRad, fovXRad, scaleX, scaleY;
-    Camera &cam;
+    float aspectRatio;
+
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
-    bool running, sceneUpdated, camMoved, lockInput;
+    bool sceneUpdated, camMoved, lockInput;
     static thread_local std::mt19937 rng; // Thread-local RNG
     mutable std::uniform_real_distribution<float> dist;
+
+    std::thread renderThread;
 
     struct BounceInfo {
         float dot;

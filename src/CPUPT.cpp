@@ -1,4 +1,4 @@
-#include "Render.h"
+#include "CPUPT.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -24,32 +24,13 @@
 #include "BVHNode.h"
 #include "UI.h"
 
-Render::Render(Camera &cam) : cam(cam), resX(config.resX), resY(config.resX / (config.aspectX / config.aspectY)), internalResX(config.resX / config.upScale),
-                              internalResY(resY / config.upScale), boundsX(0, 0), boundsY(0, 0), dist(0.0f, 1.0f), iterations(0), running(true),
-                              sceneUpdated(false), camMoved(true), lockInput(false), numThreads(0) {
-    int res = internalResX * internalResY;
-    lumR.resize(res, 0.0f);
-    lumG.resize(res, 0.0f);
-    lumB.resize(res, 0.0f);
-    absR.resize(res, 0.0f);
-    absG.resize(res, 0.0f);
-    absB.resize(res, 0.0f);
-    std::cout << "External: resX:" << resX << ", internal: resY: " << resY << std::endl;
-    std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
+#include "SystemManager.h"
 
-    window = new Window("Path Tracer", resX, resY);
-    renderer = new Renderer(*window, resX, resY);
+CPUPT::CPUPT(SystemManager* systemManager) : systemManager(systemManager), dist(0.0f, 1.0f), iterations(1), numThreads(0) {
 
-    // --- Initialize ImGui ---
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForSDLRenderer(window->getSDLWindow(), renderer->getSDLRenderer());
-    ImGui_ImplSDLRenderer2_Init(renderer->getSDLRenderer());
 }
 
-void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
+void CPUPT::renderLoop() {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
@@ -58,33 +39,34 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
 
-    constructBVHST(sceneobjectsList);
     std::cout << "Constructing BVH: " << std::endl;
-    constructLinearBVH(sceneobjectsList);
+    constructBVHST(sceneObjectsList);
+    //constructLinearBVH(sceneobjectsList);
     std::cout << "Finished constructing BVH: " << std::endl;
 
+    std::cout << "BVHNodes size: " <<BVHNodes.size() <<std::endl;
+
+
     // render loop code
-    while (running) {
+    while (systemManager->getIsRunning()) {
         auto frameTime = std::chrono::high_resolution_clock::now();
 
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
 
-        if (UI::camUpdate) {
-            camMoved = true;
+
+        if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
+
             UI::camUpdate = false;
-        }
+            camera->getCamMoved() = false;
 
-        if (UI::sceneUpdate) {
-            sceneUpdated = true;
-            UI::sceneUpdate = false;
-        }
+            if (UI::sceneUpdate) {
 
-        if (camMoved) {
-            if (sceneUpdated) {
+                UI::sceneUpdate = false;
+
                 std::cout << "Reconstructing BVH: " << std::endl;
-                constructBVHST(sceneobjectsList);
-                constructLinearBVH(sceneobjectsList);
+                constructBVHST(sceneObjectsList);
+                //constructLinearBVH(sceneobjectsList);
                 sceneUpdated = false;
             }
             // reset colour buffer
@@ -98,8 +80,10 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
             }
             aspectRatio = static_cast<float>(internalResX) / internalResY;
             iterations = 1;
-            camMoved = false;
+            UI::accumulatedRays = iterations;
         }
+
+        Camera cameraCopy = *camera; // dereference camera and copy
 
         std::cout << "Starting Rays" << std::endl;
         auto startTimeRays = std::chrono::high_resolution_clock::now();
@@ -108,15 +92,16 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
                 boundsX = threadSegments(0, internalResX, segments, boundsX, i);
                 boundsY = threadSegments(0, internalResY, segments, boundsY, j);
                 int its = iterations;
-                threads.emplace_back(std::async(std::launch::async, &Render::traceRay, this,
-                                                cam, boundsX.first, boundsX.second, boundsY.first,
-                                                boundsY.second, its, std::ref(sceneobjectsList), std::ref(mutex)));
+                threads.emplace_back(std::async(std::launch::async, &CPUPT::traceRay, this,
+                                                cameraCopy, boundsX.first, boundsX.second, boundsY.first,
+                                                boundsY.second, its, std::ref(mutex)));
             }
         }
         for (std::future<void> &thread: threads) {
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
+
 
 
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
@@ -138,32 +123,17 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(0, internalResX, segments, boundsX, i);
                 boundsY = threadSegments(0, internalResY, segments, boundsY, j);
-                threads.emplace_back(std::async(std::launch::async, &Render::toneMap, this, maxLuminance,
+                threads.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
                                                 boundsX.first, boundsX.second, boundsY.first,
                                                 boundsY.second, std::ref(mutex)));
             }
         }
-        for (std::future<void> &thread: threads) {
+        for (std::future<void> &thread : threads) {
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
 
-        renderer->clearScreen();
-        renderer->pushRGBBuffer(RGBBuffer, resX);
-
-        // Start ImGui frame
-        ImGui_ImplSDL2_NewFrame();
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui::NewFrame();
-
-        // Render Squadron UI
-        UI::render();
-
-        // Render ImGui
-        ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer->getSDLRenderer());
-
-        renderer->presentScreen();
+        systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
 
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameTime);
@@ -171,119 +141,30 @@ void Render::renderLoop(std::vector<SceneObject *> &sceneobjectsList) {
         std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << "\n";
         std::cout << "Frametime: " << finalFrameTime.count() << "ms" << std::endl;
         iterations++;
+        UI::accumulatedRays = iterations;
         //-----------------------
     }
 }
 
-void Render::gameLoop(std::vector<SceneObject *> &sceneobjectsList) {
+void CPUPT::launchRenderThread(std::vector<SceneObject *> &sceneObjectsList) {
 
-    // render loop
-    std::thread renderThread(&Render::renderLoop, this, std::ref(sceneobjectsList));
+    this->sceneObjectsList = sceneObjectsList;
 
-    // Main event loop
-    SDL_Event event;
-    while (running) {
-        ImGui_ImplSDL2_ProcessEvent(&event);
-        //ImGuiIO& io = ImGui::GetIO();
-
-        //if (io.WantCaptureMouse || io.WantCaptureKeyboard) {continue;}
-
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            }
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_DELETE) {
-                    lockInput = lockInput == false ? true : false;
-                    window->setRelativeMouse();
-                    std::cout << "locking input" << std::endl;
-                }
-            }
-        }
-        const Uint8 *inputState = SDL_GetKeyboardState(NULL);
-        SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
-        if (inputState[SDL_SCANCODE_UP]) {
-            config.increaeISO();
-        }
-        if (inputState[SDL_SCANCODE_DOWN]) {
-            config.decreaseISO();
-        }
-        if (inputState[SDL_SCANCODE_RIGHT]) {
-            config.resetISO();
-        }
-        if (inputState[SDL_SCANCODE_ESCAPE]) {
-            running = false;
-        }
-
-        if (!lockInput) {
-            if (inputState[SDL_SCANCODE_KP_PLUS]) {
-                config.increaeFOV();
-                cam.reInitilize();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_KP_MINUS]) {
-                config.decreaeFOV();
-                cam.reInitilize();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_LEFTBRACKET]) {
-                config.decreaseFocalDistance();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_RIGHTBRACKET]) {
-                config.increaseFocalDistance();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_SEMICOLON]) {
-                config.increaseAperture();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_APOSTROPHE]) {
-                config.decreaseAperture();
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_W]) {
-                cam.moveForward(0.1f);
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_S]) {
-                cam.moveBackward(0.1f);
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_A]) {
-                cam.moveLeft(0.1f);
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_D]) {
-                cam.moveRight(0.1f);
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_E]) {
-                cam.moveUp(0.1f);
-                camMoved = true;
-            }
-            if (inputState[SDL_SCANCODE_Q]) {
-                cam.moveDown(0.1f);
-                camMoved = true;
-            }
-            if (mouseX != 0 || mouseY != 0) {
-                cam.updateDirection(mouseX, mouseY);
-                camMoved = true;
-            }
-        }
-
-        // Optional: Limit frame rate or add delay if necessary
-        //SDL_Delay(1); // ~60 FPS (1000 ms / 16 ms = 60.25 FPS)
-    }
-
-    renderThread.join();
-
-    std::cout << "Deleting Objects" << std::endl;
-    deleteObjects(); // delete all ray and luminance vectors
+    // launch a thread the handles the render loop
+    renderThread = std::thread(&CPUPT::renderLoop, this);
 }
 
-void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
+void CPUPT::joinRenderThread() {
+    if (renderThread.joinable()) {
+        renderThread.join();
+    }
+}
+
+
+void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
+
+    std::cout<<"Tone Mapping"<<std::endl;
+
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
@@ -336,7 +217,7 @@ void Render::toneMap(float maxLuminance, int xstart, int xend, int ystart, int y
     }
 }
 
-void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, int its, std::vector<SceneObject *> &sceneobjectsList, std::mutex &mutex) const {
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
     Vector3 lum;
     Vector3 col;
     Ray ray;
@@ -347,33 +228,37 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                 std::vector<BounceInfo> bounceInfo;
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
                     if (currentBounce == 0) {
+                        //std::cout<<"Primary Ray"<<std::endl;
                         // primary Ray
-                        ray.getOrigin().set(cam.getPos());
-                        ray.getPos().set(cam.getPos());
+                        ray.getOrigin().set(camera.getPos());
+                        ray.getPos().set(camera.getPos());
                         // calculate position of pixel on image plane
                         // jitter the pixel position for MSAA
+                        //std::cout<<"Rand"<<std::endl;
                         float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
                         float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
                         Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
                                               1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
-                        Vector3 pixelPosScene(pixelPosPlane.getX() * cam.getPlaneWidth() / 2, pixelPosPlane.getY() * cam.getPlaneHeight() / 2, 0);
+                        Vector3 pixelPosScene(pixelPosPlane.getX() * camera.getPlaneWidth() / 2, pixelPosPlane.getY() * camera.getPlaneHeight() / 2, 0);
                         // point ray according to pixel position (ray starts from camera origin)
-                        ray.getDir().set(cam.getDir() + cam.getRight() * pixelPosScene.getX() + cam.getUp() * pixelPosScene.getY());
+                        //std::cout<<"Setting ray direction"<<std::endl;
+                        ray.getDir().set(camera.getDir() + camera.getRight() * pixelPosScene.getX() + camera.getUp() * pixelPosScene.getY());
                         ray.getDir().normalise();
                         if (config.DepthOfField) {
                             // compute Focal Point
-                            Vector3 focalPoint = cam.getPos() + ray.getDir() * config.focalDistance;
+                            Vector3 focalPoint = camera.getPos() + ray.getDir() * config.focalDistance;
                             // Randomly sample a point within the aperture
                             float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
                             float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                            Vector3 lensOffset = cam.getRight() * lensU + cam.getUp() * lensV;
-                            ray.getOrigin().set(cam.getPos() + lensOffset);
-                            ray.getPos().set(cam.getPos() + lensOffset);
+                            Vector3 lensOffset = camera.getRight() * lensU + camera.getUp() * lensV;
+                            ray.getOrigin().set(camera.getPos() + lensOffset);
+                            ray.getPos().set(camera.getPos() + lensOffset);
                             ray.getDir().set(focalPoint - ray.getOrigin());
                             ray.getDir().normalise();
                         }
                     } else {
                         // secondary Ray
+                        //std::cout<<"Secondary Ray"<<std::endl;
                         float randomSample = dist(rng); // monte carlo sampling
                         if (randomSample >= ray.getHitObject()->getMaterial().transmission) {
                             sampleReflectionDirection(ray, *ray.getHitObject(), false);
@@ -381,8 +266,11 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
                             sampleRefractionDirection(ray, *ray.getHitObject(), false);
                         }
                     }
+                    //std::cout<<"Traversing BVH"<<std::endl;
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
+                    //std::cout<<"Finished Traversing BVH"<<std::endl;
                     if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
+                        //std::cout<<"Scene Object Found"<<std::endl;
                         SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
                         ray.march(leafNode.close);
                         ray.getHitPoint().set(ray.getPos());
@@ -425,9 +313,9 @@ void Render::traceRay(Camera cam, int xstart, int xend, int ystart, int yend, in
     }
 }
 
-thread_local std::mt19937 Render::rng(std::random_device{}());
+thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-void Render::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+void CPUPT::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
     float n1 = 1.0003f; // refractive index of air
     float n2 = sceneObject.getMaterial().IOR;
     // cosine of incient angle
@@ -475,7 +363,7 @@ void Render::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject,
     ray.setBounceDot(1.0f);
 }
 
-void Render::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+void CPUPT::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
     float roughness = sceneObject.getMaterial().roughness;
     // reflection direction
     float dotProduct = ray.getDir().dot(ray.getNormal());
@@ -545,7 +433,7 @@ void Render::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject,
     ray.updateOrigin(0.01f); // march the ray a tiny amount to move it off the object
 }
 
-void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
+void CPUPT::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
     // create leaf nodes
     for (SceneObject *sceneObject: sceneObjectsList) {
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
@@ -600,7 +488,7 @@ void Render::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) 
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) {
+void CPUPT::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) {
     // create leaf nodes
     for (SceneObject *sceneObject: sceneObjectsList) {
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
@@ -632,14 +520,14 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
                 size_t end = start + nodesPerThread + (i < remainder ? 1 : 0);
 
                 end = std::min(end, numNodes); // ensure last thread does not exceed size of nodes vector
-                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this,
+                threads.emplace_back(std::async(std::launch::async, &CPUPT::findBestPair, this,
                                                 std::ref(BVHNodes), start, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight),
                                                 std::ref(bestLeft), std::ref(bestRight), std::ref(mutex)));
             }
         } else {
             for (int i = 0; i < BVHNodes.size(); i++) {
                 int end = i + 1;
-                threads.emplace_back(std::async(std::launch::async, &Render::findBestPair, this,
+                threads.emplace_back(std::async(std::launch::async, &CPUPT::findBestPair, this,
                                                 std::ref(BVHNodes), i, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight),
                                                 std::ref(bestLeft),
                                                 std::ref(bestRight), std::ref(mutex)));
@@ -672,7 +560,7 @@ void Render::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) 
     std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
 }
 
-void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
+void CPUPT::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
                           BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
@@ -702,7 +590,7 @@ void Render::findBestPair(const std::vector<BVHNode *> &nodes, int start, int en
     }
 }
 
-void Render::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
+void CPUPT::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
     constructBVHST(sceneObjectsList);
 
     Ray ray1(Vector3(0, -1.7, 1), Vector3(1, 0, 0));
@@ -725,7 +613,7 @@ void Render::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
     constructLinearBVH(sceneObjectsList);
     std::cout << "Searching linearBVH" << std::endl;
     startTime = std::chrono::high_resolution_clock::now();
-    Render::BVHResult leafNodeLinear = searchLinearBVH(ray1, sceneObjectsList);
+    CPUPT::BVHResult leafNodeLinear = searchLinearBVH(ray1, sceneObjectsList);
     if (leafNodeLinear.close != -1) {
         //std::cout << "Intersection Test: " << std::endl;;
         //sceneObjectsList[leafNodeLinear.first]->printType();
@@ -736,25 +624,41 @@ void Render::BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList) {
     std::cout << "Finished tree traversal: " << durationTime.count() << "ns" << std::endl;
 }
 
-void Render::initialiseObjects() {
-    /*for (int i = 0; i < internalResX * internalResY; i++) {
-        rays[i] = new Ray();
-    }*/
-    RGBBuffer = new uint8_t[resX * resY * 3];
-}
+void CPUPT::initialiseObjects() {
 
-void Render::deleteObjects() {
+    camera = systemManager->getCamera();
+
+    resX = config.resX;
+    resY = config.resX / (config.aspectX / config.aspectY);
+
+    internalResX = config.resX / config.upScale;
+    internalResY = resY / config.upScale;
+
+    aspectRatio = static_cast<float>(internalResX) / internalResY;
+
+    std::cout << "External: resX:" << resX << ", internal: resY: " << resY << std::endl;
+    std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
+
+    RGBBuffer = new uint8_t[resX * resY * 3];
+
+    int res = internalResX * internalResY;
+    lumR.resize(res, 0.0f);
+    lumG.resize(res, 0.0f);
+    lumB.resize(res, 0.0f);
+    absR.resize(res, 0.0f);
+    absG.resize(res, 0.0f);
+    absB.resize(res, 0.0f);}
+
+void CPUPT::deleteObjects() {
     for (auto node: BVHNodes) {
         delete node;
     }
     BVHNodes.clear();
-    /*for (int i = 0; i < internalResX * internalResY; i++) {
-        delete rays[i];
-    }*/
+
     delete RGBBuffer;
 }
 
-std::pair<int, int> Render::threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int step) {
+std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int step) {
     int res = end - start;
     int pixelsPerThread = res / numThreads; // number of pixels per thread
     int remainder = res % numThreads; // remaining pixels after division
@@ -765,7 +669,7 @@ std::pair<int, int> Render::threadSegments(float start, float end, int &numThrea
     return std::make_pair(startPixel, endPixel);
 }
 
-void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList) {
+void CPUPT::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList) {
     // create a leaf node for each scene object
     for (int i = 0; i < sceneObjectsList.size(); i++) {
         std::pair<Vector3, Vector3> bounds = sceneObjectsList[i]->getBounds();
@@ -828,7 +732,7 @@ void Render::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsLi
     }
 }
 
-Render::BVHResult Render::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
+CPUPT::BVHResult CPUPT::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
     std::stack<int> nodeStack; // list of nodes to check, by index to node vector
     nodeStack.push(bvhNodes.size() - 1); // start at root node
 
