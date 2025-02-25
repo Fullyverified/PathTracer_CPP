@@ -12,10 +12,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 message(STATUS "Using CXX Flags: ${CMAKE_CXX_FLAGS}")
 
 if (WIN32)  # Windows environment (MinGW)
-    set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version
-    set(Vulkan_INCLUDE_DIR "${VULKAN_SDK}/Include")
-    set(Vulkan_LIBRARY "${VULKAN_SDK}/Lib/vulkan-1.lib")
-    include_directories(${Vulkan_INCLUDE_DIR})
+    #set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version
+    #set(Vulkan_INCLUDE_DIR "${VULKAN_SDK}/Include")
+    #set(Vulkan_LIBRARY "${VULKAN_SDK}/Lib/vulkan-1.lib")
+    #include_directories(${Vulkan_INCLUDE_DIR})
 
     # Add GLM // if your vulkan SDK doesn't include GLM
     #set(GLM_DIR ${CMAKE_SOURCE_DIR}/libraries/glm) # Adjust this path if necessary
@@ -36,8 +36,8 @@ if (WIN32)  # Windows environment (MinGW)
     set(SDL2_IMAGE_LIBRARIES SDL2_image.lib)
 
 elseif (UNIX)   # Linux environment (WSL)
-    find_package(Vulkan REQUIRED)
-    include_directories(${Vulkan_INCLUDE_DIRS})
+    #find_package(Vulkan REQUIRED)
+    #include_directories(${Vulkan_INCLUDE_DIRS})
 
     # Add SDL2 using system packages
     find_package(SDL2 REQUIRED)
@@ -51,16 +51,16 @@ set(TinyObjLoader_DIR ${CMAKE_SOURCE_DIR}/libraries/tinyobjloader) # Adjust this
 include_directories(${TinyObjLoader_DIR})
 
 # Add VOLK
-set(VOLK_DIR ${CMAKE_SOURCE_DIR}/libraries/volk)
-include_directories(${VOLK_DIR})
+#set(VOLK_DIR ${CMAKE_SOURCE_DIR}/libraries/volk)
+#include_directories(${VOLK_DIR})
 
 # Add VMA
-set(VMA_DIR ${CMAKE_SOURCE_DIR}/libraries/VMA)
-include_directories(${VMA_DIR})
+#set(VMA_DIR ${CMAKE_SOURCE_DIR}/libraries/VMA)
+#include_directories(${VMA_DIR})
 
 # Add STB_IMAGE
-set(STB_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/stb_image)
-include_directories(${STB_IMAGE_DIR})
+#set(STB_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/stb_image)
+#include_directories(${STB_IMAGE_DIR})
 
 # Add IMGUI
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/libraries/imgui)
@@ -77,21 +77,21 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC ${IMGUI_DIR})
 
 # Add FMT
-set(FMT_DIR ${CMAKE_SOURCE_DIR}/libraries/fmt)
-include_directories(${FMT_DIR})
-add_subdirectory(${FMT_DIR})
+#set(FMT_DIR ${CMAKE_SOURCE_DIR}/libraries/fmt)
+#include_directories(${FMT_DIR})
+#add_subdirectory(${FMT_DIR})
 
 # Add FASTGLTF
-set(FASTGLTF_DIR ${CMAKE_SOURCE_DIR}/libraries/fastgltf)
-add_subdirectory(${FASTGLTF_DIR})
-include_directories(${FASTGLTF_DIR}/include)
+#set(FASTGLTF_DIR ${CMAKE_SOURCE_DIR}/libraries/fastgltf)
+#add_subdirectory(${FASTGLTF_DIR})
+#include_directories(${FASTGLTF_DIR}/include)
 
 # Add VKBOOTSTRAP
-set(VKBOOTSTRAP_DIR ${CMAKE_SOURCE_DIR}/libraries/vkbootstrap)
-include_directories(${VKBOOTSTRAP_DIR})
+#set(VKBOOTSTRAP_DIR ${CMAKE_SOURCE_DIR}/libraries/vkbootstrap)
+#include_directories(${VKBOOTSTRAP_DIR})
 
 # source files
-include_directories(Vulkan) # include Vulkan classes
+#include_directories(Vulkan) # include Vulkan classes
 
 add_executable(PathTracer_CPP
         src/main.cpp #path tracer source files
@@ -129,25 +129,8 @@ add_executable(PathTracer_CPP
         src/Window.h
         src/Renderer.h
         src/InputManager.h
-        # Vulkan and vulkan related dependencies
-        Vulkan/vk_main.cpp
-        Vulkan/camera.h
-        Vulkan/camera.cpp
-        Vulkan/meshes.h
-        Vulkan/meshes.cpp
-        Vulkan/vk_descriptors.h
-        Vulkan/vk_descriptors.cpp
-        Vulkan/vk_engine.h
-        Vulkan/vk_engine.cpp
-        Vulkan/vk_images.h
-        Vulkan/vk_images.cpp
-        Vulkan/vk_initializers.h
-        Vulkan/vk_initializers.cpp
-        Vulkan/vk_pipelines.h
-        Vulkan/vk_pipelines.cpp
-        Vulkan/vk_types.h
-        src/SystemManager.h
         src/InputManager.cpp
+        src/SystemManager.h
 )
 
 # Link Vulkan and libraries
@@ -160,22 +143,22 @@ if (WIN32)
             imgui
             ${tinyObjLoader}
 
-            ${Vulkan_LIBRARY}
-            fmt::fmt
-            fastgltf::fastgltf
-            ${vkbootstrap}
-            ${volk}
+            #${Vulkan_LIBRARY}
+            #fmt::fmt
+            #fastgltf::fastgltf
+            #${vkbootstrap}
+            #${volk}
     )
 elseif (UNIX)
     target_link_libraries(PathTracer_CPP
-            Vulkan::Vulkan
-            ${tinyObjLoader}
-            fmt::fmt
             ${SDL2_LIBRARIES}  # Use system-installed SDL2 libraries
-            fastgltf
-
             imgui
-            ${vkbootstrap}
-            ${volk}
+            ${tinyObjLoader}
+
+            #fastgltf
+            #Vulkan::Vulkan
+            #fmt::fmt
+            #${vkbootstrap}
+            #${volk}
     )
 endif()

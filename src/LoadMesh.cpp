@@ -3,6 +3,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <algorithm>
+#include <filesystem>
 #include <queue>
 
 #include "BVHNode.h"
@@ -14,7 +15,12 @@ void LoadMesh::load(const std::string &filename) {
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str())) {
+
+    std::filesystem::path meshDir = std::filesystem::current_path() / "meshes";
+
+    std::filesystem::path meshFile = meshDir / filename;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, meshFile.string().c_str())) {
         throw std::runtime_error(warn + err);
     }
 

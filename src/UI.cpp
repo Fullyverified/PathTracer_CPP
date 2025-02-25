@@ -10,6 +10,8 @@ int UI::accumulatedRays = 0;
 int UI::numRays = config.raysPerPixel;
 int UI::numBounces = config.bounceDepth;
 bool UI::accumulateRays = true;
+float UI::gigaRays = 0;
+
 int UI::upscale = config.upScale;
 float UI::fOV = config.fOV;
 
@@ -30,6 +32,7 @@ void UI::render() {
     ImGui::SetNextWindowCollapsed(false, ImGuiCond_Always);
 
 
+    ImGui::Text("Gigarays: %f", gigaRays);
     ImGui::Text("Accumlated Rays: %d", accumulatedRays);
 
     if (ImGui::Checkbox("Accumulate Rays", &accumulateRays)) {

@@ -45,11 +45,11 @@ public:
         Material roughPlastic{Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
         Material roughMetal{Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
 
-        LoadMesh companionCube;
-        companionCube.load("../meshes/companionCube.obj");
+        /*LoadMesh companionCube;
+        companionCube.load("companionCube.obj");
 
         LoadMesh lucy;
-        lucy.load("../meshes/lucyScaled.obj");
+        lucy.load("lucyScaled.obj");*/
 
         std::vector<SceneObject *> sceneObjectsList;
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), white)); // floor
@@ -61,7 +61,7 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), green)); // right wall wall
 
         // Spheres
-        sceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,mirror)); // left sphere on floor
+        //sceneObjectsList.emplace_back(new Sphere(Vector3(5,-1.7,1),0.8,0.8,0.8,mirror)); // left sphere on floor
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
 
         // Meshes

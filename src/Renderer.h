@@ -3,7 +3,6 @@
 
 #include <SDL.h>
 #include "Window.h"
-#include "fmt/base.h"
 
 class Renderer {
 public:

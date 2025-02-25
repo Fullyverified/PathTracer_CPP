@@ -121,8 +121,6 @@ void CPUPT::renderLoop() {
         }
         threads.clear();
 
-
-
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         //-----------------------
 
@@ -157,10 +155,13 @@ void CPUPT::renderLoop() {
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameTime);
         std::cout << config.raysPerPixel * iterations << " Ray(s) Time: " << durationTimeRays.count() << "ms" << "\n";
-        std::cout << "Tone Mapping And Present Time: " << durationTimeTM.count() << "ms" << "\n";
+        std::cout << "Tone Mapping and Buffer update Time: " << durationTimeTM.count() << "ms" << "\n";
         std::cout << "Frametime: " << finalFrameTime.count() << "ms" << std::endl;
         iterations++;
         UI::accumulatedRays = iterations * config.raysPerPixel;
+
+        float frameTimeSec = std::chrono::duration<float>(durationTimeRays).count() / 1000.0f;
+        UI::gigaRays = (config.raysPerPixel * internalResX * internalResY) / (1e9f * frameTimeSec);
         //-----------------------
     }
 }

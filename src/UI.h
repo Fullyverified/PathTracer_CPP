@@ -9,11 +9,15 @@ public:
     static int numRays;
     static int numBounces;
     static bool accumulateRays;
+    static float gigaRays;
+
     static int upscale;
+
+    static float fOV;
+
     static bool depthOfField;
     static float apetureRadius;
     static float focalDistance;
-    static float fOV;
 
     static bool camUpdate;
     static bool sceneUpdate;
