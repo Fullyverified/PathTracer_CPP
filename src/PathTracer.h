@@ -26,6 +26,7 @@ public:
         Material white{Vector3(1, 1, 1), 0.75, 0, 1, 0, 0};
         Material red{Vector3(1, 0, 0), 0.75, 0, 1, 0, 0};
         Material green{Vector3(0, 1, 0), 0.75, 0, 1, 0, 0};
+        Material blue{Vector3(0, 0, 1), 0.75, 0, 1, 0, 0};
         Material light{Vector3(1, 1, 1), 0.75, 0, 1, 0, 40};
 
         Material metal{Vector3(1, 1, 1), 0, 1, 1, 0, 0};

@@ -179,13 +179,9 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
                 // Extended Reinhard Tone Mapping - returns value [0, 1]
                 float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
 
-                red *= mappedLuminance;
-                green *= mappedLuminance;
-                blue *= mappedLuminance;
-
-                /*red *= mappedLuminance / luminance;
-                green *= mappedLuminance / luminance;
-                blue *= mappedLuminance / luminance;*/
+                red = red / luminance * mappedLuminance;
+                green = green / luminance * mappedLuminance;
+                blue = blue / luminance * mappedLuminance;
 
                 // Apply gamma correction
                 float gamma = 2.2f;
