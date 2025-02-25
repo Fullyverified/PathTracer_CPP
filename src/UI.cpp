@@ -34,11 +34,14 @@ void UI::render() {
 
 
     ImGui::Text("Gigarays: %f", gigaRays);
-    ImGui::Text("Accumlated Rays: %d", accumulatedRays);
 
     if (ImGui::Checkbox("Accumulate Rays", &accumulateRays)) {
         camUpdate = true;
     }
+
+    ImGui::SameLine();
+
+    ImGui::Text("%d", accumulatedRays);
 
     if (ImGui::SliderInt("Rays per frame", &numRays, 1, 100)) {
         camUpdate = true;
@@ -109,12 +112,12 @@ void UI::render() {
         camUpdate = true;
     }
 
-    if (ImGui::SliderFloat("Aperture Radius", &apetureRadius, 0, 1000)) {
+    if (ImGui::SliderFloat("Aperture Radius", &apetureRadius, 0, 2)) {
         camUpdate = true;
         config.apertureRadius = apetureRadius;
     }
 
-    if (ImGui::SliderFloat("Focal Distance", &focalDistance, 0, 1000)) {
+    if (ImGui::SliderFloat("Focal Distance", &focalDistance, 0, 100)) {
         camUpdate = true;
         config.focalDistance = focalDistance;
     }
