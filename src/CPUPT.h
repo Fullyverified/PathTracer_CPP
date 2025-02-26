@@ -68,7 +68,6 @@ public:
     // cleanup
     void initialiseObjects();
     void updateUpscaling();
-    void updateResolution();
 
     void deleteObjects();
 
@@ -81,7 +80,7 @@ private:
     Camera* camera;
 
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
-    mutable std::vector<float> absR, absG, absB;
+    mutable std::vector<float> hdrR, hdrG, hdrB;
     float maxLuminance, currentLuminance;
     mutable uint8_t *RGBBuffer;
 

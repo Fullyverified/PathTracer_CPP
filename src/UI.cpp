@@ -145,7 +145,7 @@ void UI::renderSettings() {
 
     ImGui::Separator();
 
-    ImGui::Text("Change Resolution");
+    ImGui::Text("Resolution");
 
     ImGui::SetNextItemWidth(80); // Set fixed width for the input box
     if (ImGui::InputInt("##ResX", &resX, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {

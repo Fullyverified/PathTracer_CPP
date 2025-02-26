@@ -77,7 +77,7 @@ void CPUPT::renderLoop() {
             }
 
             if (UI::resUpdate) {
-                updateResolution(); // change buffer size
+                initialiseObjects(); // change buffer size
                 UI::resUpdate = false;
                 UI::resizeBuffer = true;
                 camera->reInitilize();
@@ -88,9 +88,9 @@ void CPUPT::renderLoop() {
                 lumR[i] = 0.0f;
                 lumG[i] = 0.0f;
                 lumB[i] = 0.0f;
-                absR[i] = 0.0f;
-                absG[i] = 0.0f;
-                absB[i] = 0.0f;
+                hdrR[i] = 0.0f;
+                hdrG[i] = 0.0f;
+                hdrB[i] = 0.0f;
             }
             iterations = 1;
             UI::accumulatedRays = iterations * config.raysPerPixel;
@@ -217,10 +217,7 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
 }
 
 void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
-    Vector3 lum;
-    Vector3 col;
     Ray ray;
-
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
@@ -303,12 +300,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     blue = (bounceInfo[index].emission + blue) * baseColour.z * dotProduct;
                 }
 
-                absR[y * internalResX + x] += red;
-                absG[y * internalResX + x] += green;
-                absB[y * internalResX + x] += blue;
-                lumR[y * internalResX + x] = absR[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
-                lumG[y * internalResX + x] = absG[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
-                lumB[y * internalResX + x] = absB[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
+                hdrR[y * internalResX + x] += red;
+                hdrG[y * internalResX + x] += green;
+                hdrB[y * internalResX + x] += blue;
+                lumR[y * internalResX + x] = hdrR[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
+                lumG[y * internalResX + x] = hdrG[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
+                lumB[y * internalResX + x] = hdrB[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
             }
         }
     }
@@ -611,45 +608,25 @@ void CPUPT::initialiseObjects() {
     lumR.resize(res, 0.0f);
     lumG.resize(res, 0.0f);
     lumB.resize(res, 0.0f);
-    absR.resize(res, 0.0f);
-    absG.resize(res, 0.0f);
-    absB.resize(res, 0.0f);
+    hdrR.resize(res, 0.0f);
+    hdrG.resize(res, 0.0f);
+    hdrB.resize(res, 0.0f);
 }
 
 void CPUPT::updateUpscaling() {
     upScale = config.upScale;
+
     internalResX = config.resX / config.upScale;
     internalResY = resY / config.upScale;
+
     int res = internalResX * internalResY;
+
     lumR.resize(res, 0.0f);
     lumG.resize(res, 0.0f);
     lumB.resize(res, 0.0f);
-    absR.resize(res, 0.0f);
-    absG.resize(res, 0.0f);
-    absB.resize(res, 0.0f);
-}
-
-void CPUPT::updateResolution() {
-
-    std::cout<<"Buffers Resized"<<std::endl;
-    resX = config.resX;
-    resY = config.resY;
-
-    internalResX = config.resX / config.upScale;
-    internalResY = config.resY / config.upScale;
-
-    aspectRatio = static_cast<float>(internalResX) / internalResY;
-
-    //delete[] RGBBuffer;
-    RGBBuffer = new uint8_t[resX * resY * 3];
-
-    int res = internalResX * internalResY;
-    lumR.resize(res, 0.0f);
-    lumG.resize(res, 0.0f);
-    lumB.resize(res, 0.0f);
-    absR.resize(res, 0.0f);
-    absG.resize(res, 0.0f);
-    absB.resize(res, 0.0f);
+    hdrR.resize(res, 0.0f);
+    hdrG.resize(res, 0.0f);
+    hdrB.resize(res, 0.0f);
 }
 
 void CPUPT::deleteObjects() {
