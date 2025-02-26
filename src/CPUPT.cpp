@@ -304,7 +304,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     float p_diffuse = 1.0f - (p_specular + p_transmission);
 
                     if (randomSample < p_specular) {
-                        // Metallic reflection
+                        // Metallic reflection.
                         sampleSpecularDirection(ray, *hitObject, false);
                     } else if (randomSample < p_specular + p_transmission) {
                         // Blend in the possibility of refraction based on (transmission * (1 - metallic))
