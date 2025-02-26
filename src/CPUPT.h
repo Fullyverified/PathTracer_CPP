@@ -55,7 +55,9 @@ public:
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
 
     // bounce logic
-    void sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+    void sampleSpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+
+    void sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
     void sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 

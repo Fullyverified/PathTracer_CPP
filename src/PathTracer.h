@@ -30,15 +30,17 @@ public:
         Material light{Vector3(1, 1, 1), 0.75, 0, 1,  0, 40, 0, 0};
 
         Material metal{Vector3(1, 1, 1), 0, 1, 1,  0, 0, 0, 0};
+        Material copper{Vector3(0.66, 0.5, 0.2), 0, 1, 1,  0, 0, 0, 0};
         Material plastic{Vector3(1, 1, 1), 0, 0, 1,  0, 0, 0, 0};
+        Material orangePlastic{Vector3(0.66, 0.5, 0.2), 0, 0, 1,  0, 0, 0, 0};
         Material mirror{Vector3(1, 1, 1), 0.0, 0, 1,  0, 0, 0, 0};
         Material glass{Vector3(1, 1, 1), 0.0, 0, 1.53,  1, 0, 0, 0};
 
         Material bluePlastic{Vector3(0.4, 0.4, 1), 0.8, 0, 1,  0, 0, 0, 0};
 
-        Material redGlow{Vector3(1, 0, 0), 0.75, 0, 1,  0, 20, 0, 0};
-        Material blueGlow{Vector3(0, 1, 0), 0.75, 0, 1,  0, 20, 0, 0};
-        Material greenGlow{Vector3(0, 0, 1), 0.75, 0, 1,  0, 20, 0, 0};
+        Material redGlow{Vector3(1, 0, 0), 0.75, 0, 1,  0, 5, 0, 0};
+        Material blueGlow{Vector3(0, 1, 0), 0.75, 0, 1,  0, 5, 0, 0};
+        Material greenGlow{Vector3(0, 0, 1), 0.75, 0, 1,  0, 5, 0, 0};
 
 
         Material smoothPlastic{Vector3(1, 1, 1), 0.05, 0, 1,  0, 0, 0, 0};
@@ -67,8 +69,8 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), green)); // right wall wall
 
         // Spheres
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,mirror)); // left sphere on floor
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,copper)); // left sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, orangePlastic)); // right sphere on floor
 
         // BOX 1
 

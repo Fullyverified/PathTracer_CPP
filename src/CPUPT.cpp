@@ -212,15 +212,13 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const
-{
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
     // For convenience, define some random distribution for later
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
-
                 // -------------------------------------------------------------
                 // Primary (camera) Ray setup
                 // -------------------------------------------------------------
@@ -261,7 +259,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
 
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
-
                     // Intersect scene using BVH
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
@@ -279,10 +276,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     hitObject->getNormal(ray); // sets ray.getNormal()
 
                     // Grab the material
-                    const Material& mat = hitObject->getMaterial();
+                    const Material &mat = hitObject->getMaterial();
 
                     // 1) Add emission *through* the throughput
-                    finalColour = finalColour + throughput * mat.emission;
+                    finalColour = finalColour + throughput * (mat.colour * mat.emission);
 
                     // 2) Compute dotProduct, reflectance, etc.
                     float dotProduct = std::abs(ray.getNormal().dot(ray.getDir()));
@@ -302,27 +299,30 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // 5) Pick next direction: reflection or refraction, etc.
                     float randomSample = dist(rng);
-                    if (mat.metallic > randomSample) {
-                        // Metallic reflection
-                        sampleReflectionDirection(ray, *hitObject, false);
-                    } else {
-                        // Blend in the possibility of refraction based on (transmission * (1 - metallic))
-                        float effectiveTransmission = mat.transmission * (1.0f - mat.metallic);
-                        if (effectiveTransmission > randomSample) {
-                            float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                            float R = fresnelSchlick(cosTheta, mat.IOR); // reflection portion
-                            float randomSample2 = dist(rng); // a second sample
-                            if (randomSample2 < R) {
-                                sampleReflectionDirection(ray, *hitObject, false);
-                            } else {
-                                sampleRefractionDirection(ray, *hitObject, false);
-                            }
-                        } else {
-                            // Dielectric reflection branch
-                            sampleReflectionDirection(ray, *hitObject, false);
-                        }
-                    }
+                    float p_specular = mat.metallic;
+                    float p_transmission = mat.transmission * (1.0f - mat.metallic);
+                    float p_diffuse = 1.0f - (p_specular + p_transmission);
 
+                    if (randomSample < p_specular) {
+                        // Metallic reflection
+                        sampleSpecularDirection(ray, *hitObject, false);
+                    } else if (randomSample < p_specular + p_transmission) {
+                        // Blend in the possibility of refraction based on (transmission * (1 - metallic))
+                        float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
+                        float R = fresnelSchlick(cosTheta, mat.IOR); // reflection portion
+                        float randomSample2 = dist(rng); // a second sample
+                        if (randomSample2 < R) {
+                            sampleSpecularDirection(ray, *hitObject, false);
+                        } else {
+                            sampleRefractionDirection(ray, *hitObject, false);
+                        }
+                    } else if (randomSample < p_diffuse) {
+                        // Dielectric reflection branch
+                        sampleDiffuseDirection(ray, *hitObject, false);
+                    } else {
+                        sampleDiffuseDirection(ray, *hitObject, false);
+                        std::cout<<"Probabilities dont sum to 1"<<std::endl;
+                    }
                 } // end for bounceDepth
 
                 // -------------------------------------------------------------
@@ -336,7 +336,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 lumR[y * internalResX + x] = hdrR[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
                 lumG[y * internalResX + x] = hdrG[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
                 lumB[y * internalResX + x] = hdrB[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
-
             } // end raysPerPixel
         } // end x
     } // end y
@@ -354,7 +353,7 @@ void CPUPT::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, 
 
     if (sinTheta2 >= 1) {
         // total internal reflection - bounce off object
-        sampleReflectionDirection(ray, sceneObject, false);
+        sampleSpecularDirection(ray, sceneObject, false);
     } else {
         // valid refreaction into next medium
         float cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
@@ -373,7 +372,7 @@ void CPUPT::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, 
         sinTheta2 = (n1 / n2) * sinTheta1;
         int totalInternalReflections = 0; // cap on total interal reflections
         while (sinTheta2 >= 1 && totalInternalReflections <= 5) {
-            sampleReflectionDirection(ray, sceneObject, true); // inside object so flipped normal
+            sampleSpecularDirection(ray, sceneObject, true); // inside object so flipped normal
             ray.updateOrigin(-0.01f); // undo the march from the previous method
             ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second); // march the ray to the other side of the object
             // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
@@ -419,7 +418,8 @@ float CPUPT::fresnelSchlick(float cosTheta, float ior) const {
     return R0 + (1.0f - R0) * std::pow(1.0f - cosTheta, 5.0f);
 }
 
-void CPUPT::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+void CPUPT::sampleSpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+    // ~glossy
     float roughness = sceneObject.getMaterial().roughness;
     // reflection direction
     float dotProduct = ray.getDir().dot(ray.getNormal());
@@ -487,6 +487,64 @@ void CPUPT::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, 
         ray.setBounceDot(bounceDot);
     }
     ray.updateOrigin(0.01f); // march the ray a tiny amount to move it off the object
+}
+
+void CPUPT::sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
+    // Diffuse sampling - random direction above surface with cosine-weighted distribution
+
+    // Surface normal
+    Vector3 N = ray.getNormal();
+    if (flipNormal) {
+        N.flip();
+    }
+
+    // random numbers for hemisphere sampling
+    float alpha = dist(rng);
+    float gamma = dist(rng);
+
+    // conver to spherical coordinates
+
+    float theta = std::acos(std::sqrt(alpha)); // polar angle
+    float phi = 2.0f * std::numbers::pi * gamma; // azimuth
+
+    // Convert spherical coords to Cartesian in local tangent space
+    Vector3 localDir(
+        std::sin(theta) * std::cos(phi),
+        std::sin(theta) * std::sin(phi),
+        std::cos(theta)
+    );
+    localDir.normalise();
+
+    // Build tangent & bitangent from N
+    Vector3 arbitraryA;
+    if (std::abs(N.getX()) < 0.5f && std::abs(N.getZ()) < 0.5f) {
+        arbitraryA.set(1, 0, 0);
+    } else {
+        arbitraryA.set(0, 1, 0);
+    }
+    Vector3 tangentT = N.cross(arbitraryA);
+    tangentT.normalise();
+    Vector3 bitangent = N.cross(tangentT);
+    bitangent.normalise();
+
+    // Transform localDir into world space
+    Vector3 worldDir(
+        localDir.getX() * tangentT.getX() + localDir.getY() * bitangent.getX() + localDir.getZ() * N.getX(),
+        localDir.getX() * tangentT.getY() + localDir.getY() * bitangent.getY() + localDir.getZ() * N.getY(),
+        localDir.getX() * tangentT.getZ() + localDir.getY() * bitangent.getZ() + localDir.getZ() * N.getZ()
+    );
+
+    worldDir.normalise();
+    ray.getDir().set(worldDir);
+
+    float bounceDot = ray.getDir().dot(N);
+    if (bounceDot < 0) {
+        ray.getDir().flip();
+        ray.setBounceDot(-bounceDot);
+    } else {
+        ray.setBounceDot(bounceDot);
+    }
+    ray.updateOrigin(0.01f); // offset to avoid self-intersection
 }
 
 void CPUPT::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
