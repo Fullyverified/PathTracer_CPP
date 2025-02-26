@@ -59,9 +59,6 @@ void CPUPT::renderLoop() {
     //constructLinearBVH(sceneobjectsList);
     std::cout << "Finished constructing BVH: " << std::endl;
 
-    std::cout << "BVHNodes size: " <<BVHNodes.size() <<std::endl;
-
-
     // render loop code
     while (systemManager->getIsRunning()) {
         auto frameStartTime = std::chrono::high_resolution_clock::now();
@@ -69,20 +66,26 @@ void CPUPT::renderLoop() {
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
 
+        std::cout << "Checking Updates: " <<std::endl;
         if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
+            std::cout << "Cam Update" <<std::endl;
 
             UI::camUpdate = false;
             camera->getCamMoved() = false;
 
-            camera->reInitilize();
-
             if (UI::sceneUpdate) {
-
                 UI::sceneUpdate = false;
-
                 constructBVHST(sceneObjectsList);
-                //constructLinearBVH(sceneobjectsList);
             }
+
+            if (UI::resUpdate) {
+                std::cout << "Res Update" <<std::endl;
+                updateResolution(); // change buffer size
+                UI::resUpdate = false;
+                UI::resizeBuffer = true;
+                camera->reInitilize();
+            }
+
             // reset colour buffer
             for (int i = 0; i < internalResX * internalResY; i++) {
                 lumR[i] = 0.0f;
@@ -92,7 +95,7 @@ void CPUPT::renderLoop() {
                 absG[i] = 0.0f;
                 absB[i] = 0.0f;
             }
-            aspectRatio = static_cast<float>(internalResX) / internalResY;
+            //aspectRatio = static_cast<float>(internalResX) / internalResY;
             iterations = 1;
             UI::accumulatedRays = iterations * config.raysPerPixel;
         }
@@ -105,11 +108,17 @@ void CPUPT::renderLoop() {
 
         Camera cameraCopy = *camera; // dereference camera and copy
 
+        std::cout << "Starting Rays: " <<std::endl;
+
+        std::cout<<"resolutionX"<<resX<<std::endl;
+        std::cout<<"config.resolutionX"<<config.resX<<std::endl;
+        std::cout<<"internalresolutionX"<<internalResX<<std::endl;
+
         auto startTimeRays = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
-                boundsX = threadSegments(0, internalResX, segments, boundsX, i);
-                boundsY = threadSegments(0, internalResY, segments, boundsY, j);
+                boundsX = threadSegments(0, internalResX, segments, i);
+                boundsY = threadSegments(0, internalResY, segments, j);
                 int its = iterations;
                 threads.emplace_back(std::async(std::launch::async, &CPUPT::traceRay, this,
                                                 cameraCopy, boundsX.first, boundsX.second, boundsY.first,
@@ -125,6 +134,7 @@ void CPUPT::renderLoop() {
         UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
         //-----------------------
 
+        std::cout << "Finding max luminance: "<<std::endl;
         // tone mapping
         maxLuminance = 0;
         currentLuminance = 0;
@@ -134,11 +144,14 @@ void CPUPT::renderLoop() {
             maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
         }
         maxLuminance *= config.ISO;
+
+        std::cout << "Starting Tone Mapping: "<<std::endl;
+
         auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
-                boundsX = threadSegments(0, internalResX, segments, boundsX, i);
-                boundsY = threadSegments(0, internalResY, segments, boundsY, j);
+                boundsX = threadSegments(0, internalResX, segments, i);
+                boundsY = threadSegments(0, internalResY, segments, j);
                 threads.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
                                                 boundsX.first, boundsX.second, boundsY.first,
                                                 boundsY.second, std::ref(mutex)));
@@ -149,6 +162,7 @@ void CPUPT::renderLoop() {
         }
         threads.clear();
 
+        std::cout << "Pushing RBG Buffer: "<<std::endl;
         systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
 
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
@@ -200,10 +214,10 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
             }
 
             // upscale and store in RGB buffer considering aspect ratio
-            for (int i = 0; i < config.upScale; i++) {
-                for (int j = 0; j < config.upScale; j++) {
-                    int outX = static_cast<int>(x * config.upScale + i);
-                    int outY = static_cast<int>(y * config.upScale + j);
+            for (int i = 0; i < upScale; i++) {
+                for (int j = 0; j < upScale; j++) {
+                    int outX = static_cast<int>(x * upScale + i);
+                    int outY = static_cast<int>(y * upScale + j);
                     int offset = (outY * resX + outX) * 3;
 
                     RGBBuffer[offset] = red;
@@ -219,8 +233,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
     Vector3 lum;
     Vector3 col;
     Ray ray;
+
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
+            if (x > internalResX || y > internalResY) {
+                std::cout<<"Mismatch"<<std::endl;
+            }
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
                 ray.reset();
                 std::vector<BounceInfo> bounceInfo;
@@ -299,6 +317,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     red = (bounceInfo[index].emission + red) * baseColour.x * dotProduct;
                     green = (bounceInfo[index].emission + green) * baseColour.y * dotProduct;
                     blue = (bounceInfo[index].emission + blue) * baseColour.z * dotProduct;
+                }
+                std::cout<<"Summing Colours"<<std::endl;
+                if (y * internalResX + x > lumR.size() - 1) {
+                    std::cout<<"Mismatch"<<std::endl;
                 }
                 absR[y * internalResX + x] += red;
                 absG[y * internalResX + x] += green;
@@ -593,15 +615,14 @@ void CPUPT::initialiseObjects() {
     camera = systemManager->getCamera();
 
     resX = config.resX;
-    resY = config.resX / (config.aspectX / config.aspectY);
+    resY = config.resY;
 
-    internalResX = config.resX / config.upScale;
-    internalResY = resY / config.upScale;
+    upScale = config.upScale;
 
-    aspectRatio = static_cast<float>(internalResX) / internalResY;
+    internalResX = resX / upScale;
+    internalResY = resY / upScale;
 
-    std::cout << "External: resX:" << resX << ", internal: resY: " << resY << std::endl;
-    std::cout << "Internal: resX:" << internalResX << ", internal: resY: " << internalResY << std::endl;
+    aspectRatio = static_cast<float>(resX) / resY;
 
     RGBBuffer = new uint8_t[resX * resY * 3];
 
@@ -615,7 +636,7 @@ void CPUPT::initialiseObjects() {
 }
 
 void CPUPT::updateUpscaling() {
-
+    upScale = config.upScale;
     internalResX = config.resX / config.upScale;
     internalResY = resY / config.upScale;
     int res = internalResX * internalResY;
@@ -628,14 +649,17 @@ void CPUPT::updateUpscaling() {
 }
 
 void CPUPT::updateResolution() {
+
+    std::cout<<"Buffers Resized"<<std::endl;
     resX = config.resX;
-    resY = config.resX / (config.aspectX / config.aspectY);
+    resY = config.resY;
 
     internalResX = config.resX / config.upScale;
-    internalResY = resY / config.upScale;
+    internalResY = config.resY / config.upScale;
 
     aspectRatio = static_cast<float>(internalResX) / internalResY;
 
+    delete[] RGBBuffer;
     RGBBuffer = new uint8_t[resX * resY * 3];
 
     int res = internalResX * internalResY;
@@ -653,10 +677,10 @@ void CPUPT::deleteObjects() {
     }
     BVHNodes.clear();
 
-    delete RGBBuffer;
+    delete[] RGBBuffer;
 }
 
-std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int step) {
+std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, int step) {
     int res = end - start;
     int pixelsPerThread = res / numThreads; // number of pixels per thread
     int remainder = res % numThreads; // remaining pixels after division

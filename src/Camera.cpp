@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "Config.h"
 #include <numbers>
 
 Camera::Camera(Vector3 pos, Vector3 dir) : aspectX(config.aspectX), aspectY(config.aspectY), pos(pos), dir(dir), worldUp(0,1,0),
@@ -39,6 +40,9 @@ void Camera::imagePlane() {
 float Camera::toRadians(float &degrees) const{return (degrees * std::numbers::pi) / 180.0f;}
 
 void Camera::reInitilize() {
+    aspectX = config.aspectX;
+    aspectY = config.aspectY;
+
     dir.normalise();
     rightVector();
     upVector();

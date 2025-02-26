@@ -38,6 +38,7 @@ public:
     }
 
     void initialize(std::vector<SceneObject *> &SceneObjectsList, Camera *camera) {
+        std::cout<<"Initializing ImGui and Managers"<<std::endl;
         // --- Initialize ImGui ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -52,10 +53,11 @@ public:
         inputManager = new InputManager(camera, window);
         cpupt->initialiseObjects();
 
-        int resX = config.resX;
-        int resY = config.resX / (config.aspectX / config.aspectY);
+        resX = config.resX;
+        int resY = config.resY;
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
+        std::cout<<"Finished"<<std::endl;
     }
 
     void update(float deltaTime) {
@@ -72,12 +74,29 @@ public:
     }
 
     void presentScreen() {
-        int width = static_cast<int>(config.resX);
+        std::cout<<"Present Screen"<<std::endl;
+        if (UI::resizeBuffer) {
+            std::cout<<"Resizing screen buffer"<<std::endl;
+            resX = config.resX;
+            resY = config.resY;
+            int res = resX * resY;
+
+            delete[] RGBBuffer;
+            RGBBuffer = new uint8_t[res * 3];
+
+            std::cout<<"Resizing SDL texture"<<std::endl;
+            renderer->initializeTexture(resX, resY);
+            SDL_SetWindowSize(window->getSDLWindow(), resX, resY);
+
+            UI::resizeBuffer = false;
+        }
+
         renderer->clearScreen();
 
         // Push RGB Buffer
-        renderer->pushRGBBuffer(RGBBuffer, width);
+        renderer->pushRGBBuffer(RGBBuffer, resX);
 
+        if (!inputManager->getHideUI()) {
         // Start ImGui frame
         ImGui_ImplSDL2_NewFrame();
         ImGui_ImplSDLRenderer2_NewFrame();
@@ -91,6 +110,7 @@ public:
         // Render ImGui
         ImGui::Render();
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer->getSDLRenderer());
+        }
 
         // present screen - ImGui + RGB Buffer
         renderer->presentScreen();
@@ -107,6 +127,7 @@ public:
     }
 
     void updateRGBBuffer(uint8_t *newRGBBuffer) {
+
         RGBBuffer = newRGBBuffer;
     }
 
@@ -119,8 +140,8 @@ public:
     }
 
     void updateResolution() {
-        int resX = config.resX;
-        int resY = config.resX / (config.aspectX / config.aspectY);
+        resX = config.resX;
+        int resY = config.resX;
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
     }
@@ -135,6 +156,7 @@ private:
 
 
     uint8_t *RGBBuffer;
+    int resX, resY;
 
     bool running, lockInput;
 };

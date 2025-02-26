@@ -19,15 +19,20 @@ bool UI::accumulateRays = true;
 int UI::numThreads = std::thread::hardware_concurrency();
 
 int UI::upscale = config.upScale;
-float UI::fOV = config.fOV;
 
+float UI::fOV = config.fOV;
 bool UI::depthOfField = config.DepthOfField;
 float UI::apetureRadius = config.apertureRadius;
 float UI::focalDistance = config.focalDistance;
 
+int UI::resX = config.resX;
+int UI::resY = config.resY;
+
 bool UI::camUpdate = false;
 bool UI::sceneUpdate = false;
 bool UI::upscalingUpdate = false;
+bool UI::resUpdate = false;
+bool UI::resizeBuffer = false;
 
 void UI::renderSettings() {
 
@@ -69,13 +74,6 @@ void UI::renderSettings() {
 
     if (ImGui::SliderInt("CPU Threads", &numThreads, 1, std::thread::hardware_concurrency())) {
         config.threads = numThreads;
-    }
-
-    ImGui::Separator();
-
-    if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
-        camUpdate = true;
-        config.fOV = fOV;
     }
 
     ImGui::Separator();
@@ -125,6 +123,11 @@ void UI::renderSettings() {
 
     ImGui::Text("Camera Settings");
 
+    if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
+        camUpdate = true;
+        config.fOV = fOV;
+    }
+
     if (ImGui::Checkbox("Depth of Field", &depthOfField)) {
         config.DepthOfField = depthOfField;
         camUpdate = true;
@@ -142,10 +145,36 @@ void UI::renderSettings() {
 
     ImGui::Separator();
 
-    ImGui::Text("Modify Scene - TBD");
+    ImGui::Text("Change Resolution");
+
+    ImGui::SetNextItemWidth(80); // Set fixed width for the input box
+    if (ImGui::InputInt("##ResX", &resX, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
+
+    }
+
+    ImGui::SameLine();ImGui::Text("x");ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(80);
+    if (ImGui::InputInt("##ResY", &resY, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
+
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Apply")) {
+        config.resX = resX;
+        config.resY = resY;
+        config.aspectX = resX;
+        config.aspectY = resY;
+        camUpdate = true;
+        resUpdate = true;
+    }
+
+    ImGui::Separator();
 
     ImGui::Text("Hint: Press Del to enable mouse look");
     ImGui::Text("Hint: WASD + QE");
+    ImGui::Text("Hint: F1 to hide UI");
 
     ImGui::End();
 

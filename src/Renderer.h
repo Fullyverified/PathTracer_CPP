@@ -30,6 +30,10 @@ public:
     }
 
     void initializeTexture(int &W, int &H) {
+        if (textureBuffer) {  // Check if an existing texture exists
+            SDL_DestroyTexture(textureBuffer);
+            textureBuffer = nullptr; // Ensure it's reset before re-creating
+        }
         textureBuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, W, H);
     }
 

@@ -63,7 +63,7 @@ public:
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
 
     // multithreading logic
-    std::pair<int, int> threadSegments(float start, float end, int &numThreads, std::pair<int, int>, int i);
+    std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
 
     // cleanup
     void initialiseObjects();
@@ -85,7 +85,7 @@ private:
     float maxLuminance, currentLuminance;
     mutable uint8_t *RGBBuffer;
 
-    int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY;
+    int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY, upScale;
     float aspectRatio;
 
     std::pair<int, int> boundsX;

@@ -3,9 +3,10 @@
 
 struct Config {
     float resX = 1200;
-    float upScale = 4; // 1 is default - integer scaling - multiples of res X
     float aspectX = 1;
     float aspectY = 1;
+    float resY = resX / (aspectX / aspectY);
+    float upScale = 4; // 1 is default - integer scaling - multiples of res X
     float fOV = 45;
     int raysPerPixel = 1;
     int bounceDepth = 6;
@@ -13,10 +14,10 @@ struct Config {
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;
-    int threads = 0; // 0 = default
+    int threads = 1; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
-    float ISO = 1; // up and down keys to modify
+    float ISO = 1;
     float mouseSensitivity = 0.1f;
 
     void increaeISO() {

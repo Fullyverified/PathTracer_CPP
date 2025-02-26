@@ -8,7 +8,7 @@
 
 class InputManager {
 public:
-    InputManager(Camera *camera, Window *window) : camera(camera), window(window), running(true), lockMouse(true) {
+    InputManager(Camera *camera, Window *window) : camera(camera), window(window), running(true), lockMouse(true), hideUI(false) {
         running = true;
     }
 
@@ -23,6 +23,10 @@ public:
             if (event.key.keysym.sym == SDLK_DELETE) {
                 lockMouse = lockMouse == false;
                 window->setRelativeMouse();
+            }
+
+            if (event.key.keysym.sym == SDLK_F1) {
+                hideUI = hideUI == false;
             }
         }
     }
@@ -79,8 +83,11 @@ public:
     }
 
     bool getIsRunning() {
-        //running = true;
         return running;
+    }
+
+    bool getHideUI() {
+        return hideUI;
     }
 
 private:
@@ -88,7 +95,7 @@ private:
     Camera *camera;
     int mouseX, mouseY;
 
-    bool running, lockMouse;
+    bool running, lockMouse, hideUI;
 };
 
 

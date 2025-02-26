@@ -26,9 +26,14 @@ public:
     static float apetureRadius;
     static float focalDistance;
 
+    static int resX;
+    static int resY;
+
     static bool camUpdate;
     static bool sceneUpdate;
     static bool upscalingUpdate;
+    static bool resUpdate;
+    static bool resizeBuffer;
 
 private:
 
