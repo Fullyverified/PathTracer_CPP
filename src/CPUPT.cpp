@@ -26,12 +26,10 @@
 
 #include "SystemManager.h"
 
-CPUPT::CPUPT(SystemManager* systemManager) : systemManager(systemManager), dist(0.0f, 1.0f), iterations(1), numThreads(0) {
-
+CPUPT::CPUPT(SystemManager *systemManager) : systemManager(systemManager), iterations(1), numThreads(0) {
 }
 
 void CPUPT::launchRenderThread(std::vector<SceneObject *> &sceneObjectsList) {
-
     this->sceneObjectsList = sceneObjectsList;
 
     // launch a thread the handles the render loop
@@ -67,7 +65,6 @@ void CPUPT::renderLoop() {
         int segments = std::round(std::sqrt(numThreads));
 
         if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
-
             UI::camUpdate = false;
             camera->getCamMoved() = false;
 
@@ -145,7 +142,7 @@ void CPUPT::renderLoop() {
                                                 boundsY.second, std::ref(mutex)));
             }
         }
-        for (std::future<void> &thread : threads) {
+        for (std::future<void> &thread: threads) {
             thread.get(); // Blocks until the thread completes its task
         }
         threads.clear();
@@ -167,7 +164,6 @@ void CPUPT::renderLoop() {
 }
 
 void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
-
     for (int x = xstart; x <= xend; x++) {
         for (int y = ystart; y <= yend; y++) {
             float red = lumR[y * internalResX + x];
@@ -216,99 +212,134 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
-    Ray ray;
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const
+{
+    // For convenience, define some random distribution for later
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
+
+                // -------------------------------------------------------------
+                // Primary (camera) Ray setup
+                // -------------------------------------------------------------
+                Ray ray;
                 ray.reset();
-                std::vector<BounceInfo> bounceInfo;
+                // Camera (primary) ray origin:
+                ray.getOrigin().set(camera.getPos());
+                ray.getPos().set(camera.getPos());
+
+                // Jitter the pixel position for MSAA
+                float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
+                float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
+                Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
+                                      1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
+                Vector3 pixelPosScene(pixelPosPlane.getX() * camera.getPlaneWidth() / 2,
+                                      pixelPosPlane.getY() * camera.getPlaneHeight() / 2, 0);
+
+                // Point ray according to pixel position (ray starts from camera origin)
+                ray.getDir().set(camera.getDir() + camera.getRight() * pixelPosScene.getX() + camera.getUp() * pixelPosScene.getY());
+                ray.getDir().normalise();
+
+                // Depth of Field
+                if (config.DepthOfField) {
+                    Vector3 focalPoint = camera.getPos() + ray.getDir() * config.focalDistance;
+                    float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                    float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
+                    Vector3 lensOffset = camera.getRight() * lensU + camera.getUp() * lensV;
+                    ray.getOrigin().set(camera.getPos() + lensOffset);
+                    ray.getPos().set(camera.getPos() + lensOffset);
+                    ray.getDir().set(focalPoint - ray.getOrigin());
+                    ray.getDir().normalise();
+                }
+
+                // -------------------------------------------------------------
+                // Path Tracing Loop
+                // -------------------------------------------------------------
+                Vector3 finalColour(0.0f, 0.0f, 0.0f);
+                Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
+
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
-                    if (currentBounce == 0) {
-                        //std::cout<<"Primary Ray"<<std::endl;
-                        // primary Ray
-                        ray.getOrigin().set(camera.getPos());
-                        ray.getPos().set(camera.getPos());
-                        // calculate position of pixel on image plane
-                        // jitter the pixel position for MSAA
-                        //std::cout<<"Rand"<<std::endl;
-                        float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
-                        float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
-                        Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
-                                              1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
-                        Vector3 pixelPosScene(pixelPosPlane.getX() * camera.getPlaneWidth() / 2, pixelPosPlane.getY() * camera.getPlaneHeight() / 2, 0);
-                        // point ray according to pixel position (ray starts from camera origin)
-                        //std::cout<<"Setting ray direction"<<std::endl;
-                        ray.getDir().set(camera.getDir() + camera.getRight() * pixelPosScene.getX() + camera.getUp() * pixelPosScene.getY());
-                        ray.getDir().normalise();
-                        if (config.DepthOfField) {
-                            // compute Focal Point
-                            Vector3 focalPoint = camera.getPos() + ray.getDir() * config.focalDistance;
-                            // Randomly sample a point within the aperture
-                            float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                            float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
-                            Vector3 lensOffset = camera.getRight() * lensU + camera.getUp() * lensV;
-                            ray.getOrigin().set(camera.getPos() + lensOffset);
-                            ray.getPos().set(camera.getPos() + lensOffset);
-                            ray.getDir().set(focalPoint - ray.getOrigin());
-                            ray.getDir().normalise();
-                        }
-                    } else {
-                        // secondary Ray
-                        //std::cout<<"Secondary Ray"<<std::endl;
-                        float randomSample = dist(rng); // monte carlo sampling
-                        if (randomSample >= ray.getHitObject()->getMaterial().transmission) {
-                            sampleReflectionDirection(ray, *ray.getHitObject(), false);
-                        } else {
-                            sampleRefractionDirection(ray, *ray.getHitObject(), false);
-                        }
-                    }
-                    //std::cout<<"Traversing BVH"<<std::endl;
+
+                    // Intersect scene using BVH
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
-                    //std::cout<<"Finished Traversing BVH"<<std::endl;
-                    if (leafNode.node != nullptr && leafNode.node->getLeaf()) {
-                        //std::cout<<"Scene Object Found"<<std::endl;
-                        SceneObject *BVHSceneObject = leafNode.node->getSceneObject();
-                        ray.march(leafNode.close);
-                        ray.getHitPoint().set(ray.getPos());
-                        ray.setHitObject(BVHSceneObject);
-                        ray.getOrigin().set(ray.getPos());
-                        // store hit data
-                        BVHSceneObject->getNormal(ray); // update normal vector
-                        BounceInfo currentBounceInfo{};
-                        currentBounceInfo.emission = BVHSceneObject->getMaterial().emission;
-                        currentBounceInfo.colour = BVHSceneObject->getMaterial().colour;
-                        currentBounceInfo.metallic = BVHSceneObject->getMaterial().metallic;
-                        currentBounceInfo.dot = std::abs(ray.getNormal().dot(ray.getDir()));
-                        bounceInfo.push_back(currentBounceInfo);
+                    if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
+                        // No intersection: terminate this path
+                        break;
                     }
-                    else {
-                        currentBounce = config.bounceDepth; // end ray
+
+                    // Move the ray to the hit point
+                    SceneObject *hitObject = leafNode.node->getSceneObject();
+                    ray.march(leafNode.close);
+                    ray.getHitPoint().set(ray.getPos());
+                    ray.setHitObject(hitObject);
+                    ray.getOrigin().set(ray.getPos());
+                    // Update normal
+                    hitObject->getNormal(ray); // sets ray.getNormal()
+
+                    // Grab the material
+                    const Material& mat = hitObject->getMaterial();
+
+                    // 1) Add emission *through* the throughput
+                    finalColour = finalColour + throughput * mat.emission;
+
+                    // 2) Compute dotProduct, reflectance, etc.
+                    float dotProduct = std::abs(ray.getNormal().dot(ray.getDir()));
+                    Vector3 surfaceReflectance = mat.colour;
+
+                    // 3) Update throughput by the surface reflectance,
+                    //    dot product, (and possibly Fresnel if you want a fuller model),
+                    //    and also factor in PDF if you do explicit importance sampling.
+                    throughput = throughput * surfaceReflectance * dotProduct;
+
+                    // 4) Russian roulette or other bounce termination can go here
+                    //    For now, we just rely on bounceDepth or no intersection
+                    //    but you can add a random termination, e.g.:
+                    // float rr = dist(rng);
+                    // if (rr > 0.9f) break;
+                    // else throughput *= 1.0f / 0.9f;
+
+                    // 5) Pick next direction: reflection or refraction, etc.
+                    float randomSample = dist(rng);
+                    if (mat.metallic > randomSample) {
+                        // Metallic reflection
+                        sampleReflectionDirection(ray, *hitObject, false);
+                    } else {
+                        // Blend in the possibility of refraction based on (transmission * (1 - metallic))
+                        float effectiveTransmission = mat.transmission * (1.0f - mat.metallic);
+                        if (effectiveTransmission > randomSample) {
+                            float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
+                            float R = fresnelSchlick(cosTheta, mat.IOR); // reflection portion
+                            float randomSample2 = dist(rng); // a second sample
+                            if (randomSample2 < R) {
+                                sampleReflectionDirection(ray, *hitObject, false);
+                            } else {
+                                sampleRefractionDirection(ray, *hitObject, false);
+                            }
+                        } else {
+                            // Dielectric reflection branch
+                            sampleReflectionDirection(ray, *hitObject, false);
+                        }
                     }
-                }
-                float red = 0;
-                float green = 0;
-                float blue = 0;
-                for (int index = bounceInfo.size() - 1; index >= 0; index--) {
-                    // Mix between diffuse (non-metallic) and specular (metallic) based on metallic value
-                    float dotProduct = bounceInfo[index].dot;  // Ensure this is cosine of the angle
-                    float metallic = bounceInfo[index].metallic;
-                    Vector3 baseColour = bounceInfo[index].colour;
 
-                    red = (bounceInfo[index].emission + red) * baseColour.x * dotProduct;
-                    green = (bounceInfo[index].emission + green) * baseColour.y * dotProduct;
-                    blue = (bounceInfo[index].emission + blue) * baseColour.z * dotProduct;
-                }
+                } // end for bounceDepth
 
-                hdrR[y * internalResX + x] += red;
-                hdrG[y * internalResX + x] += green;
-                hdrB[y * internalResX + x] += blue;
+                // -------------------------------------------------------------
+                // We now have finalColour for this ray. Accumulate into the buffer.
+                // -------------------------------------------------------------
+                hdrR[y * internalResX + x] += finalColour.x;
+                hdrG[y * internalResX + x] += finalColour.y;
+                hdrB[y * internalResX + x] += finalColour.z;
+
+                // Optionally, update a "progressive" or "average" buffer
                 lumR[y * internalResX + x] = hdrR[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
                 lumG[y * internalResX + x] = hdrG[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
                 lumB[y * internalResX + x] = hdrB[y * internalResX + x] / (static_cast<float>(currentRay) * static_cast<float>(its));
-            }
-        }
-    }
+
+            } // end raysPerPixel
+        } // end x
+    } // end y
 }
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
@@ -359,6 +390,33 @@ void CPUPT::sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, 
         ray.updateOrigin(sceneObject.getIntersectionDistance(ray).second + 0.01f);
     }
     ray.setBounceDot(1.0f);
+}
+
+float CPUPT::distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) {
+    float alpha = roughness * roughness;
+    float NdotH = std::max(normal.dot(halfVector), 0.0f);
+    float denom = (NdotH * NdotH * (alpha - 1.0f) + 1.0f);
+    return alpha / (std::numbers::pi * denom * denom);
+}
+
+float CPUPT::geometrySchlickGGX(float NdotV, float roughness) {
+    float k = (roughness + 1.0f) * (roughness + 1.0f) / 8.0f;
+    return NdotV / (NdotV * (1.0f - k) + k);
+}
+
+float CPUPT::geometrySmith(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness) {
+    float NdotV = std::max(normal.dot(viewDir), 0.0f);
+    float NdotL = std::max(normal.dot(lightDir), 0.0f);
+    float ggxV = geometrySchlickGGX(NdotV, roughness);
+    float ggxL = geometrySchlickGGX(NdotL, roughness);
+    return ggxV * ggxL;
+}
+
+float CPUPT::fresnelSchlick(float cosTheta, float ior) const {
+    float R0 = (ior - 1.0f) / (ior + 1.0f);
+    R0 = R0 * R0;
+
+    return R0 + (1.0f - R0) * std::pow(1.0f - cosTheta, 5.0f);
 }
 
 void CPUPT::sampleReflectionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
@@ -559,7 +617,7 @@ void CPUPT::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) {
 }
 
 void CPUPT::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
-                          BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
+                         BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
     float localBestCost = std::numeric_limits<float>::infinity();
     BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
     int localIndexLeft = 0, localIndexRight = 0;
@@ -589,7 +647,6 @@ void CPUPT::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end
 }
 
 void CPUPT::initialiseObjects() {
-
     camera = systemManager->getCamera();
 
     resX = config.resX;

@@ -65,6 +65,16 @@ public:
         z /= magnitude;
     }
 
+    Vector3 computeHalfVector(const Vector3 &viewDir, const Vector3 &lightDir) {
+        Vector3 half = viewDir + lightDir;
+        half.normalise();
+        return half;
+    }
+
+    Vector3 fresnelSchlick(float cosTheta, const Vector3 &F0) {
+        return F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * std::pow(1.0f - cosTheta, 5.0f);
+    }
+
     // operator[]
     float& operator[](int index) {
         switch (index) {

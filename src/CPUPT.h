@@ -59,6 +59,15 @@ public:
 
     void sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
+    float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness); // Microfacet Distribution (D)
+
+    float geometrySchlickGGX(float NdotV, float roughness); // Geometrey Term (G)
+
+    float geometrySmith(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness);
+
+    // cosTheta is the angle between the incoming ray (rayDir) and the normal
+    float fresnelSchlick(float cosTheta, float ior) const;
+
     // tone mapping
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
 
@@ -70,6 +79,17 @@ public:
     void updateUpscaling();
 
     void deleteObjects();
+
+    // Vector functions
+    float dot(Vector3& first, Vector3& second) const {
+        float dot = first.x * second.x + first.y * second.y + first.z * second.z;
+        return dot;
+    }
+
+    Vector3 mix(const Vector3 &a, const Vector3 &b, float factor) const {
+        return a * (1.0f - factor) + b * factor;
+    }
+
 
 private:
 
