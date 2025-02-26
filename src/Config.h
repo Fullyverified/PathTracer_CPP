@@ -5,7 +5,7 @@ struct Config {
     float resX = 1200;
     float aspectX = 1;
     float aspectY = 1;
-    float resY = resX / (aspectX / aspectY);
+    float resY = 1200;
     float upScale = 4; // 1 is default - integer scaling - multiples of res X
     float fOV = 45;
     int raysPerPixel = 1;

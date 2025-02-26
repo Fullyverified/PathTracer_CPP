@@ -54,7 +54,7 @@ public:
         cpupt->initialiseObjects();
 
         resX = config.resX;
-        int resY = config.resY;
+        resY = config.resY;
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
         std::cout<<"Finished"<<std::endl;
@@ -73,23 +73,23 @@ public:
         cpupt->joinRenderThread();
     }
 
-    void presentScreen() {
-        std::cout<<"Present Screen"<<std::endl;
+    void changeResolution() {
         if (UI::resizeBuffer) {
-            std::cout<<"Resizing screen buffer"<<std::endl;
             resX = config.resX;
             resY = config.resY;
             int res = resX * resY;
 
-            delete[] RGBBuffer;
             RGBBuffer = new uint8_t[res * 3];
 
-            std::cout<<"Resizing SDL texture"<<std::endl;
             renderer->initializeTexture(resX, resY);
             SDL_SetWindowSize(window->getSDLWindow(), resX, resY);
 
             UI::resizeBuffer = false;
         }
+    }
+
+    void presentScreen() {
+        changeResolution();
 
         renderer->clearScreen();
 
@@ -127,7 +127,6 @@ public:
     }
 
     void updateRGBBuffer(uint8_t *newRGBBuffer) {
-
         RGBBuffer = newRGBBuffer;
     }
 
@@ -141,7 +140,7 @@ public:
 
     void updateResolution() {
         resX = config.resX;
-        int resY = config.resX;
+        resY = config.resX;
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
     }
