@@ -20,6 +20,7 @@ public:
     void updateOrigin(const float& distance);
     [[nodiscard]] Vector3& getPos() { return pos; }
     [[nodiscard]] Vector3& getOrigin() { return origin; }
+    void setOrigin(Vector3& origin) {this->origin = origin;}
     [[nodiscard]] Vector3& getDir() { return dir; }
     [[nodiscard]] Vector3& getHitPoint() { return hitpoint; }
     [[nodiscard]] Vector3& getNormal() { return normal; }
@@ -27,9 +28,6 @@ public:
     [[nodiscard]] SceneObject* getHitObject() const { return sceneObject; }
 
     [[nodiscard]] Vector3& getBCoords() {return bCoords;}
-
-    void setBounceDot(float bounceDot) {this->bounceDot = bounceDot;}
-    [[nodiscard]] float getBounceDot() const {return bounceDot;}
 
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     [[nodiscard]] Triangle* getTriangle() const {return triangle;}
@@ -41,15 +39,22 @@ public:
         hitpoint = {0, 0, 0};
         normal = {0, 0, 0};
         bCoords = {0, 0, 0};
-        bounceDot = 0;
         hit = false;
         sceneObject = nullptr;
         triangle = nullptr;
     }
 
+    void initialize(Ray other) {
+        origin = other.origin;
+        pos = other.origin;
+        dir = other.dir;
+        hitpoint = other.hitpoint;
+        normal = other.normal;
+        bCoords = other.bCoords;
+    }
+
 private:
     Vector3 origin, pos, dir, hitpoint, normal, bCoords;
-    float bounceDot;
     bool hit;
     SceneObject* sceneObject;
     Triangle* triangle;

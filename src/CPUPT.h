@@ -4,6 +4,7 @@
 #include <atomic>
 #include <vector>
 #include <mutex>
+#include <numbers>
 #include <random>
 #include <stack>
 
@@ -55,17 +56,52 @@ public:
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
 
     // bounce logic
-    void sampleSpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+    Vector3 sampleSpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    void sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+    Vector3 sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    void sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+    Vector3 sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness); // Microfacet Distribution (D)
+    // BRDF / PDF
+    float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const; // Microfacet Distribution (D)
 
-    float geometrySchlickGGX(float NdotV, float roughness); // Geometrey Term (G)
+    float geometrySchlickGGX(float NdotV, float roughness) const; // Geometrey Term (G)
 
-    float geometrySmith(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness);
+    float geometrySmithGGX(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness) const;
+
+    Vector3 computeMicrofacetBRDF(float D, float F, float G, Vector3 n, Vector3 wo, Vector3 wi, Vector3 col) const { // specular
+        Vector3 numerator = col * D * F * G;
+        float denominator = 4.0f * fabs(n.dot(wo)) * fabs(n.dot(wi));
+        return numerator / denominator;
+    }
+
+    float microfacetPDF(Vector3 &n, Vector3& wo, Vector3 &wi, float D, Vector3& h) const { // specular
+        float nDotH = fabs(n.dot(h));
+        float woDotH = fabs(wo.dot(h));
+
+        if (nDotH < 1e-8f) {
+            std::cout<<"nDotH < 1e-8f"<<std::endl;
+        }
+        if (woDotH < 1e-8f) {
+            std::cout<<"nDotH < 1e-8f"<<std::endl;
+        }
+
+        return (D * nDotH) / (4.0f * woDotH);
+    }
+
+    Vector3 computeRefractionBRDF() const { // refraction
+        return Vector3(1, 1, 1);
+    };
+    float refractionPDF() const { // refraction
+        return 1;
+    }
+
+    Vector3 diffuseBRDF(Vector3 col) const { // diffuse
+        return col / std::numbers::pi;
+    }
+    float diffusePDF(float cosTheta) const { // diffuse
+        return cosTheta / std::numbers::pi;
+    }
 
     // cosTheta is the angle between the incoming ray (rayDir) and the normal
     float fresnelSchlick(float cosTheta, float ior) const;
@@ -90,6 +126,12 @@ public:
 
     Vector3 mix(const Vector3 &a, const Vector3 &b, float factor) const {
         return a * (1.0f - factor) + b * factor;
+    }
+
+    Vector3 normalOfHalfAngle(const Vector3 &wo, const Vector3 &wi) const {
+        Vector3 h = wo + wi;
+        h.normalise();
+        return h;
     }
 
 

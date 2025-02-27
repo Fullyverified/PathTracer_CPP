@@ -75,6 +75,14 @@ public:
         return F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * std::pow(1.0f - cosTheta, 5.0f);
     }
 
+    float lengthSquared() const {
+        return x * x + y * y + z * z;
+    }
+
+    float length() const {
+        return std::sqrtf(x * x + y * y + z * z);
+    }
+
     // operator[]
     float& operator[](int index) {
         switch (index) {

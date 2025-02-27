@@ -9,8 +9,6 @@ struct Material {
     float IOR;
     float transmission;
     float emission;
-    float microD; // Microfacet Distribution Function (D):
-    float geometryMasking; // Geometry (Shadowing-Masking) Term (G):
 };
 
 #endif //MATERIAL_H
