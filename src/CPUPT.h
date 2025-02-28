@@ -60,7 +60,9 @@ public:
 
     Vector3 sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    Vector3 sampleRefractionDirection(Ray &ray, SceneObject &sceneObject) const;
+    Vector3 sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObject) const;
+    Vector3 sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) const;
+
 
     // BRDF / PDF
     float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const; // Microfacet Distribution (D)
@@ -185,6 +187,8 @@ private:
     };
 
     std::vector<LinearBVHNode> bvhNodes;
+
+    bool debug;
 };
 
 #endif //RENDER_H

@@ -22,7 +22,6 @@ public:
     [[nodiscard]] Vector3& getOrigin() { return origin; }
     void setOrigin(Vector3& origin) {this->origin = origin;}
     [[nodiscard]] Vector3& getDir() { return dir; }
-    [[nodiscard]] Vector3& getHitPoint() { return hitpoint; }
     [[nodiscard]] Vector3& getNormal() { return normal; }
     void setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
     [[nodiscard]] SceneObject* getHitObject() const { return sceneObject; }
@@ -32,11 +31,14 @@ public:
     void setTriangle(Triangle* triangle) {this->triangle = triangle;}
     [[nodiscard]] Triangle* getTriangle() const {return triangle;}
 
+    bool getInternal() {return internal;}
+    void setInternal(bool internal) {this->internal = internal;}
+    void flipInternal() {internal = internal == false;}
+
     void reset() {
         origin = {0, 0, 0};
         pos = {0, 0, 0};
         dir = {0, 0, 0};
-        hitpoint = {0, 0, 0};
         normal = {0, 0, 0};
         bCoords = {0, 0, 0};
         hit = false;
@@ -48,14 +50,13 @@ public:
         origin = other.origin;
         pos = other.origin;
         dir = other.dir;
-        hitpoint = other.hitpoint;
         normal = other.normal;
         bCoords = other.bCoords;
     }
 
 private:
-    Vector3 origin, pos, dir, hitpoint, normal, bCoords;
-    bool hit;
+    Vector3 origin, pos, dir, normal, bCoords;
+    bool hit, internal;
     SceneObject* sceneObject;
     Triangle* triangle;
 };

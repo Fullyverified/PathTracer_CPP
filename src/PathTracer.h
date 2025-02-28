@@ -28,17 +28,17 @@ public:
         Material red{Vector3(1, 0, 0), 0.75, 0, 1,  0, 0};
         Material green{Vector3(0, 1, 0), 0.75, 0, 1,  0, 0};
         Material blue{Vector3(0, 0, 1), 0.75, 0, 1,  0, 0};
-        Material light{Vector3(1, 1, 1), 0.75, 0, 1,  0, 20};
+        Material light{Vector3(1, 1, 1), 0.75, 0, 1,  0, 5};
 
-        Material metal{Vector3(1, 1, 1), 0, 1, 2,  0, 0};
-        Material copper{Vector3(0.66, 0.5, 0.2), 0, 1, 2,  0, 0};
+        Material metal{Vector3(1, 1, 1), 0, 1, 3,  0, 0};
+        Material copper{Vector3(0.66, 0.5, 0.2), 0, 1, 3,  0, 0};
         Material plastic{Vector3(1, 1, 1), 0, 0, 1,  0, 0};
         Material redPlastic{Vector3(1, 0, 0), 0.8, 0, 1,  0, 0};
         Material greenPlastic{Vector3(0, 1, 0), 0, 0, 1,  0, 0};
         Material bluePlastic{Vector3(0, 0, 1), 0.8, 0, 1,  0, 0};
         Material orangePlastic{Vector3(0.66, 0.5, 0.2), 0, 0, 1,  0, 0};
-        Material mirror{Vector3(1, 1, 1), 0.0, 1, 2,  0, 0};
-        Material glass{Vector3(1, 1, 1), 0.0, 0, 1.53,  1, 0};
+        Material mirror{Vector3(1, 1, 1), 0.0, 1, 4,  0, 0};
+        Material glass{Vector3(1, 1, 1), 0.0, 0, 2.5,  1, 0};
 
 
         Material redGlow{Vector3(1, 0, 0), 0.75, 0, 1,  0, 5};
@@ -75,7 +75,7 @@ public:
 
         // Spheres
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,metal)); // left sphere on floor
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, 0, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, glass)); // right sphere on floor
 
         // BOX 1
 
@@ -91,7 +91,7 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 7), Vector3(14, 12, 1), green)); // right wall wall
 
         // Spheres
-        sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 0), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, white)); // statue left
+        sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, white)); // statue left
 
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.25, 8.75), 0.8, 0.8, 0.8, metal)); // right sphere on floor
 
