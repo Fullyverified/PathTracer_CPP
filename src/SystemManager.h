@@ -50,8 +50,9 @@ public:
         this->sceneObjectsList = SceneObjectsList;
         this->camera = camera;
 
-        inputManager = new InputManager(camera, window);
         cpupt->initialiseObjects();
+
+        inputManager = new InputManager(camera, window);
 
         resX = config.resX;
         resY = config.resY;

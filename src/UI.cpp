@@ -124,8 +124,8 @@ void UI::renderSettings() {
     ImGui::Text("Camera Settings");
 
     if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
-        camUpdate = true;
         config.fOV = fOV;
+        camUpdate = true;
     }
 
     if (ImGui::Checkbox("Depth of Field", &depthOfField)) {

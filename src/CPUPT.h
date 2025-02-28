@@ -60,7 +60,7 @@ public:
 
     Vector3 sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    Vector3 sampleRefractionDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
+    Vector3 sampleRefractionDirection(Ray &ray, SceneObject &sceneObject) const;
 
     // BRDF / PDF
     float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const; // Microfacet Distribution (D)
@@ -89,10 +89,14 @@ public:
         return (D * nDotH) / (4.0f * woDotH);
     }
 
-    Vector3 computeRefractionBRDF() const { // refraction
-        return Vector3(1, 1, 1);
+    Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2) const { // refraction
+        float ratioSq = (n1 * n1) / (n2 * n2);
+        Vector3 T = (1.0f - F) * ratioSq * col;
+        return T;
     };
     float refractionPDF() const { // refraction
+        // For a delta lobe, it’s customary to treat the PDF = 1
+        // because sampling that single direction has probability 1 in that branch.
         return 1;
     }
 
@@ -132,6 +136,11 @@ public:
         Vector3 h = wo + wi;
         h.normalise();
         return h;
+    }
+
+    Vector3 reflect(Vector3& dir, Vector3& normal) const {
+        float dotP = dot(dir, normal);
+        return dir - normal * dotP * 2;
     }
 
 

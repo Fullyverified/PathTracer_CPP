@@ -83,6 +83,11 @@ public:
         return std::sqrtf(x * x + y * y + z * z);
     }
 
+    Vector3 reflect(Vector3& n) {
+        float dotP = this->dot(n);
+        return Vector3(x - n.x, y - n.y, z - n.z) * dotP * 2;
+    }
+
     // operator[]
     float& operator[](int index) {
         switch (index) {

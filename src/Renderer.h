@@ -7,8 +7,8 @@
 class Renderer {
 public:
     Renderer(Window& window, int& width, int& height) {
-        renderer = SDL_CreateRenderer(window.getSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
 
+        renderer = SDL_CreateRenderer(window.getSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
         initializeTexture(width, height);
     }
 
@@ -31,8 +31,9 @@ public:
 
     void initializeTexture(int &W, int &H) {
         if (textureBuffer) {  // Check if an existing texture exists
-            SDL_DestroyTexture(textureBuffer);
-            textureBuffer = nullptr; // Ensure it's reset before re-creating
+            //SDL_DestroyTexture(textureBuffer);
+            //textureBuffer = nullptr; // Ensure it's reset before re-creating
+            // disabled because of crash
         }
         textureBuffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, W, H);
     }

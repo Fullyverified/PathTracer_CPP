@@ -55,10 +55,6 @@ std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
         sqrt2 = temp;
     }
 
-    if (sqrt1 < 0 && sqrt2 >= 0) {
-        return {sqrt1, 0}; // ray inside sphere
-    }
-
     return {sqrt1, sqrt2};
 }
 
