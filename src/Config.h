@@ -17,22 +17,22 @@ struct Config {
     int threads = 1; // 0 = default
     bool denoise = false;
     float denoiseWeight = 0.75;
-    float ISO = 1;
+    float exposure = 1;
     float mouseSensitivity = 0.1f;
 
     void increaeISO() {
-        ISO += (ISO * 0.01f);
+        exposure += (exposure * 0.01f);
     }
 
     void decreaseISO() {
-        ISO -= (ISO * 0.01f);
-        if (ISO < 0) {
-            ISO = 0;
+        exposure -= (exposure * 0.01f);
+        if (exposure < 0) {
+            exposure = 0;
         }
     }
 
     void resetISO() {
-        ISO = 1.0f;
+        exposure = 1.0f;
     }
 
     void increaeFOV() {

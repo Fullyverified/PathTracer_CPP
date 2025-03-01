@@ -21,6 +21,7 @@ public:
     static int upscale;
 
     static float fOV;
+    static float exposure;
 
     static bool depthOfField;
     static float apetureRadius;

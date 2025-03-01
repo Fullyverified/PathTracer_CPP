@@ -21,6 +21,7 @@ int UI::numThreads = std::thread::hardware_concurrency();
 int UI::upscale = config.upScale;
 
 float UI::fOV = config.fOV;
+float UI::exposure = config.exposure;
 bool UI::depthOfField = config.DepthOfField;
 float UI::apetureRadius = config.apertureRadius;
 float UI::focalDistance = config.focalDistance;
@@ -124,7 +125,10 @@ void UI::renderSettings() {
     ImGui::Text("Camera Settings");
 
     if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
-        config.fOV = fOV;
+        camUpdate = true;
+    }
+
+    if (ImGui::SliderFloat("Exposure", &exposure, 0.1, 10)) {
         camUpdate = true;
     }
 
@@ -134,13 +138,13 @@ void UI::renderSettings() {
     }
 
     if (ImGui::SliderFloat("Aperture Radius", &apetureRadius, 0, 2)) {
-        camUpdate = true;
         config.apertureRadius = apetureRadius;
+        camUpdate = true;
     }
 
     if (ImGui::SliderFloat("Focal Distance", &focalDistance, 0, 100)) {
-        camUpdate = true;
         config.focalDistance = focalDistance;
+        camUpdate = true;
     }
 
     ImGui::Separator();

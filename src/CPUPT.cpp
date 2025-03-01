@@ -69,6 +69,8 @@ void CPUPT::renderLoop() {
             UI::camUpdate = false;
             camera->getCamMoved() = false;
 
+            config.fOV = UI::fOV;
+            config.exposure = UI::exposure;
             camera->reInitilize(); // fov changes
 
             if (UI::sceneUpdate) {
@@ -132,7 +134,7 @@ void CPUPT::renderLoop() {
             currentLuminance = 0.2126f * lumR[i] + 0.7152f * lumG[i] + 0.0722f * lumB[i];
             maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
         }
-        maxLuminance *= config.ISO;
+        maxLuminance *= config.exposure;
 
         auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
@@ -259,12 +261,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 Vector3 finalColour(0.0f, 0.0f, 0.0f);
                 Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
-
                 ray.setInternal(false);
-
-                /*if (x == 210 && y == 230) {
-                    std::cout<<"Start"<<std::endl;
-                }*/
 
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
                     // Intersect scene using BVH
@@ -272,19 +269,11 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
-                        /*if (x == 210 && y == 230) {
-                            std::cout<<"No new BVH object found"<<std::endl;
-                        }*/
                         break;
                     }
 
                     // Move the ray to the exact hit point
                     SceneObject *hitObject = leafNode.node->getSceneObject();
-
-                    /*if (x == 210 && y == 230) {
-                        hitObject->printType();
-                        std::cout<<"Mat: "<<hitObject->getMaterial().transmission<<std::endl;
-                    }*/
 
                     // ray outside object - move to entry point
                     if (!ray.getInternal()) {
@@ -301,154 +290,71 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Update normal
 
                     // Grab the material
-                    const Material &mat = hitObject->getMaterial();
+                    Material mat = hitObject->getMaterial();
 
                     // 1) Sample new direction: reflection or refraction, etc and compute BRDF and PDF
                     float randomSample = dist(rng);
                     float p_specular = mat.metallic;
                     float p_transmission = mat.transmission * (1.0f - mat.metallic);
                     float p_diffuse = 1.0f - (p_specular + p_transmission); // replaced with else
+                    // probabilites should add up to 1 regardless
 
                     Vector3 wo = ray.getDir() * -1; // outgoing direction
                     Vector3 wi;
 
-                    float pdf = 1.0f; // Probability Distribution Function
-                    Vector3 brdf = 0.0f; // Bi-Directional reflectance Distrubtion Function
-
-                    float F, N1, N2;
-
-                    float cosTheta = 0;
                     Vector3 n = ray.getNormal();
+                    Vector3 newThroughput;
 
-                    bool isRefraction;
+                    float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
+                    float R = fresnelSchlickRefraction(cosTheta, mat.IOR); // reflection portion
+                    float randomSample2 = dist(rng); // a second sample
+
                     if (ray.getInternal()) { // continue previous refraction
-                        // -------------------------------------------------------------
                         // Refraction
-                        // -------------------------------------------------------------
                         wi = sampleRefractionDirectionSingle(ray, *hitObject);
-                        isRefraction = true;
-                        /*if (x == 210 && y == 230) {
-                            std::cout<<"Refraction loop"<<std::endl;
-                        }*/
-                        // compute terms
-                        cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                        F = fresnelSchlick(cosTheta, mat.IOR);
 
-                        if (!ray.getInternal()) {
-                            N1 = 1.0003;
-                            N2 = mat.IOR;
-                        } else {
-                            N1 = mat.IOR;
-                            N2 = 1.0003;
-                        }
+                        newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
 
-                        brdf = computeRefractionBRDF(mat.colour, F, N1, N2);
-                        pdf = refractionPDF();
                     } else {
                         if (randomSample < p_specular) {
-                            // -------------------------------------------------------------
                             // Specular (Metallic)
-                            // -------------------------------------------------------------
                             wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
+                            newThroughput = throughputSpecularMetallic(wo, wi, mat, n);
 
-                            // compute terms
-                            Vector3 h = normalOfHalfAngle(wo, wi);
-                            cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                            F = fresnelSchlick(cosTheta, mat.IOR);
-                            float D = distrubtionGGX(n, h, mat.roughness);
-                            float G = geometrySmithGGX(n, wo, wi, mat.roughness);
-
-                            // compute BRDF and PDF
-                            brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi, mat.colour);
-                            pdf = microfacetPDF(n, wo, wi, D, h);
                         } else if (randomSample < p_specular + p_transmission) {
                             // Blend in the possibility of refraction based on (transmission * (1 - metallic))
-                            cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                            float R = fresnelSchlick(cosTheta, mat.IOR); // reflection portion
-                            float randomSample2 = dist(rng); // a second sample
 
                             if (randomSample2 < R) {
-                                // -------------------------------------------------------------
                                 // Specular (Glass)
-                                // -------------------------------------------------------------
                                 wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
-
-                                // compute terms
-                                Vector3 h = normalOfHalfAngle(wo, wi);
-                                cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                                float D = distrubtionGGX(n, h, mat.roughness);
-                                float F = fresnelSchlick(cosTheta, mat.IOR);
-                                float G = geometrySmithGGX(n, wo, wi, mat.roughness);
-
-                                // compute BRDF and PDF
-                                brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi, mat.colour);
-                                pdf = microfacetPDF(n, wo, wi, D, h);
+                                newThroughput = throughputSpecularDiffuseRefraction(wo, wi, mat, n);
                             } else {
-                                // -------------------------------------------------------------
                                 // Refraction
-                                // -------------------------------------------------------------
                                 wi = sampleRefractionDirectionSingle(ray, *hitObject);
-                                isRefraction = true;
-
-                                // compute terms
-                                Vector3 h = normalOfHalfAngle(wo, wi);
-                                cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                                F = fresnelSchlick(cosTheta, mat.IOR);
-
-                                if (!ray.getInternal()) {
-                                    N1 = 1.0003;
-                                    N2 = mat.IOR;
-                                } else {
-                                    N1 = mat.IOR;
-                                    N2 = 1.0003;
-                                }
-
-                                brdf = computeRefractionBRDF(mat.colour, F, N1, N2);
-                                pdf = refractionPDF();
+                                newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
+                            }
+                        } else if (randomSample < p_diffuse) {
+                            if (randomSample2 < R) {
+                                // Specular Diffuse
+                                wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
+                                newThroughput = throughputSpecularDiffuseRefraction(wo, wi, mat, n);
+                            } else {
+                                // Dielectric reflection
+                                wi = sampleDiffuseDirection(ray, *hitObject, false); // sample direction
+                                newThroughput = throughputDiffuse(wo, wi, n, mat);
                             }
                         } else {
-                            // -------------------------------------------------------------
-                            // Dielectric reflection
-                            // -------------------------------------------------------------
-                            wi = sampleDiffuseDirection(ray, *hitObject, false); // sample direction
-
-                            // compute terms
-                            cosTheta = fabs(n.dot(wi));
-
-                            //compute brdf and pdf
-                            brdf = diffuseBRDF(mat.colour);
-                            pdf = diffusePDF(cosTheta);
+                            std::cout<<"Probabilities dont add up"<<std::endl;
                         }
-                    }
 
+
+                    }
 
                     // 2) Add emission *through* the throughput
                     finalColour = finalColour + throughput * (mat.colour * mat.emission);
 
-                    // -------------------------------------------------------------
                     // 3) Update throughput with BRDF and PDF
-                    // Refraction is a deterministic model so needs a different solution
-                    // -------------------------------------------------------------
-                    float cosTheta_i = std::abs(n.dot(wi)); // angle factor
-                    if (!isRefraction) {
-                        // Diffuse and Specular branch
-                        throughput = throughput * brdf * cosTheta_i / pdf;
-                        /*if (x == 210 && y == 230) {
-                            std::cout<<"Diffuse or specular throughput branch: "<<std::endl;
-                        }*/
-                    } else {
-                        // Refractive Branch
-                        throughput = throughput * (1 - F) * ((N1 / N2) * (N1 / N2)) * mat.colour;
-                        /*if (x == 210 && y == 230) {
-                            std::cout<<"Refractive throughput branch: "<<std::endl;
-                        }*/
-                    }
-                    isRefraction = false;
-
-                    /*if (x == 210 && y == 230) {
-                        std::cout<<"throughput: "<<std::endl;
-                        throughput.print();
-                    }*/
+                    throughput = throughput * newThroughput;
 
                     /*float dotProduct = std::abs(ray.getNormal().dot(ray.getDir()));
                     Vector3 surfaceReflectance = mat.colour;
@@ -463,17 +369,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     ray.getDir().set(wi);
                     ray.updateOrigin(0.01);
-
-                    /*if (x == 210 && y == 230) {
-                        Vector3 wi = ray.getDir();
-                        Vector3 N = ray.getNormal();
-                        float cosThetaI = N.dot(wo);
-
-                        if (cosThetaI < 0.0f) {
-                            std::cout<<"Ray moved into sphere succesfully"<<std::endl;
-                        }
-                        std::cout<<"End bounce: "<<currentBounce<<std::endl;
-                    }*/
 
                 } // end for bounceDepth
 
@@ -501,7 +396,6 @@ thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 Vector3 CPUPT::sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObject) const {
     Vector3 wi = ray.getDir();
     Vector3 N = ray.getNormal();
-    float cosThetaI = N.dot(wi);
 
     float n1 = 1.0003f; // refractive index of air
     float n2 = sceneObject.getMaterial().IOR;
@@ -512,20 +406,13 @@ Vector3 CPUPT::sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObjec
         std::swap(n1, n2);
     }
 
+    float cosThetaI = N.dot(wi);
+
     // cosine of incient angle
     float sinTheta1 = std::sqrt(std::max(0.0f, 1.0f - cosThetaI * cosThetaI));
     float sinTheta2 = (n1 / n2) * sinTheta1;
 
-    /*if (ray.getInternal()) {
-        std::cout << "Exiting: cosThetaI = " << cosThetaI
-             << ", sinTheta1 = " << sinTheta1
-             << ", n1 = " << n1
-             << ", n2 = " << n2
-             << ", sinTheta2 = " << sinTheta2 << std::endl;
-    }*/
-
     if (sinTheta2 >= 1) {
-        std::cout<<"TIR"<<std::endl;
         // total internal reflection - bounce off object / bounce back inside object
         Vector3 reflection = wi.reflect(N);
         reflection.normalise();
@@ -542,62 +429,6 @@ Vector3 CPUPT::sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObjec
     ray.flipInternal();
 
     return refraction;
-}
-
-Vector3 CPUPT::sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) const {
-    Ray refracRay;
-    refracRay.initialize(ray);
-
-    float n1 = 1.0003f; // refractive index of air
-    float n2 = sceneObject.getMaterial().IOR;
-    // cosine of incient angle
-    float cosTheta1 = (refracRay.getNormal().dot(refracRay.getDir()));
-
-    float sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
-    float sinTheta2 = (n1 / n2) * sinTheta1;
-
-    if (sinTheta2 >= 1) {
-        // total internal reflection - bounce off object
-        return sampleSpecularDirection(refracRay, sceneObject, false);
-    }
-
-    // valid refreaction into next medium
-    float cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
-    sceneObject.getNormal(refracRay); // update normal
-    Vector3 refraction(refracRay.getDir() * (n1 / n2) + refracRay.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
-
-    refracRay.getDir().set(refraction);
-    refracRay.getDir().normalise();
-    refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second); // march the ray to the other side of the object
-    n1 = sceneObject.getMaterial().IOR;
-    n2 = 1.0003;
-    // cosine of incident angle
-    sceneObject.getNormal(refracRay); // update normal
-    cosTheta1 = (refracRay.getNormal().dot(refracRay.getDir()));
-    sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
-    sinTheta2 = (n1 / n2) * sinTheta1;
-
-    int totalInternalReflections = 0; // cap on total interal reflections
-    while (sinTheta2 >= 1 && totalInternalReflections <= 5) {
-        sampleSpecularDirection(refracRay, sceneObject, true); // inside object so flipped normal
-        refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second); // march the ray to the other side of the object
-        // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
-        sceneObject.getNormal(refracRay); // update normal
-        cosTheta1 = ((refracRay.getNormal() * -1).dot(refracRay.getDir()));
-        sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
-        sinTheta2 = (n1 / n2) * sinTheta1;
-        totalInternalReflections++;
-    }
-    cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
-    sceneObject.getNormal(refracRay); // update normal
-    refraction.set(refracRay.getDir() * (n1 / n2) + refracRay.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
-    refracRay.getDir().normalise();
-    refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second);
-
-    // update ray origin but not direction to preserve wi and wo;
-    ray.setOrigin(refracRay.getOrigin());
-
-    return refracRay.getDir();
 }
 
 float CPUPT::distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const {
@@ -624,11 +455,13 @@ float CPUPT::geometrySmithGGX(const Vector3 &normal, const Vector3 &viewDir, con
     return ggxV * ggxL;
 }
 
-float CPUPT::fresnelSchlick(float cosTheta, float ior) const {
+Vector3 CPUPT::fresnelSchlickSpecular(float cosTheta, Vector3 F0) const {
+    return F0 + (Vector3(1.0f) - F0) * std::pow(1.0f - cosTheta, 5.0f);
+}
+
+float CPUPT::fresnelSchlickRefraction(float cosTheta, float ior) const {
     float R0 = (ior - 1.0f) / (ior + 1.0f);
     R0 = R0 * R0;
-
-    //std::cout<<"Fresenl: "<<R0 + (1.0f - R0) * std::pow(1.0f - cosTheta, 5.0f)<<std::endl;
     return R0 + (1.0f - R0) * std::pow(1.0f - cosTheta, 5.0f);
 }
 
@@ -1065,4 +898,60 @@ CPUPT::BVHResult CPUPT::searchLinearBVH(Ray &ray, const std::vector<SceneObject 
     if (closestDistance == std::numeric_limits<float>::infinity()) { closestDistance = -1; }
 
     return BVHResult{closestObject, closestDistance, closestExit}; // return the index of the closest object, and the intersection distance
+}
+
+Vector3 CPUPT::sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) const {
+    Ray refracRay;
+    refracRay.initialize(ray);
+
+    float n1 = 1.0003f; // refractive index of air
+    float n2 = sceneObject.getMaterial().IOR;
+    // cosine of incient angle
+    float cosTheta1 = (refracRay.getNormal().dot(refracRay.getDir()));
+
+    float sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+    float sinTheta2 = (n1 / n2) * sinTheta1;
+
+    if (sinTheta2 >= 1) {
+        // total internal reflection - bounce off object
+        return sampleSpecularDirection(refracRay, sceneObject, false);
+    }
+
+    // valid refreaction into next medium
+    float cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
+    sceneObject.getNormal(refracRay); // update normal
+    Vector3 refraction(refracRay.getDir() * (n1 / n2) + refracRay.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
+
+    refracRay.getDir().set(refraction);
+    refracRay.getDir().normalise();
+    refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second); // march the ray to the other side of the object
+    n1 = sceneObject.getMaterial().IOR;
+    n2 = 1.0003;
+    // cosine of incident angle
+    sceneObject.getNormal(refracRay); // update normal
+    cosTheta1 = (refracRay.getNormal().dot(refracRay.getDir()));
+    sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+    sinTheta2 = (n1 / n2) * sinTheta1;
+
+    int totalInternalReflections = 0; // cap on total interal reflections
+    while (sinTheta2 >= 1 && totalInternalReflections <= 5) {
+        sampleSpecularDirection(refracRay, sceneObject, true); // inside object so flipped normal
+        refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second); // march the ray to the other side of the object
+        // recalculate the sin of the angle to work out if the ray still has total internal reflection or not
+        sceneObject.getNormal(refracRay); // update normal
+        cosTheta1 = ((refracRay.getNormal() * -1).dot(refracRay.getDir()));
+        sinTheta1 = std::sqrt(1.0f - cosTheta1 * cosTheta1);
+        sinTheta2 = (n1 / n2) * sinTheta1;
+        totalInternalReflections++;
+    }
+    cosTheta2 = std::sqrt(1.0f - sinTheta2 * sinTheta2);
+    sceneObject.getNormal(refracRay); // update normal
+    refraction.set(refracRay.getDir() * (n1 / n2) + refracRay.getNormal() * ((n1 / n2) * cosTheta1 - cosTheta2));
+    refracRay.getDir().normalise();
+    refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second);
+
+    // update ray origin but not direction to preserve wi and wo;
+    ray.setOrigin(refracRay.getOrigin());
+
+    return refracRay.getDir();
 }
