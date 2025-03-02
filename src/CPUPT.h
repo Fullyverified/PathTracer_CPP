@@ -60,7 +60,7 @@ public:
 
     Vector3 sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
 
-    Vector3 sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObject) const;
+    Vector3 sampleRefractionDirection(Ray &ray, SceneObject &sceneObject) const;
     Vector3 sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) const;
 
 
@@ -75,7 +75,7 @@ public:
 
     float fresnelSchlickRefraction(float cosTheta, float IOR) const;
 
-    Vector3 computeMicrofacetBRDF(float D, Vector3& F0, float G, Vector3& n, Vector3& wo, Vector3& wi, Vector3& col) const { // specular
+    Vector3 computeMicrofacetBRDF(float D, Vector3& F0, float G, Vector3& n, Vector3& wo, Vector3& wi) const { // specular
         Vector3 numerator = D * F0 * G;
         float denominator = 4.0f * fabs(n.dot(wo)) * fabs(n.dot(wi));
         return numerator / denominator;
@@ -94,12 +94,7 @@ public:
     }
 
     Vector3 throughputSpecularMetallic(Vector3& wo, Vector3& wi, Material& mat, Vector3& n) const {
-
-        /*float R0 = (mat.IOR - 1.0f) / (mat.IOR + 1.0f);
-        R0 = R0 * R0;
-        Vector3 F0 = R0 + mat.metallic * (mat.colour - R0);*/
-
-        Vector3 F0 = mat.colour; // place holder
+        Vector3 F0 = mat.colour;
 
         Vector3 h = normalOfHalfAngle(wo, wi);
         float cosTheta = std::abs(dot(wo, n));
@@ -107,31 +102,27 @@ public:
         float D = distrubtionGGX(n, h, mat.roughness);
         float G = geometrySmithGGX(n, wo, wi, mat.roughness);
 
-        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi, mat.colour);
+        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi);
         float pdf = microfacetPDF(n, wo, wi, D, h);
 
-        float cosTheta_I = std::abs(n.dot(wi));;
+        float cosTheta_I = std::abs(n.dot(wi));
 
-        return brdf * cosTheta * cosTheta_I / pdf;
+        return brdf * cosTheta_I / pdf;
     }
 
     Vector3 throughputSpecularDiffuseRefraction(Vector3& wo, Vector3& wi, Material& mat, Vector3& n) const {
-
-        float R0 = (mat.IOR - 1.0f) / (mat.IOR + 1.0f);
-        R0 = R0 * R0;
-
         Vector3 h = normalOfHalfAngle(wo, wi);
         float cosTheta = std::abs(dot(wo, n));
-        Vector3 F = fresnelSchlickSpecular(cosTheta, R0);
+        Vector3 F = fresnelSchlickRefraction(cosTheta, mat.IOR);
         float D = distrubtionGGX(n, h, mat.roughness);
         float G = geometrySmithGGX(n, wo, wi, mat.roughness);
 
-        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi, mat.colour);
+        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi);
         float pdf = microfacetPDF(n, wo, wi, D, h);
 
         float cosTheta_I = std::abs(n.dot(wi));;
 
-        return brdf * cosTheta * cosTheta_I / pdf;
+        return brdf * cosTheta_I / pdf;
     }
 
     Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2) const { // refraction
@@ -169,13 +160,32 @@ public:
         return cosTheta / std::numbers::pi;
     }
 
-    Vector3 throughputDiffuse(Vector3& wo, Vector3& wi, Vector3& n, const Material& mat) const {
-        float cosTheta = fabs(n.dot(wi));
-        Vector3 brdf = diffuseBRDF(mat.colour);
-        float pdf = diffusePDF(cosTheta);
+    Vector3 throughputDiffuse(Vector3& wo, Vector3& wi, Material& mat, Vector3& n, float R, bool specular) const {
+        Vector3 brdf;
 
-        //return mat.colour * cosTheta;
-        return brdf * cosTheta / pdf;
+        // compute terms
+        Vector3 h = normalOfHalfAngle(wo, wi);
+        float D = distrubtionGGX(n, h, mat.roughness);
+        float cosTheta_wi = std::abs(n.dot(wi));
+
+        // compute pdf
+        float pdf_specular = microfacetPDF(n, wo, wi, D, h);
+        float pdf_diffuse = diffusePDF(cosTheta_wi);
+
+        if (specular) {
+            float cosTheta_wo = std::abs(dot(wo, n));
+            Vector3 F = fresnelSchlickRefraction(cosTheta_wo, mat.IOR);
+            float G = geometrySmithGGX(n, wo, wi, mat.roughness);
+
+            Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
+            brdf = brdf_specular;
+        } else {
+            Vector3 brdf_diffuse = diffuseBRDF(mat.colour);
+            brdf = brdf_diffuse;
+        }
+
+        float effective_pdf = R * pdf_specular + (1 - R) * pdf_diffuse;
+        return (brdf * cosTheta_wi) / effective_pdf;
     }
 
     // tone mapping

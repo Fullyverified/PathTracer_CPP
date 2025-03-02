@@ -31,8 +31,8 @@ public:
         Material light{Vector3(1, 1, 1), 0.75, 0, 1,  0, 15};
 
         Material metal{Vector3(1, 1, 1), 0, 1, 1,  0, 0};
-        Material copper{Vector3(0.66, 0.5, 0.2), 0, 1, 3,  0, 0};
-        Material plastic{Vector3(1, 1, 1), 0, 0, 3,  0, 0};
+        Material copper{Vector3(0.66, 0.5, 0.2), 0, 1, 1,  0, 0};
+        Material plastic{Vector3(1, 1, 1), 0, 0, 1.5,  0, 0};
         Material redPlastic{Vector3(1, 0, 0), 0.8, 0, 1,  0, 0};
         Material greenPlastic{Vector3(0, 1, 0), 0, 0, 1,  0, 0};
         Material bluePlastic{Vector3(0, 0, 1), 0.8, 0, 1,  0, 0};

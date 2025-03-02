@@ -309,45 +309,43 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     float R = fresnelSchlickRefraction(cosTheta, mat.IOR); // reflection portion
                     float randomSample2 = dist(rng); // a second sample
 
-                    if (ray.getInternal()) { // continue previous refraction
+                    if (ray.getInternal()) {
                         // Refraction
-                        wi = sampleRefractionDirectionSingle(ray, *hitObject);
+                        // Continue refraction from previous bounce
+                        wi = sampleRefractionDirection(ray, *hitObject);
 
                         newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
-
                     } else {
                         if (randomSample < p_specular) {
                             // Specular (Metallic)
                             wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
                             newThroughput = throughputSpecularMetallic(wo, wi, mat, n);
-
                         } else if (randomSample < p_specular + p_transmission) {
                             // Blend in the possibility of refraction based on (transmission * (1 - metallic))
-
                             if (randomSample2 < R) {
                                 // Specular (Glass)
                                 wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
                                 newThroughput = throughputSpecularDiffuseRefraction(wo, wi, mat, n);
                             } else {
                                 // Refraction
-                                wi = sampleRefractionDirectionSingle(ray, *hitObject);
+                                wi = sampleRefractionDirection(ray, *hitObject);
                                 newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
                             }
                         } else if (randomSample < p_diffuse) {
                             if (randomSample2 < R) {
                                 // Specular Diffuse
                                 wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
-                                newThroughput = throughputSpecularDiffuseRefraction(wo, wi, mat, n);
+                                newThroughput = throughputDiffuse(wo, wi, mat, n, R, true);
                             } else {
                                 // Dielectric reflection
                                 wi = sampleDiffuseDirection(ray, *hitObject, false); // sample direction
-                                newThroughput = throughputDiffuse(wo, wi, n, mat);
+                                //newThroughput = throughputDiffuse(wo, wi, n, mat, R);
+                                newThroughput = throughputDiffuse(wo, wi, mat, n, R, false);
                             }
                         } else {
-                            std::cout<<"Probabilities dont add up"<<std::endl;
+                            std::cout << "Probabilities dont add up" << std::endl;
+                            break;
                         }
-
-
                     }
 
                     // 2) Add emission *through* the throughput
@@ -369,7 +367,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     ray.getDir().set(wi);
                     ray.updateOrigin(0.01);
-
                 } // end for bounceDepth
 
                 // -------------------------------------------------------------
@@ -379,7 +376,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 hdrG[y * internalResX + x] += finalColour.y;
                 hdrB[y * internalResX + x] += finalColour.z;
 
-                // Optionally, update a "progressive" or "average" buffer
+                // Update progressive buffer
                 lumR[y * internalResX + x] = hdrR[y * internalResX + x] / (
                                                  static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
                 lumG[y * internalResX + x] = hdrG[y * internalResX + x] / (
@@ -393,7 +390,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-Vector3 CPUPT::sampleRefractionDirectionSingle(Ray &ray, SceneObject &sceneObject) const {
+Vector3 CPUPT::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject) const {
     Vector3 wi = ray.getDir();
     Vector3 N = ray.getNormal();
 
@@ -460,7 +457,7 @@ Vector3 CPUPT::fresnelSchlickSpecular(float cosTheta, Vector3 F0) const {
 }
 
 float CPUPT::fresnelSchlickRefraction(float cosTheta, float ior) const {
-    float R0 = (ior - 1.0f) / (ior + 1.0f);
+    float R0 = (ior - 1.0003f) / (ior + 1.0003f);
     R0 = R0 * R0;
     return R0 + (1.0f - R0) * std::pow(1.0f - cosTheta, 5.0f);
 }
