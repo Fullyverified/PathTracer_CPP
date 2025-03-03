@@ -264,9 +264,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 ray.setInternal(false);
 
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
+
                     // Intersect scene using BVH
-
-
                     BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         break;
@@ -274,8 +273,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // Move the ray to the exact hit point
                     SceneObject *hitObject = leafNode.node->getSceneObject();
-
-                    // ray outside object - move to entry point
                     if (!ray.getInternal()) {
                         // outside of an object - march to entry
                         ray.march(leafNode.close);
@@ -287,17 +284,16 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     hitObject->getNormal(ray); // sets ray.getNormal()
                     ray.getOrigin().set(ray.getPos()); // Set new ray origin
                     ray.setHitObject(hitObject);
-                    // Update normal
 
                     // Grab the material
                     Material mat = hitObject->getMaterial();
 
-                    // 1) Sample new direction: reflection or refraction, etc and compute BRDF and PDF
+                    // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                     float randomSample = dist(rng);
                     float p_specular = mat.metallic;
                     float p_transmission = mat.transmission * (1.0f - mat.metallic);
-                    float p_diffuse = 1.0f - (p_specular + p_transmission); // replaced with else
-                    // probabilites should add up to 1 regardless
+                    float p_diffuse = 1.0f - (p_specular + p_transmission);
+                    // probabilites should add up to 1
 
                     Vector3 wo = ray.getDir() * -1; // outgoing direction
                     Vector3 wi;
@@ -305,42 +301,43 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     Vector3 n = ray.getNormal();
                     Vector3 newThroughput;
 
+                    // specular caused by IOR
                     float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                    float R = fresnelSchlickRefraction(cosTheta, mat.IOR); // reflection portion
+                    float R0 = fresnelSchlickRefraction(cosTheta, mat.IOR); // reflection portion
                     float randomSample2 = dist(rng); // a second sample
+                    // ----------------------
 
                     if (ray.getInternal()) {
                         // Refraction
                         // Continue refraction from previous bounce
                         wi = sampleRefractionDirection(ray, *hitObject);
+                        newThroughput = computeThroughput(wo, wi, mat, n, R0, refreaction, true);
 
-                        newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
                     } else {
                         if (randomSample < p_specular) {
                             // Specular (Metallic)
-                            wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
-                            newThroughput = throughputSpecularMetallic(wo, wi, mat, n);
+                            wi = sampleSpecularDirection(ray, *hitObject, false);
+                            newThroughput = computeThroughput(wo, wi, mat, n, R0, metallic, false);
                         } else if (randomSample < p_specular + p_transmission) {
                             // Blend in the possibility of refraction based on (transmission * (1 - metallic))
-                            if (randomSample2 < R) {
+                            if (randomSample2 < R0) {
                                 // Specular (Glass)
-                                wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
-                                newThroughput = throughputSpecularDiffuseRefraction(wo, wi, mat, n);
+                                wi = sampleSpecularDirection(ray, *hitObject, false);
+                                newThroughput = computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                             } else {
                                 // Refraction
                                 wi = sampleRefractionDirection(ray, *hitObject);
-                                newThroughput = throughputRefraction(wo, wi, mat, n, ray.getInternal());
+                                newThroughput = computeThroughput(wo, wi, mat, n, R0, refreaction, false);
                             }
-                        } else if (randomSample < p_diffuse) {
-                            if (randomSample2 < R) {
+                        } else if (randomSample < p_specular + p_transmission + p_diffuse) {
+                            if (randomSample2 < R0) {
                                 // Specular Diffuse
-                                wi = sampleSpecularDirection(ray, *hitObject, false); // sample direction
-                                newThroughput = throughputDiffuse(wo, wi, mat, n, R, true);
+                                wi = sampleSpecularDirection(ray, *hitObject, false);
+                                newThroughput = computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                             } else {
                                 // Dielectric reflection
                                 wi = sampleDiffuseDirection(ray, *hitObject, false); // sample direction
-                                //newThroughput = throughputDiffuse(wo, wi, n, mat, R);
-                                newThroughput = throughputDiffuse(wo, wi, mat, n, R, false);
+                                newThroughput = computeThroughput(wo, wi, mat, n, R0, diffuse, false);
                             }
                         } else {
                             std::cout << "Probabilities dont add up" << std::endl;

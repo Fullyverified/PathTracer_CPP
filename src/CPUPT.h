@@ -18,6 +18,14 @@
 
 class SystemManager;
 
+// To aid PDF and BRDF calculation
+enum SampleType {
+    metallic,
+    specularFresnel,    // specular caused by IOR
+    refreaction,
+    diffuse
+};
+
 class CPUPT {
 public:
     struct BVHResult {
@@ -188,6 +196,62 @@ public:
         return (brdf * cosTheta_wi) / effective_pdf;
     }
 
+    Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material& mat, Vector3& n, float R0, SampleType type, bool internal) const {
+        Vector3 brdf;
+
+        // compute terms
+        Vector3 h = normalOfHalfAngle(wo, wi);
+        float D = distrubtionGGX(n, h, mat.roughness);
+        float cosTheta_wi = std::abs(n.dot(wi));
+
+        // compute pdf
+        float pdf_specular = microfacetPDF(n, wo, wi, D, h);
+        float pdf_refraction = refractionPDF();
+        float pdf_diffuse = diffusePDF(cosTheta_wi);
+
+        // compute BRDF depending on sample type
+        if (type == metallic || type == specularFresnel) {
+            float cosTheta_wo = std::abs(dot(wo, n));
+            Vector3 F = type == metallic ? fresnelSchlickSpecular(cosTheta_wo, mat.colour) : fresnelSchlickRefraction(cosTheta_wo, mat.IOR);
+            float G = geometrySmithGGX(n, wo, wi, mat.roughness);
+            Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
+            brdf = brdf_specular;
+
+        } else if (type == refreaction) {
+            float cosTheta = std::abs(dot(wo, n));
+            float F = fresnelSchlickRefraction(cosTheta, mat.IOR);
+            float N1, N2;
+            if (!internal) {
+                N1 = 1.0003;
+                N2 = mat.IOR;
+            } else {
+                N1 = mat.IOR;
+                N2 = 1.0003;
+            }
+            brdf = computeRefractionBRDF(mat.colour, F, N1, N2);
+
+        } else if (type == diffuse) {
+            Vector3 brdf_diffuse = diffuseBRDF(mat.colour);
+            brdf = brdf_diffuse;
+
+        } else {
+            return 1;
+        }
+
+        float p_specular = mat.metallic;
+        float effective_pdf_specular = pdf_specular * p_specular; // metallic branch
+
+        float p_transmission = mat.transmission * (1 - mat.metallic);
+        float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
+
+        float p_diffuse = 1 - (p_specular + p_transmission);
+        float effective_pdf_diffuse = (R0 * pdf_specular + (1 - R0) * pdf_diffuse) * p_diffuse; // diffuse branch
+
+        float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
+
+        return (brdf * cosTheta_wi) / effective_pdf;
+    }
+
     // tone mapping
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
 
@@ -261,7 +325,6 @@ private:
         bool isLeaf;
         int numChildren;
     };
-
     std::vector<LinearBVHNode> bvhNodes;
 
     bool debug;
