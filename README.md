@@ -1,5 +1,5 @@
 A CPU Path tracer.  
-![Lucy + Refraction 1000 rays crop](https://github.com/user-attachments/assets/f684c323-53a4-4fee-84b4-b1daf21c2889)  
+![Lucy + Refraction 1000 rays crop](https://github.com/user-attachments/assets/f684c323-53a4-4fee-84b4-b1daf21c2889)
 
 ![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
   
