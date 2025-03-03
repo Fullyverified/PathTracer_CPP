@@ -14,9 +14,9 @@ Controls - WASD and Mouse
 UI to modify render settings  
 
 # To Do  
-Direct Light Sampling  
 ~~Multiple Importance Sampling (MIS)~~  
 Next Event Estimation (NEE)  
+Restir GI
 Denoising  
 Russian Roulette Termination
 Temporal frame reconstruction using motion vectors  
