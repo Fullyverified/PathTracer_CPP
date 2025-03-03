@@ -4,28 +4,29 @@ A CPU Path tracer.
 ![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
   
 # Features  
+Multiple Importance Sampling (MIS)
 Multithreading  
 BVH Acceleration  
 Meshes  
-Cosine Weighted Importance Sampling  
 Refraction (Transparency)  
 Extended Reinhard Tone Mapping
-Depth of Field  
 Controls - WASD and Mouse  
 UI to modify render settings  
 
 # To Do  
 Direct Light Sampling  
-Multiple Importance Sampling  
+~~Multiple Importance Sampling (MIS)~~  
 Next Event Estimation (NEE)  
 Denoising  
-Russian Roulette Termination - (currently ray bounces are a fixed amount)  
+Russian Roulette Termination
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
 GPU Acceleration with Vulkan  
 Image textures, rougness maps, etc  
 
 # Improvments
+Replaced cosine weighted importance sampling with Multiple Importance Sampling.
+
 BVH Tree Construction supports both multithreaded and singlethreaded modes. Multithreaded tree construction is only faster for scenes with hundreds of objects, so ST is default.  
 ![BVH Tree Traversal](https://github.com/user-attachments/assets/e06606b0-830a-4ddc-aae1-cfbb3a9738b1)  
 BVH creation is 220x faster and traversal is 34x faster :D  
@@ -42,3 +43,5 @@ It uses SDl2, ImGui and SDL2_Img. I disabled Vulkan for now since I still haven'
 
 # Known Bugs  
 Probably doesn't work on Linux at the moment
+The Mesh BVH doesn't traverse properly for refractive material
+Tne Mesh BVH doesn't traverse properly with more than 1 triangle per leaf node
