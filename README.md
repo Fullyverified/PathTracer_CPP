@@ -44,4 +44,5 @@ It uses SDl2, ImGui and SDL2_Img. I disabled Vulkan for now since I still haven'
 # Known Bugs  
 Probably doesn't work on Linux at the moment
 The Mesh BVH doesn't traverse properly for refractive material
-Tne Mesh BVH doesn't traverse properly with more than 1 triangle per leaf node
+The Mesh BVH doesn't traverse properly with more than 1 triangle per leaf node
+Rare pitch black pixel, most likely an issue with BRDF and PDF
