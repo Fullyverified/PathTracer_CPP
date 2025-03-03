@@ -113,7 +113,7 @@ public:
 
         // BOX 3
 
-        Camera *camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
+        Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
         std::cout << "Making system manager" << std::endl;
         SystemManager systemManager;
         std::cout << "Initializing system manager" << std::endl;
