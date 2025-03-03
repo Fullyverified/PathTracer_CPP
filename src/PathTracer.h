@@ -93,7 +93,7 @@ public:
         // Spheres
         sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, white)); // statue left
 
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.25, 8.75), 0.8, 0.8, 0.8, metal)); // right sphere on floor
+        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, glass)); // right sphere on floor
 
         // BOX 2
 
@@ -113,7 +113,7 @@ public:
 
         // BOX 3
 
-        Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
+        Camera *camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
         std::cout << "Making system manager" << std::endl;
         SystemManager systemManager;
         std::cout << "Initializing system manager" << std::endl;

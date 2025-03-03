@@ -314,11 +314,11 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         newThroughput = computeThroughput(wo, wi, mat, n, R0, refreaction, true);
 
                     } else {
-                        if (randomSample < p_specular) {
+                        if (randomSample <= p_specular) {
                             // Specular (Metallic)
                             wi = sampleSpecularDirection(ray, *hitObject, false);
                             newThroughput = computeThroughput(wo, wi, mat, n, R0, metallic, false);
-                        } else if (randomSample < p_specular + p_transmission) {
+                        } else if (randomSample <= p_specular + p_transmission) {
                             // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                             if (randomSample2 < R0) {
                                 // Specular (Glass)
@@ -329,7 +329,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                                 wi = sampleRefractionDirection(ray, *hitObject);
                                 newThroughput = computeThroughput(wo, wi, mat, n, R0, refreaction, false);
                             }
-                        } else if (randomSample < p_specular + p_transmission + p_diffuse) {
+                        } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                             if (randomSample2 < R0) {
                                 // Specular Diffuse
                                 wi = sampleSpecularDirection(ray, *hitObject, false);
@@ -340,7 +340,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                                 newThroughput = computeThroughput(wo, wi, mat, n, R0, diffuse, false);
                             }
                         } else {
-                            std::cout << "Probabilities dont add up" << std::endl;
+                            std::cout << "Probabilities dont add up: " << randomSample<<std::endl;
                             break;
                         }
                     }
