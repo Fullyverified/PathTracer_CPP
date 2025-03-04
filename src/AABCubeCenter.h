@@ -14,7 +14,7 @@ public:
     [[nodiscard]] Vector3 getDir() const override {return dir;}
     void setDir(Vector3 newDir) override {dir = newDir;}
     [[nodiscard]] Vector3 getScale() const override {return length;}
-    void setScale(Vector3 newScale) override {length = newScale;}
+    void setScale(Vector3 newScale) override {length = newScale; updateBounds();}
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;
@@ -24,6 +24,8 @@ public:
     [[nodiscard]] int getObjID() const override;
     [[nodiscard]] bool isMesh() const override {return false;}
     [[nodiscard]] BVHNode* getMeshNode() const override {return nullptr;}
+
+    void updateBounds();
 
     AABCubeCenter(const AABCubeCenter& other) = delete; // disable copy constructor
     AABCubeCenter& operator=(const AABCubeCenter& other) = delete; // disable copy assignment

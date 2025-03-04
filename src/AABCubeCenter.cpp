@@ -5,11 +5,15 @@
 #include <utility>
 #include <limits>
 
-AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, Material* material)
-    : pos(pos), length(length), material(material),
-      minBounds(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2),
-      maxBounds(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2) {
+AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, Material* material) : pos(pos), length(length), material(material) {
     objID = ++objectCounter;
+    minBounds = Vector3(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2);
+    maxBounds = Vector3(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2);
+}
+
+void AABCubeCenter::updateBounds() {
+    minBounds = Vector3(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2);
+    maxBounds = Vector3(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2);
 }
 
 void AABCubeCenter::getNormal(Ray &ray) const {
