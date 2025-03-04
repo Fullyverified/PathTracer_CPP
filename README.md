@@ -9,9 +9,9 @@ BVH Acceleration
 Multithreading  
 PBR Materials  
 Meshes and Primitives  
-Extended Reinhard Tone Mapping
+Extended Reinhard Tone Mapping  
 Controls - WASD and Mouse  
-UI to modify render settings  
+UI  
 
 # To Do  
 ~~Multiple Importance Sampling (MIS)~~  
