@@ -4,25 +4,26 @@ A CPU Path tracer.
 ![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
   
 # Features  
-Multiple Importance Sampling (MIS)
-Multithreading  
+Multiple Importance Sampling (MIS)  
 BVH Acceleration  
-Meshes  
-Refraction (Transparency)  
+Multithreading  
+PBR Materials  
+Meshes and Primitives  
 Extended Reinhard Tone Mapping
 Controls - WASD and Mouse  
 UI to modify render settings  
 
 # To Do  
 ~~Multiple Importance Sampling (MIS)~~  
-Next Event Estimation (NEE)  
-Restir GI
+Material and Scene Editor  
+Russian Roulette Termination  
 Denoising  
-Russian Roulette Termination
+Next Event Estimation (NEE)  
+Restir GI  
+Image textures, rougness maps, etc  
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
-GPU Acceleration with Vulkan  
-Image textures, rougness maps, etc  
+GPU Acceleration with Vulkan (maybe)  
 
 # Improvments
 Replaced cosine weighted importance sampling with Multiple Importance Sampling.
