@@ -13,6 +13,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "MaterialManager.h"
 
 class SystemManager {
 public:
@@ -24,6 +25,9 @@ public:
         renderer = new Renderer(*window, width, height);
 
         cpupt = new CPUPT(this);
+
+        materialManager = new MaterialManager();
+        UI::materialManager = materialManager;
     }
 
     ~SystemManager() {
@@ -35,10 +39,10 @@ public:
 
         delete window;
         delete renderer;
+        delete materialManager;
     }
 
     void initialize(std::vector<SceneObject *> &SceneObjectsList, Camera *camera) {
-        std::cout<<"Initializing ImGui and Managers"<<std::endl;
         // --- Initialize ImGui ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -58,7 +62,6 @@ public:
         resY = config.resY;
         int res = resX * resY;
         RGBBuffer = new uint8_t[res * 3];
-        std::cout<<"Finished"<<std::endl;
     }
 
     void update(float deltaTime) {
@@ -98,19 +101,19 @@ public:
         renderer->pushRGBBuffer(RGBBuffer, resX);
 
         if (!inputManager->getHideUI()) {
-        // Start ImGui frame
-        ImGui_ImplSDL2_NewFrame();
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui::NewFrame();
+            // Start ImGui frame
+            ImGui_ImplSDL2_NewFrame();
+            ImGui_ImplSDLRenderer2_NewFrame();
+            ImGui::NewFrame();
 
-        // Render UI
-        UI::renderSettings();
-        UI::materialEditor();
-        UI::sceneEditor();
+            // Render UI
+            UI::renderSettings();
+            UI::materialEditor();
+            UI::sceneEditor();
 
-        // Render ImGui
-        ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer->getSDLRenderer());
+            // Render ImGui
+            ImGui::Render();
+            ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer->getSDLRenderer());
         }
 
         // present screen - ImGui + RGB Buffer
@@ -119,12 +122,12 @@ public:
         running = running == false ? false : inputManager->getIsRunning(); // silly little work around to prevent running being overrided
     }
 
-    InputManager* getInputManager() {
+    InputManager *getInputManager() {
         return inputManager;
     }
 
-    Camera* getCamera() {
-         return camera;
+    Camera *getCamera() {
+        return camera;
     }
 
     void updateRGBBuffer(uint8_t *newRGBBuffer) {
@@ -139,11 +142,8 @@ public:
         this->running = running;
     }
 
-    void updateResolution() {
-        resX = config.resX;
-        resY = config.resX;
-        int res = resX * resY;
-        RGBBuffer = new uint8_t[res * 3];
+    MaterialManager *getMaterialManager() {
+        return materialManager;
     }
 
 private:
@@ -152,6 +152,7 @@ private:
     Renderer *renderer; // SDL_Renderer
     Camera *camera;
     InputManager *inputManager;
+    MaterialManager *materialManager;
     std::vector<SceneObject *> sceneObjectsList;
 
 

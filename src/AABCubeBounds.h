@@ -25,7 +25,7 @@ public:
 
 private:
     Vector3 minBounds, maxBounds, pos, colour, luminance;
-    Material material;
+    Material& material;
 };
 
 

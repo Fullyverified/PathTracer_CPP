@@ -1,5 +1,6 @@
 #ifndef UI_H
 #define UI_H
+#include "MaterialManager.h"
 
 class UI {
 public:
@@ -35,6 +36,17 @@ public:
     static bool upscalingUpdate;
     static bool resUpdate;
     static bool resizeBuffer;
+
+    static Vector3 colour;
+    static float roughness;
+    static float metallic;
+    static float IOR;
+    static float transmission;
+    static float emission;
+
+    static MaterialManager* materialManager;
+    static std::string materialKey;
+    static std::string newMatName;
 
 private:
 

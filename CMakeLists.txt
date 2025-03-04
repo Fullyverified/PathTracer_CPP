@@ -131,6 +131,8 @@ add_executable(PathTracer_CPP
         src/InputManager.h
         src/InputManager.cpp
         src/SystemManager.h
+        src/MaterialManager.cpp
+        src/MaterialManager.h
 )
 
 # Link Vulkan and libraries

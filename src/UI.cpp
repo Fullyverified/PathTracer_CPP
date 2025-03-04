@@ -5,7 +5,8 @@
 
 #include "ImGui.h"
 #include "Config.h"
-#include "iostream"
+#include "MaterialManager.h"
+#include "Material.h"
 
 int UI::RaysPerSecond = 0;
 float UI::pathTracingTime = 0;
@@ -34,6 +35,17 @@ bool UI::sceneUpdate = false;
 bool UI::upscalingUpdate = false;
 bool UI::resUpdate = false;
 bool UI::resizeBuffer = false;
+
+Vector3 UI::colour = Vector3(1, 1, 1);
+float UI::roughness = 0;
+float UI::metallic = 0;
+float UI::IOR = 0;
+float UI::transmission = 0;
+float UI::emission = 0;
+
+MaterialManager* UI::materialManager = nullptr;
+std::string UI::materialKey = "";
+std::string UI::newMatName = "";
 
 void UI::renderSettings() {
 
@@ -186,14 +198,124 @@ void UI::renderSettings() {
 
 void UI::materialEditor() {
 
+    // Find and store all materials
+    std::vector<const char*> keys;
+    for (const auto& pair : materialManager->getMaterialMap()) {
+        keys.push_back(pair.first.c_str());
+    }
+
+    // Find the current index
+    int currentIndex = -1;
+    for (size_t i = 0; i < keys.size(); i++) {
+        if (materialKey == keys[i]) {
+            currentIndex = static_cast<int>(i);
+            break;
+        }
+    }
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
 
     ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
 
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::Button("Create New Material")) {
+        if (!materialManager->materialExists(newMatName)) {
+            Material newMaterial{Vector3(1, 1, 1), 0, 0, 1, 0, 0};
+            materialManager->createMaterial(newMatName, newMaterial);
+            materialKey = newMatName;
+        }
+        std::cout<<"A Material with the name already exists"<<std::endl;
+    }
 
+    char matNameBuffer[64] = "";
+    strncpy(matNameBuffer, newMatName.c_str(), sizeof(matNameBuffer));
 
-    ImGui::Text("Work In Progress");
+    // Material Creation
+    ImGui::InputTextWithHint("##MaterialName", "Material Name", matNameBuffer, sizeof(matNameBuffer));
+    newMatName = std::string(matNameBuffer);
+
+    // Add a placeholder option at the start of the list
+    std::vector<const char*> keysWithPlaceholder = { "Select Material" };
+    keysWithPlaceholder.insert(keysWithPlaceholder.end(), keys.begin(), keys.end());
+
+    // Adjust the index if no valid selection is made
+    if (currentIndex == -1) {
+        currentIndex = 0; // Default to the placeholder
+    }
+
+    // Show the combo box with the placeholder
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::Combo("##Materials", &currentIndex, keysWithPlaceholder.data(), static_cast<int>(keysWithPlaceholder.size()))) {
+        if (currentIndex > 0) { // Ignore the placeholder selection
+            materialKey = keys[currentIndex - 1];
+        }
+    }
+
+    // Update local variables to match selected material
+    if (materialKey != "") {
+        Material& mat = materialManager->getMaterial(materialKey);
+        colour = mat.colour;
+        roughness = mat.roughness;
+        metallic = mat.metallic;
+        IOR = mat.IOR;
+        transmission = mat.transmission;
+        emission = mat.emission;
+
+    }
+
+    // Colour Editing
+    float colourArray[3] = { colour.x, colour.y, colour.z };
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::ColorPicker3("##Colour", colourArray, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
+        // Update the Vector3 with the new color values
+        colour.x = colourArray[0];
+        colour.y = colourArray[1];
+        colour.z = colourArray[2];
+        materialManager->editMaterialColour(materialKey, colour);
+        camUpdate = true;
+    }
+
+    // General Material Editing
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderFloat("##Roughness", &roughness, 0.0f, 1.0f, "Roughness %.3f")) {
+        roughness = roughness > 1? 1 : roughness;
+        roughness = roughness < 0? 0 : roughness;
+        materialManager->editMaterialRoughness(materialKey, roughness);
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderFloat("##Metallic", &metallic, 0.0f, 1.0f, "Metallic %.3f")) {
+        metallic = metallic > 1? 1 : metallic;
+        metallic = metallic < 0? 0 : metallic;
+        materialManager->editMaterialMetallic(materialKey, metallic);
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderFloat("##IOR", &IOR, 0.0f, 1.0f, "IOR %.3f")) {
+        IOR = IOR > 1? 1 : IOR;
+        IOR = IOR < 0? 0 : IOR;
+        materialManager->editMaterialIOR(materialKey, IOR);
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderFloat("##Transmission", &transmission, 0.0f, 1.0f, "Transmission %.3f")) {
+        transmission = transmission > 1? 1 : transmission;
+        transmission = transmission < 0? 0 : transmission;
+        materialManager->editMaterialTransmission(materialKey, transmission);
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderFloat("##Emission", &emission, 0.0f, 1.0f, "Emission %.3f")) {
+        emission = emission < 0? 0 : emission;
+        materialManager->editMaterialEmission(materialKey, emission);
+        camUpdate = true;
+    }
 
     ImGui::End();
 }

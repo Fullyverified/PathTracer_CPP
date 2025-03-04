@@ -101,38 +101,6 @@ public:
         return (D * nDotH) / (4.0f * woDotH);
     }
 
-    Vector3 throughputSpecularMetallic(Vector3& wo, Vector3& wi, Material& mat, Vector3& n) const {
-        Vector3 F0 = mat.colour;
-
-        Vector3 h = normalOfHalfAngle(wo, wi);
-        float cosTheta = std::abs(dot(wo, n));
-        Vector3 F = fresnelSchlickSpecular(cosTheta, F0);
-        float D = distrubtionGGX(n, h, mat.roughness);
-        float G = geometrySmithGGX(n, wo, wi, mat.roughness);
-
-        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi);
-        float pdf = microfacetPDF(n, wo, wi, D, h);
-
-        float cosTheta_I = std::abs(n.dot(wi));
-
-        return brdf * cosTheta_I / pdf;
-    }
-
-    Vector3 throughputSpecularDiffuseRefraction(Vector3& wo, Vector3& wi, Material& mat, Vector3& n) const {
-        Vector3 h = normalOfHalfAngle(wo, wi);
-        float cosTheta = std::abs(dot(wo, n));
-        Vector3 F = fresnelSchlickRefraction(cosTheta, mat.IOR);
-        float D = distrubtionGGX(n, h, mat.roughness);
-        float G = geometrySmithGGX(n, wo, wi, mat.roughness);
-
-        Vector3 brdf = computeMicrofacetBRDF(D, F, G, n, wo, wi);
-        float pdf = microfacetPDF(n, wo, wi, D, h);
-
-        float cosTheta_I = std::abs(n.dot(wi));;
-
-        return brdf * cosTheta_I / pdf;
-    }
-
     Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2) const { // refraction
         return (1 - F) * ((n1 / n2) * (n1 / n2)) * col;
     };
@@ -142,58 +110,11 @@ public:
         return 1;
     }
 
-    Vector3 throughputRefraction(Vector3& wo, Vector3& wi, const Material& mat, Vector3& n, bool internal) const {
-
-        float cosTheta = std::abs(dot(wo, n));
-        float F = fresnelSchlickRefraction(cosTheta, mat.IOR);
-        float N1, N2;
-        if (!internal) {
-            N1 = 1.0003;
-            N2 = mat.IOR;
-        } else {
-            N1 = mat.IOR;
-            N2 = 1.0003;
-        }
-
-        Vector3 brdf = computeRefractionBRDF(mat.colour, F, N1, N2);
-        float pdf = refractionPDF();
-
-        return brdf / pdf;
-    }
-
     Vector3 diffuseBRDF(Vector3 col) const { // diffuse
         return col / std::numbers::pi;
     }
     float diffusePDF(float cosTheta) const { // diffuse
         return cosTheta / std::numbers::pi;
-    }
-
-    Vector3 throughputDiffuse(Vector3& wo, Vector3& wi, Material& mat, Vector3& n, float R, bool specular) const {
-        Vector3 brdf;
-
-        // compute terms
-        Vector3 h = normalOfHalfAngle(wo, wi);
-        float D = distrubtionGGX(n, h, mat.roughness);
-        float cosTheta_wi = std::abs(n.dot(wi));
-
-        // compute pdf
-        float pdf_specular = microfacetPDF(n, wo, wi, D, h);
-        float pdf_diffuse = diffusePDF(cosTheta_wi);
-
-        if (specular) {
-            float cosTheta_wo = std::abs(dot(wo, n));
-            Vector3 F = fresnelSchlickRefraction(cosTheta_wo, mat.IOR);
-            float G = geometrySmithGGX(n, wo, wi, mat.roughness);
-
-            Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
-            brdf = brdf_specular;
-        } else {
-            Vector3 brdf_diffuse = diffuseBRDF(mat.colour);
-            brdf = brdf_diffuse;
-        }
-
-        float effective_pdf = R * pdf_specular + (1 - R) * pdf_diffuse;
-        return (brdf * cosTheta_wi) / effective_pdf;
     }
 
     Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material& mat, Vector3& n, float R0, SampleType type, bool internal) const {

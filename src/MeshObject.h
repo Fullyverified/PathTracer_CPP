@@ -54,7 +54,7 @@ public:
 
 private:
     Vector3 pos, dir, scale;
-    Material material;
+    Material& material;
     std::pair<Vector3, Vector3> bounds;
     std::vector<Triangle*> triangles;
     LoadMesh &loadedMesh;

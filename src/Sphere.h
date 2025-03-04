@@ -25,7 +25,7 @@ public:
 
 private:
     Vector3 pos;
-    Material material;
+    Material& material;
     float radiusx, radiusy, radiusz;
 };
 
