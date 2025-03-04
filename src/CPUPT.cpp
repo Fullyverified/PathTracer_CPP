@@ -572,6 +572,8 @@ Vector3 CPUPT::sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, 
 
 void CPUPT::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
     // create leaf nodes
+    BVHNodes.clear();
+
     for (SceneObject *sceneObject: sceneObjectsList) {
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
         BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);

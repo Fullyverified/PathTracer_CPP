@@ -100,6 +100,12 @@ public:
     }
 
     void editMaterialRoughness(std::string& matName, float roughness) {
+
+        if (materials.find(matName) == materials.end()) {
+            std::cout<<"Material does not exit"<<std::endl;
+            std::cout<<"Material: "<<matName<<std::endl;
+        }
+
         materials[matName]->roughness = roughness;
     }
 

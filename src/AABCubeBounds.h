@@ -10,7 +10,11 @@ public:
     AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material* material);
     [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
+    void setPos(Vector3 newPos) override {pos = newPos;}
+    [[nodiscard]] Vector3 getDir() const override {return dir;}
+    void setDir(Vector3 newDir) override {dir = newDir;}
     [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
+    void setScale(Vector3 newScale) override {}
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;
@@ -25,7 +29,7 @@ public:
     AABCubeBounds& operator=(const AABCubeBounds& other) = delete; // disable copy assignment=
 
 private:
-    Vector3 minBounds, maxBounds, pos, colour, luminance;
+    Vector3 minBounds, maxBounds, pos, dir, colour, luminance;
     Material* material;
 };
 

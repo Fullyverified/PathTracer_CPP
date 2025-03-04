@@ -3,34 +3,34 @@
 #include "Ray.h"
 
 Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material* material) :
-pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), material(material) {
+pos(pos), scale(radiusx, radiusy, radiusz), material(material) {
     objID = ++objectCounter;
 }
 
 void Sphere::getNormal(Ray &ray) const {
     if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) {
-        ray.getNormal().set(-ray.getPos().getX() / (radiusx * radiusx),
-                            -ray.getPos().getY() / (radiusy * radiusy),
-                            -ray.getPos().getZ() / (radiusz * radiusz));
+        ray.getNormal().set(-ray.getPos().getX() / (scale.x * scale.x),
+                            -ray.getPos().getY() / (scale.y * scale.y),
+                            -ray.getPos().getZ() / (scale.z * scale.z));
         return;
     }
-    ray.getNormal().set(2 * (ray.getPos().getX() - pos.getX()) / (radiusx * radiusx),
-                        2 * (ray.getPos().getY() - pos.getY()) / (radiusy * radiusy),
-                        2 * (ray.getPos().getZ() - pos.getZ()) / (radiusz * radiusz));
+    ray.getNormal().set(2 * (ray.getPos().getX() - pos.getX()) / (scale.x * scale.x),
+                        2 * (ray.getPos().getY() - pos.getY()) / (scale.y * scale.y),
+                        2 * (ray.getPos().getZ() - pos.getZ()) / (scale.z * scale.z));
     ray.getNormal().normalise();
 }
 
 std::pair<Vector3, Vector3> Sphere::getBounds() {
-    Vector3 min(pos.getX() - radiusx, pos.getY() - radiusy, pos.getZ() - radiusz);
-    Vector3 max(pos.getX() + radiusx, pos.getY() + radiusy, pos.getZ() + radiusz);
+    Vector3 min(pos.getX() - scale.x, pos.getY() - scale.y, pos.getZ() - scale.z);
+    Vector3 max(pos.getX() + scale.x, pos.getY() + scale.y, pos.getZ() + scale.z);
     return std::make_pair(min, max);
 }
 
 std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos() - pos;
-    const float invXR = 1.0f / (radiusx * radiusx);
-    const float invYR = 1.0f / (radiusy * radiusy);
-    const float invZR = 1.0f / (radiusz * radiusz);
+    const float invXR = 1.0f / (scale.x * scale.x);
+    const float invYR = 1.0f / (scale.y * scale.y);
+    const float invZR = 1.0f / (scale.z * scale.z);
 
     // a should always = 1
     const float a = (ray.getDir().getX() * ray.getDir().getX() * invXR) + (ray.getDir().getY() * ray.getDir().getY() * invYR) + (ray.getDir().getZ() * ray.getDir().getZ() * invZR);

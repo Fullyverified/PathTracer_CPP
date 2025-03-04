@@ -21,7 +21,11 @@ public:
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] MeshObject::meshIntersection intersectTriangles(Ray &ray, BVHNode* leafNode) const;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
-    [[nodiscard]] Vector3 getScale() const override {return scale;}
+    void setPos(Vector3 newPos) override {pos = newPos;}
+    [[nodiscard]] Vector3 getDir() const override {return dir;}
+    void setDir(Vector3 newDir) override {dir = newDir;}
+    [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
+    void setScale(Vector3 newScale) override {scale = newScale;}
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;

@@ -206,9 +206,13 @@ void UI::renderSettings() {
 
 void UI::materialEditor() {
 
+    ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.5f);
 
+    ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
+
+    // Find selected material
     std::vector<const char*> keys = materialManager->getMaterailNames();
-    // Find the current index
     int currentIndex = -1;
     for (size_t i = 0; i < keys.size(); i++) {
         if (materialKey == keys[i]) {
@@ -217,15 +221,10 @@ void UI::materialEditor() {
         }
     }
 
-    ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(0.5f);
-
-    ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
-
+    // Material Creation
     char matNameBuffer[64] = "";
     strncpy(matNameBuffer, newMatName.c_str(), sizeof(matNameBuffer));
 
-    // Material Creation
     ImGui::InputTextWithHint("##MaterialName", "Material Name", matNameBuffer, sizeof(matNameBuffer));
     newMatName = std::string(matNameBuffer);
 
@@ -275,52 +274,64 @@ void UI::materialEditor() {
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::ColorPicker3("##Colour", colourArray, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
-        // Update the Vector3 with the new color values
-        colour.x = colourArray[0];
-        colour.y = colourArray[1];
-        colour.z = colourArray[2];
-        materialManager->editMaterialColour(materialKey, colour);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            // Update the Vector3 with the new color values
+            colour.x = colourArray[0];
+            colour.y = colourArray[1];
+            colour.z = colourArray[2];
+            materialManager->editMaterialColour(materialKey, colour);
+            camUpdate = true;
+        }
     }
 
     // General Material Editing
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Roughness", &roughness, 0.0f, 1.0f, "Roughness %.3f")) {
-        roughness = roughness > 1? 1 : roughness;
-        roughness = roughness < 0? 0 : roughness;
-        materialManager->editMaterialRoughness(materialKey, roughness);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            roughness = roughness > 1? 1 : roughness;
+            roughness = roughness < 0? 0 : roughness;
+            materialManager->editMaterialRoughness(materialKey, roughness);
+            camUpdate = true;
+        }
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Metallic", &metallic, 0.0f, 1.0f, "Metallic %.3f")) {
-        metallic = metallic > 1? 1 : metallic;
-        metallic = metallic < 0? 0 : metallic;
-        materialManager->editMaterialMetallic(materialKey, metallic);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            metallic = metallic > 1? 1 : metallic;
+            metallic = metallic < 0? 0 : metallic;
+            materialManager->editMaterialMetallic(materialKey, metallic);
+            camUpdate = true;
+        }
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##IOR", &IOR, 1.0f, 10.0f, "IOR %.3f")) {
-        IOR = IOR < 1? 1 : IOR;
-        materialManager->editMaterialIOR(materialKey, IOR);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            IOR = IOR < 1? 1 : IOR;
+            materialManager->editMaterialIOR(materialKey, IOR);
+            camUpdate = true;
+        }
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Transmission", &transmission, 0.0f, 1.0f, "Transmission %.3f")) {
-        transmission = transmission > 1? 1 : transmission;
-        transmission = transmission < 0? 0 : transmission;
-        materialManager->editMaterialTransmission(materialKey, transmission);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            transmission = transmission > 1? 1 : transmission;
+            transmission = transmission < 0? 0 : transmission;
+            materialManager->editMaterialTransmission(materialKey, transmission);
+            camUpdate = true;
+        }
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Emission", &emission, 0.0f, 1.0f, "Emission %.3f")) {
-        emission = emission < 0? 0 : emission;
-        materialManager->editMaterialEmission(materialKey, emission);
-        camUpdate = true;
+        if (currentIndex != 0) {
+            emission = emission < 0? 0 : emission;
+            materialManager->editMaterialEmission(materialKey, emission);
+            camUpdate = true;
+        }
     }
 
     ImGui::End();
@@ -357,12 +368,91 @@ void UI::sceneEditor() {
     std::string objString = "Selected Object: " + selectedObject->getType();
     ImGui::Text(objString.c_str());
 
+    ImGui::Text("Select Material");
     // Show the combo box with the placeholder
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
         selectedObject->setMaterial(materialManager->getMaterial(materialNames[currentIndex]));
         camUpdate = true;
     }
+
+    ImGui::Separator();
+
+    ImGui::Text("Transform");
+
+
+    ImGui::Text("Translation: ");
+    Vector3 position = selectedObject->getPos();
+
+    // X Axis
+    if (ImGui::DragFloat("##Position X", &position.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+        selectedObject->setPos(position);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Y Axis
+    if (ImGui::DragFloat("##Position Y", &position.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+        selectedObject->setPos(position);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Z Axis
+    if (ImGui::DragFloat("##Position Z", &position.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+        selectedObject->setPos(position);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    ImGui::Text("Rotation: ");
+    Vector3 direction = selectedObject->getPos();
+
+    // X Axis
+    if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+        selectedObject->setDir(direction);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Y Axis
+    if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+        selectedObject->setDir(direction);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Z Axis
+    if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+        selectedObject->setDir(direction);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    ImGui::Text("Scale: ");
+    Vector3 scale = selectedObject->getScale();
+
+    // X Axis
+    if (ImGui::DragFloat("##Scale X", &scale.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+        selectedObject->setScale(scale);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Y Axis
+    if (ImGui::DragFloat("##Scale Y", &scale.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+        selectedObject->setScale(scale);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Z Axis
+    if (ImGui::DragFloat("##Scale Z", &scale.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+        selectedObject->setScale(scale);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
 
     ImGui::End();
 }
