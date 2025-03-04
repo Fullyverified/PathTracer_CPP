@@ -47,7 +47,15 @@ MaterialManager* UI::materialManager = nullptr;
 std::string UI::materialKey = "";
 std::string UI::newMatName = "";
 
+SceneObject* UI::selectedObject = nullptr;
+
+bool UI::isWindowHovered = false;
+
 void UI::renderSettings() {
+
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        isWindowHovered = true;
+    } else {isWindowHovered = false;}
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
@@ -198,12 +206,8 @@ void UI::renderSettings() {
 
 void UI::materialEditor() {
 
-    // Find and store all materials
-    std::vector<const char*> keys;
-    for (const auto& pair : materialManager->getMaterialMap()) {
-        keys.push_back(pair.first.c_str());
-    }
 
+    std::vector<const char*> keys = materialManager->getMaterailNames();
     // Find the current index
     int currentIndex = -1;
     for (size_t i = 0; i < keys.size(); i++) {
@@ -212,20 +216,11 @@ void UI::materialEditor() {
             break;
         }
     }
+
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
 
     ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
-
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::Button("Create New Material")) {
-        if (!materialManager->materialExists(newMatName)) {
-            Material newMaterial{Vector3(1, 1, 1), 0, 0, 1, 0, 0};
-            materialManager->createMaterial(newMatName, newMaterial);
-            materialKey = newMatName;
-        }
-        std::cout<<"A Material with the name already exists"<<std::endl;
-    }
 
     char matNameBuffer[64] = "";
     strncpy(matNameBuffer, newMatName.c_str(), sizeof(matNameBuffer));
@@ -233,6 +228,18 @@ void UI::materialEditor() {
     // Material Creation
     ImGui::InputTextWithHint("##MaterialName", "Material Name", matNameBuffer, sizeof(matNameBuffer));
     newMatName = std::string(matNameBuffer);
+
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::Button("Create")) {
+        if (!materialManager->materialExists(newMatName)) {
+            Material newMaterial{newMatName, Vector3(1, 1, 1), 0, 0, 1, 0, 0};
+            materialManager->createMaterial(newMatName, newMaterial);
+            materialKey = newMatName;
+        }
+        std::cout<<"A Material with the name already exists"<<std::endl;
+    }
 
     // Add a placeholder option at the start of the list
     std::vector<const char*> keysWithPlaceholder = { "Select Material" };
@@ -253,13 +260,13 @@ void UI::materialEditor() {
 
     // Update local variables to match selected material
     if (materialKey != "") {
-        Material& mat = materialManager->getMaterial(materialKey);
-        colour = mat.colour;
-        roughness = mat.roughness;
-        metallic = mat.metallic;
-        IOR = mat.IOR;
-        transmission = mat.transmission;
-        emission = mat.emission;
+        Material* mat = materialManager->getMaterial(materialKey);
+        colour = mat->colour;
+        roughness = mat->roughness;
+        metallic = mat->metallic;
+        IOR = mat->IOR;
+        transmission = mat->transmission;
+        emission = mat->emission;
 
     }
 
@@ -295,9 +302,8 @@ void UI::materialEditor() {
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderFloat("##IOR", &IOR, 0.0f, 1.0f, "IOR %.3f")) {
-        IOR = IOR > 1? 1 : IOR;
-        IOR = IOR < 0? 0 : IOR;
+    if (ImGui::SliderFloat("##IOR", &IOR, 1.0f, 10.0f, "IOR %.3f")) {
+        IOR = IOR < 1? 1 : IOR;
         materialManager->editMaterialIOR(materialKey, IOR);
         camUpdate = true;
     }
@@ -327,9 +333,36 @@ void UI::sceneEditor() {
 
     ImGui::Begin("Scene Editor", nullptr, ImGuiWindowFlags_None);
 
-    ImGui::Text("Work In Progress");
+    if (selectedObject == nullptr) {
+        ImGui::Text("No object selected");
+
+        ImGui::End();
+        return;
+    }
 
 
+    // Find and store all materials
+    std::vector<const char*> materialNames = materialManager->getMaterailNames();
+
+    // Find the current material for the selected Object
+    int currentIndex = -1;
+    for (size_t i = 0; i < materialNames.size(); i++) {
+        if (selectedObject->getMaterial()->name == materialNames[i]) {
+            currentIndex = static_cast<int>(i);
+            break;
+        }
+    }
+
+    // Display selected Object Type
+    std::string objString = "Selected Object: " + selectedObject->getType();
+    ImGui::Text(objString.c_str());
+
+    // Show the combo box with the placeholder
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
+        selectedObject->setMaterial(materialManager->getMaterial(materialNames[currentIndex]));
+        camUpdate = true;
+    }
 
     ImGui::End();
 }

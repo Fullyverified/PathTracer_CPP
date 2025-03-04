@@ -5,7 +5,7 @@
 #include <utility>
 #include <limits>
 
-AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material &material) :
+AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material* material) :
 minBounds(minBounds), maxBounds(maxBounds), material(material) {
     objID = ++objectCounter;
 }
@@ -90,4 +90,8 @@ void AABCubeBounds::printType() const {
 
 int AABCubeBounds::getObjID() const {
     return objID;
+}
+
+std::string AABCubeBounds::getType() const {
+    return "Cube Bounds";
 }

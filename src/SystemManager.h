@@ -57,6 +57,7 @@ public:
         cpupt->initialiseObjects();
 
         inputManager = new InputManager(camera, window);
+        inputManager->setSystemManager(this);
 
         resX = config.resX;
         resY = config.resY;
@@ -144,6 +145,10 @@ public:
 
     MaterialManager *getMaterialManager() {
         return materialManager;
+    }
+
+    SceneObject* getClickedObject(int x, int y) {
+        return cpupt->getClickedObject(x, y);
     }
 
 private:

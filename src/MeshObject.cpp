@@ -4,7 +4,7 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, Material &material) :
+MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, Material* material) :
 pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
     objID = ++objectCounter;
 
@@ -94,4 +94,8 @@ int MeshObject::getObjID() const {
 
 void MeshObject::printType() const {
     std::cout<<"Type: Mesh"<<std::endl;
+}
+
+std::string MeshObject::getType() const {
+    return "Mesh Object";
 }

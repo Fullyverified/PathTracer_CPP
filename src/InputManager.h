@@ -5,6 +5,10 @@
 
 #include "Camera.h"
 #include "Window.h"
+#include "Vector3.h"
+#include "UI.h"
+
+class SystemManager;
 
 class InputManager {
 public:
@@ -16,6 +20,8 @@ public:
     }
 
     void processInput(SDL_Event &event) {
+        mousePos = Vector3(event.button.x, event.button.y, 0);
+
         if (event.type == SDL_QUIT) {
             running = false;
         }
@@ -27,6 +33,15 @@ public:
 
             if (event.key.keysym.sym == SDLK_F1) {
                 hideUI = hideUI == false;
+            }
+
+
+        }
+
+        if (event.type == SDL_MOUSEBUTTONUP) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                if (!UI::isWindowHovered)
+                getClickedObject(event.button.x, event.button.y);
             }
         }
     }
@@ -90,12 +105,19 @@ public:
         return hideUI;
     }
 
+    void getClickedObject(int x, int y);
+
+    void setSystemManager(SystemManager* systemManager);
+
 private:
     Window *window;
     Camera *camera;
+    SystemManager* systemManager;
     int mouseX, mouseY;
 
     bool running, lockMouse, hideUI;
+
+    Vector3 mousePos;
 };
 
 

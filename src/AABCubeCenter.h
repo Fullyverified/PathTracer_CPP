@@ -7,15 +7,16 @@
 
 class AABCubeCenter : public SceneObject {
 public:
-    AABCubeCenter(Vector3 pos, Vector3 length, Material &material);
+    AABCubeCenter(Vector3 pos, Vector3 length, Material* material);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
     [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
-    [[nodiscard]] Material getMaterial() const override {return material;}
-    void setMaterial(Material material) override {this->material = material;}
+    [[nodiscard]] Material* getMaterial() const override {return material;}
+    void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() override;
     void printType() const override;
+    std::string getType() const override;
     [[nodiscard]] int getObjID() const override;
     [[nodiscard]] bool isMesh() const override {return false;}
     [[nodiscard]] BVHNode* getMeshNode() const override {return nullptr;}
@@ -25,7 +26,7 @@ public:
 
 private:
     Vector3 pos, length, minBounds, maxBounds,  colour, luminance;;
-    Material& material;
+    Material* material;
 };
 
 

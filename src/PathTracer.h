@@ -25,9 +25,8 @@ public:
 
     void run() {
 
-        Camera *camera = new Camera(Vector3(-3, 0, -10), Vector3(1, 0, 0));
+        Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
         SystemManager systemManager;
-
         MaterialManager* materialManager = systemManager.getMaterialManager();
 
         LoadMesh companionCube;
@@ -58,7 +57,7 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 3), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
 
-        // Spheres
+        // Objects of Interest
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
 
@@ -77,7 +76,7 @@ public:
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 13), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
         sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 7), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
 
-        // Spheres
+        // Objects of Interest
         sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, materialManager->getMaterial("White"))); // statue left
         sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
 

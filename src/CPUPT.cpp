@@ -286,12 +286,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     ray.setHitObject(hitObject);
 
                     // Grab the material
-                    Material mat = hitObject->getMaterial();
+                    Material* mat = hitObject->getMaterial();
 
                     // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                     float randomSample = dist(rng);
-                    float p_specular = mat.metallic;
-                    float p_transmission = mat.transmission * (1.0f - mat.metallic);
+                    float p_specular = mat->metallic;
+                    float p_transmission = mat->transmission * (1.0f - mat->metallic);
                     float p_diffuse = 1.0f - (p_specular + p_transmission);
                     // probabilites should add up to 1
 
@@ -303,7 +303,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // specular caused by IOR
                     float cosTheta = std::abs(dot(ray.getDir(), ray.getNormal()));
-                    float R0 = fresnelSchlickRefraction(cosTheta, mat.IOR); // reflection portion
+                    float R0 = fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
                     float randomSample2 = dist(rng); // a second sample
                     // ----------------------
 
@@ -346,7 +346,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     }
 
                     // 2) Add emission *through* the throughput
-                    finalColour = finalColour + throughput * (mat.colour * mat.emission);
+                    finalColour = finalColour + throughput * (mat->colour * mat->emission);
 
                     // 3) Update throughput with BRDF and PDF
                     throughput = throughput * newThroughput;
@@ -392,7 +392,7 @@ Vector3 CPUPT::sampleRefractionDirection(Ray &ray, SceneObject &sceneObject) con
     Vector3 N = ray.getNormal();
 
     float n1 = 1.0003f; // refractive index of air
-    float n2 = sceneObject.getMaterial().IOR;
+    float n2 = sceneObject.getMaterial()->IOR;
 
     if (ray.getInternal()) {
         // inside glass, flip normal, IOR, and dotProduct
@@ -460,8 +460,8 @@ float CPUPT::fresnelSchlickRefraction(float cosTheta, float ior) const {
 }
 
 Vector3 CPUPT::sampleSpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
-    const Material &mat = sceneObject.getMaterial();
-    float rough = std::max(mat.roughness, 0.001f);
+    const Material* mat = sceneObject.getMaterial();
+    float rough = std::max(mat->roughness, 0.001f);
     float alpha = rough * rough; // for GGX
 
 
@@ -776,6 +776,38 @@ void CPUPT::deleteObjects() {
     delete[] RGBBuffer;
 }
 
+SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
+
+    int x = screenX / upScale;
+    int y = screenY / upScale;
+
+    // Ray cast to find clicked object
+    Ray ray;
+    ray.reset();
+    // Camera (primary) ray origin:
+
+    ray.getOrigin().set(camera->getPos());
+    ray.getPos().set(camera->getPos());
+
+    // Jitter the pixel position for MSAA
+    float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
+    float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
+    Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
+                          1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
+    Vector3 pixelPosScene(pixelPosPlane.getX() * camera->getPlaneWidth() / 2,
+                          pixelPosPlane.getY() * camera->getPlaneHeight() / 2, 0);
+
+
+    // Point ray according to pixel position (ray starts from camera origin)
+    ray.getDir().set(camera->getDir() + camera->getRight() * pixelPosScene.getX() + camera->getUp() * pixelPosScene.getY());
+    ray.getDir().normalise();
+
+    // Search BVH
+    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
+
+    return leafNode.node->getSceneObject();
+}
+
 std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, int step) {
     int res = end - start;
     int pixelsPerThread = res / numThreads; // number of pixels per thread
@@ -899,7 +931,7 @@ Vector3 CPUPT::sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) 
     refracRay.initialize(ray);
 
     float n1 = 1.0003f; // refractive index of air
-    float n2 = sceneObject.getMaterial().IOR;
+    float n2 = sceneObject.getMaterial()->IOR;
     // cosine of incient angle
     float cosTheta1 = (refracRay.getNormal().dot(refracRay.getDir()));
 
@@ -919,7 +951,7 @@ Vector3 CPUPT::sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) 
     refracRay.getDir().set(refraction);
     refracRay.getDir().normalise();
     refracRay.updateOrigin(sceneObject.getIntersectionDistance(refracRay).second); // march the ray to the other side of the object
-    n1 = sceneObject.getMaterial().IOR;
+    n1 = sceneObject.getMaterial()->IOR;
     n2 = 1.0003;
     // cosine of incident angle
     sceneObject.getNormal(refracRay); // update normal

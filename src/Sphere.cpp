@@ -2,7 +2,7 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material &material) :
+Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material* material) :
 pos(pos), radiusx(radiusx), radiusy(radiusy), radiusz(radiusz), material(material) {
     objID = ++objectCounter;
 }
@@ -64,4 +64,8 @@ void Sphere::printType() const {
 
 int Sphere::getObjID() const {
     return objID;
+}
+
+std::string Sphere::getType() const {
+    return "Sphere";
 }

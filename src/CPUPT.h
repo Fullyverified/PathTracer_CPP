@@ -58,8 +58,6 @@ public:
 
     BVHResult searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const;
 
-    void BVHProfiling(const std::vector<SceneObject *> &sceneObjectsList);
-
     // traversal logic
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
 
@@ -93,10 +91,10 @@ public:
         float nDotH = fabs(n.dot(h));
         float woDotH = fabs(wo.dot(h));
 
-        if (nDotH < 1e-8f || woDotH < 1e-8f) {
+        /*if (nDotH < 1e-8f || woDotH < 1e-8f) {
             std::cout<<"nDotH < 1e-8f"<<std::endl;
             std::cout<<"nDotH < 1e-8f"<<std::endl;
-        }
+        }*/
 
         return (D * nDotH) / (4.0f * woDotH);
     }
@@ -117,12 +115,12 @@ public:
         return cosTheta / std::numbers::pi;
     }
 
-    Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material& mat, Vector3& n, float R0, SampleType type, bool internal) const {
+    Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, float R0, SampleType type, bool internal) const {
         Vector3 brdf;
 
         // compute terms
         Vector3 h = normalOfHalfAngle(wo, wi);
-        float D = distrubtionGGX(n, h, mat.roughness);
+        float D = distrubtionGGX(n, h, mat->roughness);
         float cosTheta_wi = std::abs(n.dot(wi));
 
         // compute pdf
@@ -133,36 +131,36 @@ public:
         // compute BRDF depending on sample type
         if (type == metallic || type == specularFresnel) {
             float cosTheta_wo = std::abs(dot(wo, n));
-            Vector3 F = type == metallic ? fresnelSchlickSpecular(cosTheta_wo, mat.colour) : fresnelSchlickRefraction(cosTheta_wo, mat.IOR);
-            float G = geometrySmithGGX(n, wo, wi, mat.roughness);
+            Vector3 F = type == metallic ? fresnelSchlickSpecular(cosTheta_wo, mat->colour) : fresnelSchlickRefraction(cosTheta_wo, mat->IOR);
+            float G = geometrySmithGGX(n, wo, wi, mat->roughness);
             Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
             brdf = brdf_specular;
 
         } else if (type == refreaction) {
             float cosTheta = std::abs(dot(wo, n));
-            float F = fresnelSchlickRefraction(cosTheta, mat.IOR);
+            float F = fresnelSchlickRefraction(cosTheta, mat->IOR);
             float N1, N2;
             if (!internal) {
                 N1 = 1.0003;
-                N2 = mat.IOR;
+                N2 = mat->IOR;
             } else {
-                N1 = mat.IOR;
+                N1 = mat->IOR;
                 N2 = 1.0003;
             }
-            brdf = computeRefractionBRDF(mat.colour, F, N1, N2);
+            brdf = computeRefractionBRDF(mat->colour, F, N1, N2);
 
         } else if (type == diffuse) {
-            Vector3 brdf_diffuse = diffuseBRDF(mat.colour);
+            Vector3 brdf_diffuse = diffuseBRDF(mat->colour);
             brdf = brdf_diffuse;
 
         } else {
             return 1;
         }
 
-        float p_specular = mat.metallic;
+        float p_specular = mat->metallic;
         float effective_pdf_specular = pdf_specular * p_specular; // metallic branch
 
-        float p_transmission = mat.transmission * (1 - mat.metallic);
+        float p_transmission = mat->transmission * (1 - mat->metallic);
         float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
 
         float p_diffuse = 1 - (p_specular + p_transmission);
@@ -205,6 +203,9 @@ public:
         float dotP = dot(dir, normal);
         return dir - normal * dotP * 2;
     }
+
+    // UI Functions
+    SceneObject* getClickedObject(int screenX, int screenY);
 
 
 private:

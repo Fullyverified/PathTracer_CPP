@@ -1,6 +1,8 @@
 #ifndef UI_H
 #define UI_H
+
 #include "MaterialManager.h"
+#include "SceneObject.h"
 
 class UI {
 public:
@@ -47,6 +49,10 @@ public:
     static MaterialManager* materialManager;
     static std::string materialKey;
     static std::string newMatName;
+
+    static SceneObject* selectedObject;
+
+    static bool isWindowHovered;
 
 private:
 
