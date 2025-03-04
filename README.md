@@ -1,8 +1,8 @@
 A CPU Path tracer.  
 ![Lucy + Refraction 1000 rays crop](https://github.com/user-attachments/assets/f684c323-53a4-4fee-84b4-b1daf21c2889)
 
-![Colour Blending](https://github.com/user-attachments/assets/52769a1a-4fc1-4780-a5b2-9bcc7b07af49)
-  
+![Colour Blending 3100 Rays MIS](https://github.com/user-attachments/assets/19cd37ab-0406-456b-93c2-407642312d4f)
+
 # Features  
 Multiple Importance Sampling (MIS)  
 BVH Acceleration  
