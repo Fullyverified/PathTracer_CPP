@@ -17,7 +17,7 @@ public:
         Vector3 bcoords;
     };
 
-    MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, Material* material);
+    MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] MeshObject::meshIntersection intersectTriangles(Ray &ray, BVHNode* leafNode) const;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
@@ -34,7 +34,7 @@ public:
     std::string getType() const override;
     [[nodiscard]] int getObjID() const override;
     [[nodiscard]] bool isMesh() const override {return true;}
-    [[nodiscard]] BVHNode* getMeshNode() const override {return loadedMesh.getRootNode();}
+    [[nodiscard]] BVHNode* getMeshNode() const override {return loadedMesh->getRootNode();}
 
     MeshObject(const MeshObject& other) = delete; // disable copy constructor
     MeshObject& operator=(const MeshObject& other) = delete; // disable copy assignment
@@ -62,7 +62,7 @@ private:
     Material* material;
     std::pair<Vector3, Vector3> bounds;
     std::vector<Triangle*> triangles;
-    LoadMesh &loadedMesh;
+    LoadMesh* loadedMesh;
 };
 
 

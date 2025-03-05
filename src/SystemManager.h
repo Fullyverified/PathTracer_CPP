@@ -14,6 +14,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
 #include "MaterialManager.h"
+#include "SceneObjectManager.h"
 
 class SystemManager {
 public:
@@ -24,10 +25,14 @@ public:
         window = new Window("Path Tracer", width, height);
         renderer = new Renderer(*window, width, height);
 
-        cpupt = new CPUPT(this);
-
         materialManager = new MaterialManager();
         UI::materialManager = materialManager;
+
+        sceneObjectManager = new SceneObjectManager(materialManager);
+        UI::sceneObjectManager = sceneObjectManager;
+
+        cpupt = new CPUPT(this, sceneObjectManager->getSceneObjects());
+
     }
 
     ~SystemManager() {
@@ -42,7 +47,7 @@ public:
         delete materialManager;
     }
 
-    void initialize(std::vector<SceneObject *> &SceneObjectsList, Camera *camera) {
+    void initialize(Camera *camera) {
         // --- Initialize ImGui ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -51,7 +56,6 @@ public:
         ImGui_ImplSDL2_InitForSDLRenderer(window->getSDLWindow(), renderer->getSDLRenderer());
         ImGui_ImplSDLRenderer2_Init(renderer->getSDLRenderer());
 
-        this->sceneObjectsList = SceneObjectsList;
         this->camera = camera;
 
         cpupt->initialiseObjects();
@@ -71,7 +75,8 @@ public:
 
     void render() {
         // path trace scene
-        cpupt->launchRenderThread(sceneObjectsList);
+        std::cout<<"Launching render thread"<<std::endl;
+        cpupt->launchRenderThread();
     }
 
     void renderCleanUp() {
@@ -147,6 +152,10 @@ public:
         return materialManager;
     }
 
+    SceneObjectManager *getSceneObjectManager() {
+        return sceneObjectManager;
+    }
+
     SceneObject* getClickedObject(int x, int y) {
         return cpupt->getClickedObject(x, y);
     }
@@ -158,8 +167,7 @@ private:
     Camera *camera;
     InputManager *inputManager;
     MaterialManager *materialManager;
-    std::vector<SceneObject *> sceneObjectsList;
-
+    SceneObjectManager *sceneObjectManager;
 
     uint8_t *RGBBuffer;
     int resX, resY;

@@ -10,7 +10,7 @@ public:
     AABCubeCenter(Vector3 pos, Vector3 length, Material* material);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
-    void setPos(Vector3 newPos) override {pos = newPos;}
+    void setPos(Vector3 newPos) override {pos = newPos; updateBounds();}
     [[nodiscard]] Vector3 getDir() const override {return dir;}
     void setDir(Vector3 newDir) override {dir = newDir;}
     [[nodiscard]] Vector3 getScale() const override {return length;}

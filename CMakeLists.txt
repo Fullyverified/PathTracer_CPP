@@ -131,8 +131,10 @@ add_executable(PathTracer_CPP
         src/InputManager.h
         src/InputManager.cpp
         src/SystemManager.h
-        src/MaterialManager.cpp
         src/MaterialManager.h
+        src/SceneObjectManager.h
+        src/BVH.h
+        src/BVH.cpp
 )
 
 # Link Vulkan and libraries

@@ -4,12 +4,12 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh& mesh, Material* material) :
+MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material) :
 pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
     objID = ++objectCounter;
 
-    triangles = loadedMesh.getTriangles();
-    bounds = loadedMesh.getBounds();
+    triangles = loadedMesh->getTriangles();
+    bounds = loadedMesh->getBounds();
 }
 
 void MeshObject::getNormal(Ray &ray) const {
@@ -84,7 +84,7 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
-    auto bounds = loadedMesh.getBounds();
+    auto bounds = loadedMesh->getBounds();
     return {bounds.first * scale + pos, bounds.second * scale + pos};
 }
 

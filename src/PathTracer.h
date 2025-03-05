@@ -14,6 +14,7 @@
 #include "Material.h"
 #include "SystemManager.h"
 #include "MaterialManager.h"
+#include "SceneObjectManager.h"
 
 class PathTracer {
 public:
@@ -27,79 +28,8 @@ public:
 
         Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
         SystemManager systemManager;
-        MaterialManager* materialManager = systemManager.getMaterialManager();
 
-        LoadMesh companionCube;
-        companionCube.load("companionCube.obj");
-
-        LoadMesh lucy;
-        lucy.load("lucyScaled.obj");
-
-        LoadMesh diamondOBJ;
-        diamondOBJ.load("diamond.obj");
-
-        LoadMesh torus;
-        torus.load("torus.obj");
-
-        std::cout << "Scene Objects" << std::endl;
-
-        std::vector<SceneObject *> sceneObjectsList;
-        //sceneObjectsList.emplace_back(new MeshObject(Vector3(5,-2.5,1),Vector3(1,1,1),Vector3(1,1,1), companionCube, materialManager->getMaterial("White"))); // companion cube
-
-        // BOX1
-        sceneObjectsList.emplace_back(new Sphere(Vector3(5, 2.5, 0), 1, 0.1, 1, materialManager->getMaterial("Light"))); // light on ceiling
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // floor
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // roof
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8, 0, 0), Vector3(1, 6, 7), materialManager->getMaterial("White"))); // back wall
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 3), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
-
-        // Objects of Interest
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
-
-        //sceneObjectsList.emplace_back(new MeshObject(Vector3(4.5, -1.5, 1.25), Vector3(1, 1, 1), Vector3(1, 1, 1), torus, materialManager->getMaterial("Copper"))); // statue left
-
-        // BOX 1
-
-        // BOX2
-        sceneObjectsList.emplace_back(new Sphere(Vector3(5, 2.5, 10), 1, 0.1, 1, materialManager->getMaterial("Light"))); // light on ceiling
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, -3, 10), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // floor
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 10), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // roof
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8, 0, 10), Vector3(1, 6, 7), materialManager->getMaterial("White"))); // back wall
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 13), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10, 3, 7), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
-
-        // Objects of Interest
-        sceneObjectsList.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, materialManager->getMaterial("White"))); // statue left
-        sceneObjectsList.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
-
-        // BOX 2
-
-        // BOX 3
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,-3,-10),Vector3(14,1,7),materialManager->getMaterial("White"))); // floor
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-10),Vector3(14,1,7),materialManager->getMaterial("White"))); // roof
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(8,0,-10),Vector3(1,6,7),materialManager->getMaterial("White"))); // back wall
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-7),Vector3(14,12,1),materialManager->getMaterial("Mirror"))); // left wall
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(10,3,-13),Vector3(14,12,1),materialManager->getMaterial("Mirror"))); // right wall
-
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // middle
-        sceneObjectsList.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // left
-
-        // BOX 3
-
-
-        systemManager.initialize(sceneObjectsList, camera);
+        systemManager.initialize(camera);
 
         // start render thread
         systemManager.render();
@@ -142,9 +72,6 @@ public:
         // End render thread
         systemManager.renderCleanUp();
 
-        for (SceneObject *obj: sceneObjectsList) {
-            delete obj; // delete sceneObjects from heap
-        }
     }
 
 private:

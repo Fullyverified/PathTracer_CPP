@@ -11,11 +11,7 @@ class MaterialManager {
 public:
 
     MaterialManager() {
-
-        materials["Default"] = new Material("Default", Vector3(1, 1, 1), 0.75, 0, 1, 0, 0);
-
         addDefaultMaterials();
-
         refreshMaterialNames();
     }
 
@@ -63,6 +59,8 @@ public:
     }
 
     void addDefaultMaterials() {
+        materials["Default"] = new Material("Default", Vector3(1, 1, 1), 0.75, 0, 1, 0, 0);
+
         materials["White"] = new Material{"White", Vector3(1, 1, 1), 0.75, 0, 1, 0, 0};
         materials["Red"] = new Material{"Red", Vector3(1, 0, 0), 0.75, 0, 1, 0, 0};
         materials["Green"] = new Material{"Green", Vector3(0, 1, 0), 0.75, 0, 1, 0, 0};

@@ -15,6 +15,7 @@
 #include "Ray.h"
 #include "Window.h"
 #include "Renderer.h"
+#include "BVH.h"
 
 class SystemManager;
 
@@ -28,14 +29,8 @@ enum SampleType {
 
 class CPUPT {
 public:
-    struct BVHResult {
-        int sceneObject;
-        float close;
-        float far;
-    };
 
-    CPUPT(SystemManager* systemManager);
-
+    CPUPT(SystemManager* systemManager, std::vector<SceneObject *>& sceneObjectsList);
     ~CPUPT() {
     }
 
@@ -43,20 +38,8 @@ public:
     void renderLoop();
 
     // render controller
-    void launchRenderThread(std::vector<SceneObject *> &sceneobjectsList);
+    void launchRenderThread();
     void joinRenderThread();
-
-    // bvh logic
-    void constructBVHST(const std::vector<SceneObject *> &sceneObjectsList);
-
-    void constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList);
-
-    void findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
-                      BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex);
-
-    void constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList);
-
-    BVHResult searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const;
 
     // traversal logic
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
@@ -102,6 +85,7 @@ public:
     Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2) const { // refraction
         return (1 - F) * ((n1 / n2) * (n1 / n2)) * col;
     };
+
     float refractionPDF() const { // refraction
         // For a delta lobe, it’s customary to treat the PDF = 1
         // because sampling that single direction has probability 1 in that branch.
@@ -111,6 +95,7 @@ public:
     Vector3 diffuseBRDF(Vector3 col) const { // diffuse
         return col / std::numbers::pi;
     }
+
     float diffusePDF(float cosTheta) const { // diffuse
         return cosTheta / std::numbers::pi;
     }
@@ -212,8 +197,8 @@ private:
 
     SystemManager* systemManager;
 
-    std::vector<SceneObject *> sceneObjectsList;
-    std::vector<BVHNode *> BVHNodes;
+    std::vector<SceneObject *>& sceneObjectsList;
+    BVHNode* rootNode;
     Camera* camera;
 
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index

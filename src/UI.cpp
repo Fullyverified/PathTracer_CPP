@@ -8,6 +8,8 @@
 #include "MaterialManager.h"
 #include "Material.h"
 
+#include "SceneObjectManager.h"
+
 int UI::RaysPerSecond = 0;
 float UI::pathTracingTime = 0;
 float UI::toneMappingTime = 0;
@@ -212,10 +214,10 @@ void UI::materialEditor() {
     ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
 
     // Find selected material
-    std::vector<const char*> keys = materialManager->getMaterailNames();
+    std::vector<const char*> materialNames = materialManager->getMaterailNames();
     int currentIndex = -1;
-    for (size_t i = 0; i < keys.size(); i++) {
-        if (materialKey == keys[i]) {
+    for (size_t i = 0; i < materialNames.size(); i++) {
+        if (materialKey == materialNames[i]) {
             currentIndex = static_cast<int>(i);
             break;
         }
@@ -240,20 +242,11 @@ void UI::materialEditor() {
         std::cout<<"A Material with the name already exists"<<std::endl;
     }
 
-    // Add a placeholder option at the start of the list
-    std::vector<const char*> keysWithPlaceholder = { "Select Material" };
-    keysWithPlaceholder.insert(keysWithPlaceholder.end(), keys.begin(), keys.end());
-
-    // Adjust the index if no valid selection is made
-    if (currentIndex == -1) {
-        currentIndex = 0; // Default to the placeholder
-    }
-
-    // Show the combo box with the placeholder
+    // Drop down list of materials
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::Combo("##Materials", &currentIndex, keysWithPlaceholder.data(), static_cast<int>(keysWithPlaceholder.size()))) {
+    if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
         if (currentIndex > 0) { // Ignore the placeholder selection
-            materialKey = keys[currentIndex - 1];
+            materialKey = materialNames[currentIndex];
         }
     }
 
@@ -337,12 +330,43 @@ void UI::materialEditor() {
     ImGui::End();
 }
 
+int UI::primativeSelection = 0;
+int UI::meshSelection = 0;
+
+SceneObjectManager* UI::sceneObjectManager = nullptr;
+
 void UI::sceneEditor() {
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
 
     ImGui::Begin("Scene Editor", nullptr, ImGuiWindowFlags_None);
+
+    // Drop down to select a primative Type
+    std::vector<const char*> primativeTypes = sceneObjectManager->getPrimativeTypes();
+    ImGui::Combo("##Primative Objects", &primativeSelection, primativeTypes.data(), static_cast<int>(primativeTypes.size()));
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Add primative")) {
+        sceneObjectManager->addPrimative(primativeTypes[primativeSelection]);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    // Drop down to select a mesh Type
+    std::vector<const char*> meshTypes = sceneObjectManager->getMeshTypes();
+    ImGui::Combo("##Mesh Objects", &meshSelection, meshTypes.data(), static_cast<int>(meshTypes.size()));
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Add mesh")) {
+        sceneObjectManager->addMesh(meshTypes[meshSelection]);
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    ImGui::Separator();
 
     if (selectedObject == nullptr) {
         ImGui::Text("No object selected");
@@ -367,6 +391,23 @@ void UI::sceneEditor() {
     // Display selected Object Type
     std::string objString = "Selected Object: " + selectedObject->getType();
     ImGui::Text(objString.c_str());
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Delete")) {
+        std::cout<<"Calling delete method"<<std::endl;
+        sceneObjectManager->removeSceneObject(selectedObject);
+        selectedObject = nullptr;
+        sceneUpdate = true;
+        camUpdate = true;
+    }
+
+    if (selectedObject == nullptr) {
+        ImGui::Text("No object selected");
+
+        ImGui::End();
+        return;
+    }
 
     ImGui::Text("Select Material");
     // Show the combo box with the placeholder

@@ -26,10 +26,10 @@
 
 #include "SystemManager.h"
 
-CPUPT::CPUPT(SystemManager *systemManager) : systemManager(systemManager), iterations(0), numThreads(0) {
+CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *>& sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList), iterations(0), numThreads(0) {
 }
 
-void CPUPT::launchRenderThread(std::vector<SceneObject *> &sceneObjectsList) {
+void CPUPT::launchRenderThread() {
     this->sceneObjectsList = sceneObjectsList;
 
     // launch a thread the handles the render loop
@@ -46,17 +46,18 @@ void CPUPT::renderLoop() {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
-    // create all ray and luminance vector objects
-    std::cout << "Constructing Objects: " << std::endl;
+
+    // Initialise Objects
+    std::cout << "Constructing Objects" << std::endl;
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
     config.threads = std::thread::hardware_concurrency();
     //config.threads = 1;
 
-    std::cout << "Constructing BVH: " << std::endl;
-    constructBVHST(sceneObjectsList);
-    //constructLinearBVH(sceneobjectsList);
-    std::cout << "Finished constructing BVH: " << std::endl;
+    std::cout << "Constructing BVH" << std::endl;
+    BVH bvh = BVH();
+    bvh.constructBVHST(sceneObjectsList);
+    rootNode = bvh.getBVHNodes()[0];
 
     // render loop code
     while (systemManager->getIsRunning()) {
@@ -75,7 +76,8 @@ void CPUPT::renderLoop() {
 
             if (UI::sceneUpdate) {
                 UI::sceneUpdate = false;
-                constructBVHST(sceneObjectsList);
+                bvh.constructBVHST(sceneObjectsList);
+                rootNode = bvh.getBVHNodes()[0];
             }
 
             if (UI::resUpdate) {
@@ -266,7 +268,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
 
                     // Intersect scene using BVH
-                    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
+                    BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         break;
                     }
@@ -570,165 +572,6 @@ Vector3 CPUPT::sampleDiffuseDirection(Ray &ray, const SceneObject &sceneObject, 
     return worldDir;
 }
 
-void CPUPT::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
-    // create leaf nodes
-    BVHNodes.clear();
-
-    for (SceneObject *sceneObject: sceneObjectsList) {
-        std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
-        BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
-        BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
-        BVHNodes.at(BVHNodes.size() - 1)->setLeaf(true);
-    }
-
-    std::cout << "Number of leaf nodes: " << BVHNodes.size() << std::endl;
-
-    // create tree structure from lead nodes - bottom up
-    auto startTime = std::chrono::high_resolution_clock::now();
-    while (BVHNodes.size() > 1) {
-        float cost = 0, bestCost = std::numeric_limits<float>::infinity();
-        int indexLeft = 0, indexRight = 0;
-        BVHNode *bestLeft = nullptr;
-        BVHNode *bestRight = nullptr;
-        BoundingBox combinedBox;
-
-        for (int i = 0; i < BVHNodes.size(); i++) {
-            for (int j = i + 1; j < BVHNodes.size(); j++) {
-                combinedBox.updateBounds(*BVHNodes.at(i)->getBoundingBox(), *BVHNodes.at(j)->getBoundingBox());
-                cost = (combinedBox.getArea() / (BVHNodes.at(i)->getArea() + BVHNodes.at(j)->getArea())) * (
-                           BVHNodes.at(i)->getNumChildren() + BVHNodes.at(j)->getNumChildren());
-
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestLeft = BVHNodes.at(i);
-                    bestRight = BVHNodes.at(j);
-                    indexLeft = i;
-                    indexRight = j;
-                }
-            }
-        }
-        // create a new BVHNode that has the smallest combined area
-        BoundingBox *parentBox = new BoundingBox(*bestLeft->getBoundingBox(), *bestRight->getBoundingBox());
-        BVHNode *parentNode = new BVHNode(parentBox, bestLeft, bestRight);
-        BVHNodes.emplace_back(parentNode);
-        // erase node from list
-        if (indexLeft > indexRight) {
-            BVHNodes.erase(BVHNodes.begin() + indexLeft);
-            BVHNodes.erase(BVHNodes.begin() + indexRight);
-        } else {
-            BVHNodes.erase(BVHNodes.begin() + indexRight);
-            BVHNodes.erase(BVHNodes.begin() + indexLeft);
-        }
-    }
-    auto stopTime = std::chrono::high_resolution_clock::now();
-    auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout << "Finished tree creation: " << durationTime.count() << "us" << std::endl;
-    //std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
-    std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
-}
-
-void CPUPT::constructBVHMT(const std::vector<SceneObject *> &sceneObjectsList) {
-    // create leaf nodes
-    for (SceneObject *sceneObject: sceneObjectsList) {
-        std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
-        BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
-        BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
-        BVHNodes.at(BVHNodes.size() - 1)->setLeaf(true);
-    }
-    std::cout << "Number of leaf nodes: " << BVHNodes.size() << std::endl;
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-
-    size_t numThreads = std::thread::hardware_concurrency();
-    std::cout << "Threads avaliable: " << numThreads << std::endl;
-    //std::vector<std::thread> threads;
-    std::vector<std::future<void> > threads;
-    std::mutex mutex;
-
-    while (BVHNodes.size() > 1) {
-        size_t numNodes = BVHNodes.size();
-        size_t nodesPerThread = numNodes / numThreads; // basic number of nodes per thread
-        size_t remainder = numNodes % numThreads; // remaining nodes after even distribution
-
-        std::atomic<float> bestCost = std::numeric_limits<float>::infinity();
-        BVHNode *bestLeft = nullptr, *bestRight = nullptr;
-        int indexLeft = 0, indexRight = 0;
-        if (numNodes > numThreads) {
-            for (size_t i = 0; i < numThreads; i++) {
-                size_t start = i * nodesPerThread + std::min(i, remainder);
-                size_t end = start + nodesPerThread + (i < remainder ? 1 : 0);
-
-                end = std::min(end, numNodes); // ensure last thread does not exceed size of nodes vector
-                threads.emplace_back(std::async(std::launch::async, &CPUPT::findBestPair, this,
-                                                std::ref(BVHNodes), start, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight),
-                                                std::ref(bestLeft), std::ref(bestRight), std::ref(mutex)));
-            }
-        } else {
-            for (int i = 0; i < BVHNodes.size(); i++) {
-                int end = i + 1;
-                threads.emplace_back(std::async(std::launch::async, &CPUPT::findBestPair, this,
-                                                std::ref(BVHNodes), i, end, std::ref(bestCost), std::ref(indexLeft), std::ref(indexRight),
-                                                std::ref(bestLeft),
-                                                std::ref(bestRight), std::ref(mutex)));
-            }
-        }
-
-        for (std::future<void> &thread: threads) {
-            thread.get(); // Blocks until the thread completes its task
-        }
-        threads.clear();
-
-        // create a new BVHNode that has the smallest combined area
-        BoundingBox *parentBox = new BoundingBox(*bestLeft->getBoundingBox(), *bestRight->getBoundingBox());
-        BVHNode *parentNode = new BVHNode(parentBox, bestLeft, bestRight);
-        BVHNodes.emplace_back(parentNode);
-        // erase node from list
-        if (indexLeft > indexRight) {
-            BVHNodes.erase(BVHNodes.begin() + indexLeft);
-            BVHNodes.erase(BVHNodes.begin() + indexRight);
-        } else {
-            BVHNodes.erase(BVHNodes.begin() + indexRight);
-            BVHNodes.erase(BVHNodes.begin() + indexLeft);
-        }
-    }
-
-    auto stopTime = std::chrono::high_resolution_clock::now();
-    auto durationTime = std::chrono::duration_cast<std::chrono::microseconds>(stopTime - startTime);
-    std::cout << "Finished tree creation: " << durationTime.count() << "us" << std::endl;
-    std::cout << "BVHNode size: " << BVHNodes.size() << std::endl;
-    std::cout << "RootNode numChildren: " << BVHNodes.at(0)->getNumChildren() << std::endl;
-}
-
-void CPUPT::findBestPair(const std::vector<BVHNode *> &nodes, int start, int end, std::atomic<float> &globalBestCost, int &leftIndex, int &rightIndex,
-                         BVHNode *&bestLeft, BVHNode *&bestRight, std::mutex &mutex) {
-    float localBestCost = std::numeric_limits<float>::infinity();
-    BVHNode *localBestLeft = nullptr, *localBestRight = nullptr;
-    int localIndexLeft = 0, localIndexRight = 0;
-
-    for (int i = start; i < end; i++) {
-        for (int j = i + 1; j < nodes.size(); j++) {
-            BoundingBox *combinedBox = new BoundingBox(*nodes[i]->getBoundingBox(), *nodes[j]->getBoundingBox());
-            float cost = (combinedBox->getArea() / (nodes[i]->getArea() + nodes[j]->getArea())) * (nodes[i]->getNumChildren() + nodes[j]->getNumChildren());
-            if (cost < localBestCost) {
-                localBestCost = cost;
-                localBestLeft = nodes[i];
-                localBestRight = nodes[j];
-                localIndexLeft = i;
-                localIndexRight = j;
-            }
-            delete combinedBox;
-        }
-    }
-    std::lock_guard<std::mutex> guard(mutex);
-    if (localBestCost < globalBestCost) {
-        globalBestCost = localBestCost;
-        bestLeft = localBestLeft;
-        bestRight = localBestRight;
-        leftIndex = localIndexLeft;
-        rightIndex = localIndexRight;
-    }
-}
-
 void CPUPT::initialiseObjects() {
     camera = systemManager->getCamera();
 
@@ -770,11 +613,6 @@ void CPUPT::updateUpscaling() {
 }
 
 void CPUPT::deleteObjects() {
-    for (auto node: BVHNodes) {
-        delete node;
-    }
-    BVHNodes.clear();
-
     delete[] RGBBuffer;
 }
 
@@ -805,7 +643,7 @@ SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
     ray.getDir().normalise();
 
     // Search BVH
-    BVHNode::BVHResult leafNode = BVHNodes.at(0)->searchBVHTreeScene(ray);
+    BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
 
     return leafNode.node->getSceneObject();
 }
@@ -819,113 +657,6 @@ std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThread
     int endPixel = (step + 1) * pixelsPerThread + std::min(step + 1, remainder) - 1;
 
     return std::make_pair(startPixel, endPixel);
-}
-
-void CPUPT::constructLinearBVH(const std::vector<SceneObject *> &sceneObjectsList) {
-    // create a leaf node for each scene object
-    for (int i = 0; i < sceneObjectsList.size(); i++) {
-        std::pair<Vector3, Vector3> bounds = sceneObjectsList[i]->getBounds();
-        LinearBVHNode leafNode;
-        leafNode.bounds = BoundingBox(bounds.first, bounds.second);
-        leafNode.objectIndex = i;
-        leafNode.isLeaf = true;
-        leafNode.leftChild = -1;
-        leafNode.rightChild = -1;
-        leafNode.numChildren = 1;
-        bvhNodes.push_back(leafNode);
-    }
-
-    // a list of indexs to the bvhNodes vector for nodes that have not yet been merged
-    std::vector<int> activeNodes;
-    for (int i = 0; i < bvhNodes.size(); i++) {
-        activeNodes.push_back(i);
-    }
-
-    while (activeNodes.size() > 1) {
-        // use SAH to find best pair
-        float cost = 0, bestCost = std::numeric_limits<float>::infinity();
-        BoundingBox combinedBox{};
-        int bestLeft = -1, bestRight = -1;
-
-        for (int i = 0; i < activeNodes.size(); i++) {
-            for (int j = i + 1; j < activeNodes.size(); j++) {
-                int left = activeNodes[i];
-                int right = activeNodes[j];
-                combinedBox.updateBounds(bvhNodes[left].bounds, bvhNodes[right].bounds);
-                cost = (combinedBox.getArea() / (bvhNodes[left].bounds.getArea() + bvhNodes[right].bounds.getArea())) * (
-                           bvhNodes[left].numChildren + bvhNodes[right].numChildren);
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestLeft = i;
-                    bestRight = j;
-                }
-            }
-        }
-
-        // Merge the two best nodes
-        LinearBVHNode parentNode;
-        combinedBox.updateBounds(bvhNodes[activeNodes[bestLeft]].bounds, bvhNodes[activeNodes[bestRight]].bounds);
-        parentNode.bounds = BoundingBox(combinedBox);
-        parentNode.isLeaf = false;
-        parentNode.leftChild = activeNodes[bestLeft];
-        parentNode.rightChild = activeNodes[bestRight];
-        parentNode.numChildren = bvhNodes[activeNodes[bestLeft]].numChildren + bvhNodes[activeNodes[bestRight]].numChildren;
-
-        int parentIndex = bvhNodes.size();
-        bvhNodes.push_back(parentNode); // add the new parent node to the list
-
-        // remove the merged nodes from activeNodes and add the new parent node
-        if (bestLeft < bestRight) {
-            std::swap(bestLeft, bestRight); // Ensure bestLeft is always smaller
-        }
-        activeNodes.erase(activeNodes.begin() + bestLeft); // Erase the larger index first
-        activeNodes.erase(activeNodes.begin() + bestRight); // Then erase the smaller index
-        activeNodes.push_back(parentIndex);
-    }
-}
-
-CPUPT::BVHResult CPUPT::searchLinearBVH(Ray &ray, const std::vector<SceneObject *> &sceneObjectsList) const {
-    std::stack<int> nodeStack; // list of nodes to check, by index to node vector
-    nodeStack.push(bvhNodes.size() - 1); // start at root node
-
-    int closestObject = -1;
-    float closestDistance = std::numeric_limits<float>::infinity();
-    float closestExit = std::numeric_limits<float>::infinity();
-
-    while (!nodeStack.empty()) {
-        int nodeIndex = nodeStack.top();
-        nodeStack.pop(); // remove the node we are checking from the list
-
-        const LinearBVHNode &node = bvhNodes[nodeIndex];
-
-        std::pair<float, float> nodeDistance = node.bounds.getIntersectionDistance(ray);
-        std::pair<float, float> objDistance = {-1.0f, -1.0f};
-
-        if (!(nodeDistance.first <= nodeDistance.second && nodeDistance.second >= 0)) {
-            continue; // if the ray doesnt intersect the nodes bounding box skip it
-        }
-        if (node.isLeaf) {
-            objDistance = sceneObjectsList[node.objectIndex]->getIntersectionDistance(ray);
-            if (objDistance.first <= objDistance.second && objDistance.second >= 0) {
-                // check if the ray intersects the object
-                if (objDistance.first < closestDistance) {
-                    // if the intersection point is closer than the previous best, record it
-                    closestDistance = objDistance.first;
-                    closestExit = objDistance.second;
-                    closestObject = node.objectIndex;
-                }
-            }
-        } else {
-            // if the node is not a leaf, but we intersect it, add its children to the list but only if its closer than the current best
-            if (nodeDistance.first < closestDistance) {
-                nodeStack.push(node.rightChild);
-                nodeStack.push(node.leftChild);
-            }
-        }
-    }
-    if (closestDistance == std::numeric_limits<float>::infinity()) { closestDistance = -1; }
-
-    return BVHResult{closestObject, closestDistance, closestExit}; // return the index of the closest object, and the intersection distance
 }
 
 Vector3 CPUPT::sampleRefractionDirectionAll(Ray &ray, SceneObject &sceneObject) const {

@@ -2,10 +2,13 @@
 #define UI_H
 
 #include "MaterialManager.h"
+#include "SceneObjectManager.h"
 #include "SceneObject.h"
 
 class UI {
 public:
+    static bool isWindowHovered;
+
     static void renderSettings();
     static void materialEditor();
     static void sceneEditor();
@@ -52,7 +55,9 @@ public:
 
     static SceneObject* selectedObject;
 
-    static bool isWindowHovered;
+    static SceneObjectManager* sceneObjectManager;
+    static int primativeSelection;
+    static int meshSelection;
 
 private:
 
