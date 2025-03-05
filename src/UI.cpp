@@ -19,6 +19,7 @@ int UI::numRays = config.raysPerPixel;
 int UI::minBounces = config.minBounces;
 int UI::maxBounces = config.maxBounces;
 bool UI::accumulateRays = true;
+bool UI::sky = config.sky;
 
 int UI::numThreads = std::thread::hardware_concurrency();
 
@@ -361,6 +362,11 @@ void UI::sceneEditor() {
     ImGui::SetNextWindowBgAlpha(0.5f);
 
     ImGui::Begin("Scene Editor", nullptr, ImGuiWindowFlags_None);
+
+    if (ImGui::Checkbox("Sky", &sky)) {
+        config.sky = sky;
+        camUpdate = true;
+    }
 
     // Drop down to select a primative Type
     std::vector<const char*> primativeTypes = sceneObjectManager->getPrimativeTypes();

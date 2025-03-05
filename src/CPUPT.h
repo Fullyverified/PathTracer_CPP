@@ -30,7 +30,7 @@ public:
     void joinRenderThread();
 
     // traversal logic
-    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const;
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
 
     // tone mapping
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);

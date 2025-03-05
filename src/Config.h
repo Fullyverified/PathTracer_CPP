@@ -21,6 +21,7 @@ struct Config {
     float denoiseWeight = 0.75;
     float exposure = 1;
     float mouseSensitivity = 0.1f;
+    bool sky = false;
 
     void increaeISO() {
         exposure += (exposure * 0.01f);

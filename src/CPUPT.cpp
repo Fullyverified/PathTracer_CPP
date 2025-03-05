@@ -106,6 +106,7 @@ void CPUPT::renderLoop() {
         }
 
         Camera cameraCopy = *camera; // dereference camera and copy
+        bool sky = config.sky; // copy sky bool
 
         auto startTimeRays = std::chrono::high_resolution_clock::now();
 
@@ -117,7 +118,7 @@ void CPUPT::renderLoop() {
         std::atomic<int> nextSegment(0);
 
         // Create a worker for each segment
-        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, &mutex]() {
+        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, sky, &mutex]() {
             while (true) {
                 int segmentIndex = nextSegment.fetch_add(1);
                 if (segmentIndex >= totalSegments) {
@@ -130,7 +131,7 @@ void CPUPT::renderLoop() {
                 int endX = std::min(startX + tileSize - 1, internalResX - 1);
                 int startY = tileY * tileSize;
                 int endY = std::min(startY + tileSize - 1, internalResY - 1);
-                traceRay(cameraCopy, startX, endX, startY, endY, iterations, mutex);
+                traceRay(cameraCopy, startX, endX, startY, endY, iterations, sky, mutex);
             }
         };
 
@@ -190,7 +191,7 @@ void CPUPT::renderLoop() {
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (int y = ystart; y <= yend; y++) {
@@ -242,6 +243,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         // Ray intersects nothing, break
+                        if (sky) {
+                            finalColour = finalColour + throughput * (Vector3(0.52, 0.8, 0.92) * 0.1);
+                        }
                         break;
                     }
 
