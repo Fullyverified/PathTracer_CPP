@@ -35,6 +35,11 @@ public:
     void setInternal(bool internal) {this->internal = internal;}
     void flipInternal() {internal = internal == false;}
 
+    void setSelectorTrue() {selector = true;}
+    bool getSelector() {
+        return selector;
+    }
+
     void reset() {
         origin = {0, 0, 0};
         pos = {0, 0, 0};
@@ -56,7 +61,7 @@ public:
 
 private:
     Vector3 origin, pos, dir, normal, bCoords;
-    bool hit, internal;
+    bool hit, internal, selector;
     SceneObject* sceneObject;
     Triangle* triangle;
 };

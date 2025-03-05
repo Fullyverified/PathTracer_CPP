@@ -49,6 +49,14 @@ public:
         }
     }
 
+    void setRelativeMouse(bool state) {
+        if (state == false) {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        } else {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
+    }
+
 private:
     SDL_Window* window;
     bool isRunning;

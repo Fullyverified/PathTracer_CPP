@@ -9,7 +9,7 @@ struct Config {
     float upScale = 4;
     float fOV = 45;
     int raysPerPixel = 1;
-    int minBounces = 1;
+    int minBounces = 0;
     int maxBounces = 6;
     int trisPerNode = 6;
     bool DepthOfField = false;

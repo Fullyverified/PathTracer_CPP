@@ -49,7 +49,6 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
             return {nullptr, -1.0f, -1.0f}; // ray does not intersect at all
         }
     }
-
     // only return the node if the ray actually points at the object itself
 
     if (isLeaf) {

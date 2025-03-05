@@ -149,6 +149,7 @@ void CPUPT::renderLoop() {
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
         //-----------------------
+        auto startTimeTM = std::chrono::high_resolution_clock::now();
 
         // tone mapping
         maxLuminance = 0;
@@ -160,7 +161,6 @@ void CPUPT::renderLoop() {
         }
         maxLuminance *= config.exposure;
 
-        auto startTimeTM = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < segments; j++) {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(0, internalResX, segments, i);
@@ -244,7 +244,11 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         // Ray intersects nothing, break
                         if (sky) {
-                            finalColour = finalColour + throughput * (Vector3(0.52, 0.8, 0.92) * 0.1);
+                            Vector3 topColour(0.53f, 0.81f, 0.98f);
+                            Vector3 horizonColour(1.0f, 1.0f, 1.0f);
+                            float t = 0.5f * (ray.getDir().y + 1.0f); // Map y from -1 to 1 to 0 to 1
+                            Vector3 skyColor = (1.0f - t) * horizonColour + t * topColour;
+                            finalColour = finalColour + throughput * skyColor;
                         }
                         break;
                     }
@@ -472,6 +476,7 @@ SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
     // Ray cast to find clicked object
     Ray ray;
     ray.reset();
+    ray.setSelectorTrue(); // for debug
     // Camera (primary) ray origin:
 
     ray.getOrigin().set(camera->getPos());
@@ -492,6 +497,10 @@ SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
 
     // Search BVH
     BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
+
+    if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
+        return nullptr;
+    }
 
     return leafNode.node->getSceneObject();
 }

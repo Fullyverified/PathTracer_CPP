@@ -47,19 +47,18 @@ float UI::IOR = 0;
 float UI::transmission = 0;
 float UI::emission = 0;
 
-MaterialManager* UI::materialManager = nullptr;
+MaterialManager *UI::materialManager = nullptr;
 std::string UI::materialKey = "";
 std::string UI::newMatName = "";
 
-SceneObject* UI::selectedObject = nullptr;
+SceneObject *UI::selectedObject = nullptr;
 
 bool UI::isWindowHovered = false;
 
 void UI::renderSettings() {
-
     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         isWindowHovered = true;
-    } else {isWindowHovered = false;}
+    } else { isWindowHovered = false; }
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
@@ -86,7 +85,7 @@ void UI::renderSettings() {
     ImGui::Text("%d", accumulatedRays);
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::SliderInt("##Rays per frame", &numRays, 1, 100, "Rays per frame %.3f")) {
+    if (ImGui::SliderInt("##Rays per frame", &numRays, 1, 100, "Rays per frame %i")) {
         camUpdate = true;
         config.raysPerPixel = numRays;
     }
@@ -96,13 +95,13 @@ void UI::renderSettings() {
     ImGui::Text("Russian Roulette Termination");
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::SliderInt("##Min ray bounces", &minBounces, 0, 5, "Min Bounces %.3f")) {
+    if (ImGui::SliderInt("##Min ray bounces", &minBounces, 0, 5, "Min Bounces %i")) {
         camUpdate = true;
         config.minBounces = minBounces;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::SliderInt("##Max ray bounces", &maxBounces, 0, 100, "Max bounces %.3f")) {
+    if (ImGui::SliderInt("##Max ray bounces", &maxBounces, 0, 100, "Max bounces %i")) {
         if (maxBounces <= minBounces) {
             maxBounces = minBounces + 1;
         }
@@ -196,14 +195,14 @@ void UI::renderSettings() {
 
     ImGui::SetNextItemWidth(80); // Set fixed width for the input box
     if (ImGui::InputInt("##ResX", &resX, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
-
     }
 
-    ImGui::SameLine();ImGui::Text("x");ImGui::SameLine();
+    ImGui::SameLine();
+    ImGui::Text("x");
+    ImGui::SameLine();
 
     ImGui::SetNextItemWidth(80);
     if (ImGui::InputInt("##ResY", &resY, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
-
     }
 
     ImGui::SameLine();
@@ -219,23 +218,21 @@ void UI::renderSettings() {
 
     ImGui::Separator();
 
-    ImGui::Text("Hint: Press Del to enable mouse look");
+    ImGui::Text("Hint: Hold right click for mouse look");
     ImGui::Text("Hint: WASD + QE");
     ImGui::Text("Hint: F1 to hide UI");
 
     ImGui::End();
-
 }
 
 void UI::materialEditor() {
-
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
 
     ImGui::Begin("Material Editor", nullptr, ImGuiWindowFlags_None);
 
     // Find selected material
-    std::vector<const char*> materialNames = materialManager->getMaterailNames();
+    std::vector<const char *> materialNames = materialManager->getMaterailNames();
     int currentIndex = -1;
     for (size_t i = 0; i < materialNames.size(); i++) {
         if (materialKey == materialNames[i]) {
@@ -260,31 +257,31 @@ void UI::materialEditor() {
             materialManager->createMaterial(newMatName, newMaterial);
             materialKey = newMatName;
         }
-        std::cout<<"A Material with the name already exists"<<std::endl;
+        std::cout << "A Material with the name already exists" << std::endl;
     }
 
     // Drop down list of materials
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
-        if (currentIndex > 0) { // Ignore the placeholder selection
+        if (currentIndex > 0) {
+            // Ignore the placeholder selection
             materialKey = materialNames[currentIndex];
         }
     }
 
     // Update local variables to match selected material
     if (materialKey != "") {
-        Material* mat = materialManager->getMaterial(materialKey);
+        Material *mat = materialManager->getMaterial(materialKey);
         colour = mat->colour;
         roughness = mat->roughness;
         metallic = mat->metallic;
         IOR = mat->IOR;
         transmission = mat->transmission;
         emission = mat->emission;
-
     }
 
     // Colour Editing
-    float colourArray[3] = { colour.x, colour.y, colour.z };
+    float colourArray[3] = {colour.x, colour.y, colour.z};
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::ColorPicker3("##Colour", colourArray, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
@@ -303,8 +300,8 @@ void UI::materialEditor() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Roughness", &roughness, 0.0f, 1.0f, "Roughness %.3f")) {
         if (currentIndex != 0) {
-            roughness = roughness > 1? 1 : roughness;
-            roughness = roughness < 0? 0 : roughness;
+            roughness = roughness > 1 ? 1 : roughness;
+            roughness = roughness < 0 ? 0 : roughness;
             materialManager->editMaterialRoughness(materialKey, roughness);
             camUpdate = true;
         }
@@ -313,8 +310,8 @@ void UI::materialEditor() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Metallic", &metallic, 0.0f, 1.0f, "Metallic %.3f")) {
         if (currentIndex != 0) {
-            metallic = metallic > 1? 1 : metallic;
-            metallic = metallic < 0? 0 : metallic;
+            metallic = metallic > 1 ? 1 : metallic;
+            metallic = metallic < 0 ? 0 : metallic;
             materialManager->editMaterialMetallic(materialKey, metallic);
             camUpdate = true;
         }
@@ -323,7 +320,7 @@ void UI::materialEditor() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##IOR", &IOR, 1.0f, 10.0f, "IOR %.3f")) {
         if (currentIndex != 0) {
-            IOR = IOR < 1? 1 : IOR;
+            IOR = IOR < 1 ? 1 : IOR;
             materialManager->editMaterialIOR(materialKey, IOR);
             camUpdate = true;
         }
@@ -332,8 +329,8 @@ void UI::materialEditor() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Transmission", &transmission, 0.0f, 1.0f, "Transmission %.3f")) {
         if (currentIndex != 0) {
-            transmission = transmission > 1? 1 : transmission;
-            transmission = transmission < 0? 0 : transmission;
+            transmission = transmission > 1 ? 1 : transmission;
+            transmission = transmission < 0 ? 0 : transmission;
             materialManager->editMaterialTransmission(materialKey, transmission);
             camUpdate = true;
         }
@@ -342,7 +339,7 @@ void UI::materialEditor() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Emission", &emission, 0.0f, 1.0f, "Emission %.3f")) {
         if (currentIndex != 0) {
-            emission = emission < 0? 0 : emission;
+            emission = emission < 0 ? 0 : emission;
             materialManager->editMaterialEmission(materialKey, emission);
             camUpdate = true;
         }
@@ -354,10 +351,9 @@ void UI::materialEditor() {
 int UI::primativeSelection = 0;
 int UI::meshSelection = 0;
 
-SceneObjectManager* UI::sceneObjectManager = nullptr;
+SceneObjectManager *UI::sceneObjectManager = nullptr;
 
 void UI::sceneEditor() {
-
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
 
@@ -369,7 +365,7 @@ void UI::sceneEditor() {
     }
 
     // Drop down to select a primative Type
-    std::vector<const char*> primativeTypes = sceneObjectManager->getPrimativeTypes();
+    std::vector<const char *> primativeTypes = sceneObjectManager->getPrimativeTypes();
     ImGui::Combo("##Primative Objects", &primativeSelection, primativeTypes.data(), static_cast<int>(primativeTypes.size()));
 
     ImGui::SameLine();
@@ -381,7 +377,7 @@ void UI::sceneEditor() {
     }
 
     // Drop down to select a mesh Type
-    std::vector<const char*> meshTypes = sceneObjectManager->getMeshTypes();
+    std::vector<const char *> meshTypes = sceneObjectManager->getMeshTypes();
     ImGui::Combo("##Mesh Objects", &meshSelection, meshTypes.data(), static_cast<int>(meshTypes.size()));
 
     ImGui::SameLine();
@@ -399,136 +395,136 @@ void UI::sceneEditor() {
 
         ImGui::End();
         return;
-    }
+    } else {
+        // Find and store all materials
+        std::vector<const char *> materialNames = materialManager->getMaterailNames();
+
+        // Find the current material for the selected Object
+        int currentIndex = -1;
+        for (size_t i = 0; i < materialNames.size(); i++) {
+            if (selectedObject->getMaterial()->name == materialNames[i]) {
+                currentIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        // Display selected Object Type
+        std::string objString = "Selected Object: " + selectedObject->getType();
+        ImGui::Text(objString.c_str());
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Delete")) {
+            std::cout << "Calling delete method" << std::endl;
+            sceneObjectManager->removeSceneObject(selectedObject);
+            selectedObject = nullptr;
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        if (selectedObject == nullptr) {
+            ImGui::Text("No object selected");
+
+            ImGui::End();
+            return;
+        }
+
+        ImGui::Text("Select Material");
+        // Show the combo box with the placeholder
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
+            selectedObject->setMaterial(materialManager->getMaterial(materialNames[currentIndex]));
+            camUpdate = true;
+        }
+
+        ImGui::Separator();
+
+        ImGui::Text("Transform");
 
 
-    // Find and store all materials
-    std::vector<const char*> materialNames = materialManager->getMaterailNames();
+        ImGui::Text("Translation: ");
+        Vector3 position = selectedObject->getPos();
 
-    // Find the current material for the selected Object
-    int currentIndex = -1;
-    for (size_t i = 0; i < materialNames.size(); i++) {
-        if (selectedObject->getMaterial()->name == materialNames[i]) {
-            currentIndex = static_cast<int>(i);
-            break;
+        // X Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Position X", &position.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+            selectedObject->setPos(position);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Y Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Position Y", &position.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+            selectedObject->setPos(position);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Z Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Position Z", &position.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+            selectedObject->setPos(position);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        ImGui::Text("Rotation: ");
+        Vector3 direction = selectedObject->getPos();
+
+        // X Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+            selectedObject->setDir(direction);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Y Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+            selectedObject->setDir(direction);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Z Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+            selectedObject->setDir(direction);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        ImGui::Text("Scale: ");
+        Vector3 scale = selectedObject->getScale();
+
+        // X Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Scale X", &scale.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+            selectedObject->setScale(scale);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Y Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+
+        if (ImGui::DragFloat("##Scale Y", &scale.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+            selectedObject->setScale(scale);
+            sceneUpdate = true;
+            camUpdate = true;
+        }
+
+        // Z Axis
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+        if (ImGui::DragFloat("##Scale Z", &scale.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+            selectedObject->setScale(scale);
+            sceneUpdate = true;
+            camUpdate = true;
         }
     }
 
-    // Display selected Object Type
-    std::string objString = "Selected Object: " + selectedObject->getType();
-    ImGui::Text(objString.c_str());
-
-    ImGui::SameLine();
-
-    if (ImGui::Button("Delete")) {
-        std::cout<<"Calling delete method"<<std::endl;
-        sceneObjectManager->removeSceneObject(selectedObject);
-        selectedObject = nullptr;
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    if (selectedObject == nullptr) {
-        ImGui::Text("No object selected");
-
-        ImGui::End();
-        return;
-    }
-
-    ImGui::Text("Select Material");
-    // Show the combo box with the placeholder
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
-        selectedObject->setMaterial(materialManager->getMaterial(materialNames[currentIndex]));
-        camUpdate = true;
-    }
-
-    ImGui::Separator();
-
-    ImGui::Text("Transform");
-
-
-    ImGui::Text("Translation: ");
-    Vector3 position = selectedObject->getPos();
-
-    // X Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Position X", &position.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
-        selectedObject->setPos(position);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Y Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Position Y", &position.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
-        selectedObject->setPos(position);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Z Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Position Z", &position.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
-        selectedObject->setPos(position);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    ImGui::Text("Rotation: ");
-    Vector3 direction = selectedObject->getPos();
-
-    // X Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
-        selectedObject->setDir(direction);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Y Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
-        selectedObject->setDir(direction);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Z Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
-        selectedObject->setDir(direction);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    ImGui::Text("Scale: ");
-    Vector3 scale = selectedObject->getScale();
-
-    // X Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Scale X", &scale.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
-        selectedObject->setScale(scale);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Y Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-
-    if (ImGui::DragFloat("##Scale Y", &scale.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
-        selectedObject->setScale(scale);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
-
-    // Z Axis
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-    if (ImGui::DragFloat("##Scale Z", &scale.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
-        selectedObject->setScale(scale);
-        sceneUpdate = true;
-        camUpdate = true;
-    }
 
     ImGui::End();
 }

@@ -26,30 +26,44 @@ public:
             running = false;
         }
         if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.sym == SDLK_DELETE) {
-                lockMouse = lockMouse == false;
-                window->setRelativeMouse();
-            }
+            /*if (event.key.keysym.sym == SDLK_DELETE) {
+                lockMouseOverride = lockMouseOverride == false;
+                window->setRelativeMouse(!lockMouseOverride);
+            }*/
 
             if (event.key.keysym.sym == SDLK_F1) {
                 hideUI = hideUI == false;
             }
-
-
         }
 
         if (event.type == SDL_MOUSEBUTTONUP) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!UI::isWindowHovered)
-                getClickedObject(event.button.x, event.button.y);
+                    getClickedObject(event.button.x, event.button.y);
             }
         }
     }
 
     void processInputContinuous(Camera *camera, float deltaTime) {
-
         const Uint8 *inputState = SDL_GetKeyboardState(NULL);
+
+        Uint32 mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+        if (mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+            // Left mouse button is held down
+        }
+
+
+        if (mouseButtons & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+            // Right mouse button is held down
+            window->setRelativeMouse(true);
+            lockMouse = false;
+        } else {
+            window->setRelativeMouse(false);
+            lockMouse = true;
+        }
+
 
         if (inputState[SDL_SCANCODE_UP]) {
             config.increaeISO();
@@ -94,7 +108,6 @@ public:
                 camera->updateDirection(mouseX, mouseY);
             }
         }
-
     }
 
     bool getIsRunning() {
@@ -107,15 +120,15 @@ public:
 
     void getClickedObject(int x, int y);
 
-    void setSystemManager(SystemManager* systemManager);
+    void setSystemManager(SystemManager *systemManager);
 
 private:
     Window *window;
     Camera *camera;
-    SystemManager* systemManager;
+    SystemManager *systemManager;
     int mouseX, mouseY;
 
-    bool running, lockMouse, hideUI;
+    bool running, lockMouse, lockMouseOverride, hideUI;
 
     Vector3 mousePos;
 };
