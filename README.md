@@ -5,18 +5,19 @@ A CPU Path tracer.
 
 # Features  
 Multiple Importance Sampling (MIS)  
+Russian Roulette Termination  
 BVH Acceleration  
 Multithreading  
 PBR Materials  
 Meshes and Primitives  
 Extended Reinhard Tone Mapping  
 Controls - WASD and Mouse  
-UI  
+Scene and Material Editor  
 
 # To Do  
 ~~Multiple Importance Sampling (MIS)~~  
-Material and Scene Editor  
-Russian Roulette Termination  
+~~Material and Scene Editor~~  
+~~Russian Roulette Termination~~  
 Denoising  
 Next Event Estimation (NEE)  
 Restir GI  
@@ -32,6 +33,5 @@ It uses SDl2, ImGui and SDL2_Img. I disabled Vulkan for now since I still haven'
 # Known Bugs  
 Probably doesn't work on Linux at the moment  
 The Mesh BVH doesn't traverse properly for refractive material  
-The Mesh BVH doesn't traverse properly with more than 1 triangle per leaf node  
 Rare pitch black pixel, most likely an issue with BRDF and PDF  
 Scale does not working properly for mesh objects  
