@@ -16,7 +16,8 @@ float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
 int UI::numRays = config.raysPerPixel;
-int UI::numBounces = config.bounceDepth;
+int UI::minBounces = config.minBounces;
+int UI::maxBounces = config.maxBounces;
 bool UI::accumulateRays = true;
 
 int UI::numThreads = std::thread::hardware_concurrency();
@@ -83,19 +84,35 @@ void UI::renderSettings() {
 
     ImGui::Text("%d", accumulatedRays);
 
-    if (ImGui::SliderInt("Rays per frame", &numRays, 1, 100)) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderInt("##Rays per frame", &numRays, 1, 100, "Rays per frame %.3f")) {
         camUpdate = true;
         config.raysPerPixel = numRays;
     }
 
-    if (ImGui::SliderInt("Ray bounces", &numBounces, 0, 100)) {
+    ImGui::Separator();
+
+    ImGui::Text("Russian Roulette Termination");
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderInt("##Min ray bounces", &minBounces, 0, 5, "Min Bounces %.3f")) {
         camUpdate = true;
-        config.bounceDepth = numBounces;
+        config.minBounces = minBounces;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderInt("##Max ray bounces", &maxBounces, 0, 100, "Max bounces %.3f")) {
+        if (maxBounces <= minBounces) {
+            maxBounces = minBounces + 1;
+        }
+        camUpdate = true;
+        config.maxBounces = maxBounces;
     }
 
     ImGui::Separator();
 
-    if (ImGui::SliderInt("CPU Threads", &numThreads, 1, std::thread::hardware_concurrency())) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderInt("##CPU Threads", &numThreads, 1, std::thread::hardware_concurrency(), "CPU Threads %i")) {
         config.threads = numThreads;
     }
 
@@ -146,7 +163,8 @@ void UI::renderSettings() {
 
     ImGui::Text("Camera Settings");
 
-    if (ImGui::SliderFloat("fOV", &fOV, 1, 180)) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderFloat("##fOV", &fOV, 1, 180, "fOV %.3f")) {
         camUpdate = true;
     }
 
@@ -159,12 +177,14 @@ void UI::renderSettings() {
         camUpdate = true;
     }
 
-    if (ImGui::SliderFloat("Aperture Radius", &apetureRadius, 0, 2)) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderFloat("##Aperture Radius", &apetureRadius, 0, 2, "Aperture Radius %.3f")) {
         config.apertureRadius = apetureRadius;
         camUpdate = true;
     }
 
-    if (ImGui::SliderFloat("Focal Distance", &focalDistance, 0, 100)) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    if (ImGui::SliderFloat("##Focal Distance", &focalDistance, 0, 100, "Focal Distance %.3f")) {
         config.focalDistance = focalDistance;
         camUpdate = true;
     }
@@ -426,6 +446,7 @@ void UI::sceneEditor() {
     Vector3 position = selectedObject->getPos();
 
     // X Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Position X", &position.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
         selectedObject->setPos(position);
         sceneUpdate = true;
@@ -433,6 +454,7 @@ void UI::sceneEditor() {
     }
 
     // Y Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Position Y", &position.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
         selectedObject->setPos(position);
         sceneUpdate = true;
@@ -440,6 +462,7 @@ void UI::sceneEditor() {
     }
 
     // Z Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Position Z", &position.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
         selectedObject->setPos(position);
         sceneUpdate = true;
@@ -450,6 +473,7 @@ void UI::sceneEditor() {
     Vector3 direction = selectedObject->getPos();
 
     // X Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
         selectedObject->setDir(direction);
         sceneUpdate = true;
@@ -457,6 +481,7 @@ void UI::sceneEditor() {
     }
 
     // Y Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
         selectedObject->setDir(direction);
         sceneUpdate = true;
@@ -464,6 +489,7 @@ void UI::sceneEditor() {
     }
 
     // Z Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
         selectedObject->setDir(direction);
         sceneUpdate = true;
@@ -474,6 +500,7 @@ void UI::sceneEditor() {
     Vector3 scale = selectedObject->getScale();
 
     // X Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Scale X", &scale.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
         selectedObject->setScale(scale);
         sceneUpdate = true;
@@ -481,6 +508,8 @@ void UI::sceneEditor() {
     }
 
     // Y Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+
     if (ImGui::DragFloat("##Scale Y", &scale.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
         selectedObject->setScale(scale);
         sceneUpdate = true;
@@ -488,12 +517,12 @@ void UI::sceneEditor() {
     }
 
     // Z Axis
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::DragFloat("##Scale Z", &scale.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
         selectedObject->setScale(scale);
         sceneUpdate = true;
         camUpdate = true;
     }
-
 
     ImGui::End();
 }

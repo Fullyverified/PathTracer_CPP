@@ -205,7 +205,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 ray.getOrigin().set(camera.getPos());
                 ray.getPos().set(camera.getPos());
 
-                // Jitter the pixel position for MSAA
+                // Jitter the pixel position for MSAA effect
                 float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
                 float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
                 Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
@@ -236,11 +236,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
                 ray.setInternal(false);
 
-                for (int currentBounce = 0; currentBounce <= config.bounceDepth; currentBounce++) {
+                for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
 
                     // Intersect scene using BVH
                     BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
+                        // Ray intersects nothing, break
                         break;
                     }
 
@@ -324,17 +325,24 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // 3) Update throughput with BRDF and PDF
                     throughput = throughput * newThroughput;
 
-                    /*float dotProduct = std::abs(ray.getNormal().dot(ray.getDir()));
-                    Vector3 surfaceReflectance = mat.colour;
-                    throughput = throughput * surfaceReflectance * dotProduct;*/
+                    // -------------------------------------------------------------
+                    // Russian roulete termination
+                    // -------------------------------------------------------------
 
-                    // 4) Russian roulette or other bounce termination can go here
-                    //    For now, we just rely on bounceDepth or no intersection
-                    //    but you can add a random termination, e.g.:
-                    // float rr = dist(rng);
-                    // if (rr > 0.9f) break;
-                    // else throughput *= 1.0f / 0.9f;
+                    float RR =  std::min(std::max(throughput.maxComponent(), 0.1f), 1.0f);
 
+                    // Ensure minimum number of bounces completed
+                    if (currentBounce > config.minBounces) {
+                        if (dist(rng) > RR) {
+                            // Add the remaining contribution before termination
+                            finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                            break; // Terminate the ray path early
+                        }
+                        // Scale the throughput to maintain an unbiased estimator
+                        throughput = throughput / RR;
+                    }
+
+                    // Prepare for next bounce
                     ray.getDir().set(wi);
                     ray.updateOrigin(0.01);
                 } // end for bounceDepth

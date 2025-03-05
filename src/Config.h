@@ -6,10 +6,11 @@ struct Config {
     float aspectX = 1;
     float aspectY = 1;
     float resY = 1200;
-    float upScale = 4; // 1 is default - integer scaling - multiples of res X
+    float upScale = 4;
     float fOV = 45;
     int raysPerPixel = 1;
-    int bounceDepth = 6;
+    int minBounces = 1;
+    int maxBounces = 6;
     int trisPerNode = 6;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;

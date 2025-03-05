@@ -109,6 +109,10 @@ public:
 
     // generic functions
 
+    float maxComponent() {
+        return std::max(std::max(x, y), z);
+    }
+
     void flip() {
         x = -x;
         y = -y;

@@ -19,8 +19,10 @@ public:
     static float frameTime;
     static int accumulatedRays;
     static int numRays;
-    static int numBounces;
+    static int minBounces;
+    static int maxBounces;
     static bool accumulateRays;
+    static bool sky;
 
     static int numThreads;
 
