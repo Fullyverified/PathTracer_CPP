@@ -68,6 +68,9 @@ private:
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
+    std::pair<int, int> boundsXThread;
+    std::pair<int, int> boundsYThread;
+
     static thread_local std::mt19937 rng; // Thread-local RNG
 
     std::thread renderThread;

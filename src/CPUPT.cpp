@@ -47,13 +47,12 @@ void CPUPT::renderLoop() {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
+    std::vector<std::future<void >> threadsTM;
 
     // Initialise Objects
     std::cout << "Constructing Objects" << std::endl;
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
-    config.threads = std::thread::hardware_concurrency();
-    //config.threads = 1;
 
     std::cout << "Constructing BVH" << std::endl;
     BVH bvh = BVH();
@@ -108,22 +107,43 @@ void CPUPT::renderLoop() {
 
         Camera cameraCopy = *camera; // dereference camera and copy
 
-
         auto startTimeRays = std::chrono::high_resolution_clock::now();
-        for (int j = 0; j < segments; j++) {
-            for (int i = 0; i < segments; i++) {
-                boundsX = threadSegments(0, internalResX, segments, i);
-                boundsY = threadSegments(0, internalResY, segments, j);
-                int its = iterations;
-                threads.emplace_back(std::async(std::launch::async, &CPUPT::traceRay, this,
-                                                cameraCopy, boundsX.first, boundsX.second, boundsY.first,
-                                                boundsY.second, its, std::ref(mutex)));
+
+        // Calculate number of screen segments
+        int tileSize = config.tileSize;
+        int segmentsX = (internalResX + tileSize - 1) / tileSize; // Ceiling division
+        int segmentsY = (internalResY + tileSize - 1) / tileSize;
+        int totalSegments = segmentsX * segmentsY;
+        std::atomic<int> nextSegment(0);
+
+        // Create a worker for each segment
+        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, &mutex]() {
+            while (true) {
+                int segmentIndex = nextSegment.fetch_add(1);
+                if (segmentIndex >= totalSegments) {
+                    break;
+                }
+                // Convert segment index to tile coordinates
+                int tileY = segmentIndex / segmentsX;
+                int tileX = segmentIndex % segmentsX;
+                int startX = tileX * tileSize;
+                int endX = std::min(startX + tileSize - 1, internalResX - 1);
+                int startY = tileY * tileSize;
+                int endY = std::min(startY + tileSize - 1, internalResY - 1);
+                traceRay(cameraCopy, startX, endX, startY, endY, iterations, mutex);
             }
+        };
+
+        // Launch worker threads
+        std::vector<std::thread> threadsPT;
+        for (int i = 0; i < numThreads; ++i) {
+            threadsPT.emplace_back(worker);
         }
-        for (std::future<void> &thread: threads) {
-            thread.get(); // Blocks until the thread completes its task
+        // Block until all threads are finished
+        for (auto& t : threadsPT) {
+            t.join();
         }
-        threads.clear();
+        threadsPT.clear();
 
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
@@ -144,15 +164,15 @@ void CPUPT::renderLoop() {
             for (int i = 0; i < segments; i++) {
                 boundsX = threadSegments(0, internalResX, segments, i);
                 boundsY = threadSegments(0, internalResY, segments, j);
-                threads.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
+                threadsTM.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
                                                 boundsX.first, boundsX.second, boundsY.first,
                                                 boundsY.second, std::ref(mutex)));
             }
         }
-        for (std::future<void> &thread: threads) {
+        for (std::future<void> &thread : threadsTM) {
             thread.get(); // Blocks until the thread completes its task
         }
-        threads.clear();
+        threadsTM.clear();
 
         systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
 
@@ -171,7 +191,6 @@ void CPUPT::renderLoop() {
 }
 
 void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, std::mutex &mutex) const {
-    // For convenience, define some random distribution for later
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (int y = ystart; y <= yend; y++) {

@@ -14,7 +14,8 @@ struct Config {
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;
-    int threads = 1; // 0 = default
+    int threads = 0; // 0 = default
+    int tileSize = 32;
     bool denoise = false;
     float denoiseWeight = 0.75;
     float exposure = 1;
