@@ -6,6 +6,8 @@
 #include "SceneObject.h"
 #include "LoadMesh.h"
 
+#include "Camera.h"
+
 #include "AABCubeBounds.h"
 #include "AABCubeCenter.h"
 #include "Sphere.h"
@@ -17,14 +19,14 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        //primativeTypes.emplace_back("CubeBounds");
+        camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
+
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
 
+        loadMeshes();
 
         defaultScene();
-
-        loadMeshes();
     }
 
     ~SceneObjectManager() {
@@ -76,6 +78,15 @@ public:
     }
 
     void loadMeshes() {
+
+        LoadMesh* torus = new LoadMesh();
+        torus->load("torus.obj");
+        meshTypes["Torus"] = torus;
+
+        LoadMesh* diamond = new LoadMesh();
+        diamond->load("diamond.obj");
+        meshTypes["Diamond"] = diamond;
+
         LoadMesh* companionCube = new LoadMesh();
         companionCube->load("companionCube.obj");
         meshTypes["Companion Cube"] = companionCube;
@@ -83,14 +94,6 @@ public:
         LoadMesh* lucy = new LoadMesh();
         lucy->load("lucyScaled.obj");
         meshTypes["Lucy"] = lucy;
-
-        LoadMesh* diamond = new LoadMesh();
-        diamond->load("diamond.obj");
-        meshTypes["Diamond"] = diamond;
-
-        LoadMesh* torus = new LoadMesh();
-        torus->load("torus.obj");
-        meshTypes["Torus"] = torus;
 
         refreshMeshNames();
     }
@@ -119,8 +122,6 @@ public:
         sceneObjects.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
         sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
 
-        //sceneObjectsList.emplace_back(new MeshObject(Vector3(4.5, -1.5, 1.25), Vector3(1, 1, 1), Vector3(1, 1, 1), torus, materialManager->getMaterial("Copper"))); // statue left
-
         // BOX 1
 
         // BOX2
@@ -135,7 +136,7 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 7), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
 
         // Objects of Interest
-        //sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), lucy, materialManager->getMaterial("White"))); // statue left
+        sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
         sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
 
         // BOX 2
@@ -155,9 +156,16 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // left
 
         // BOX 3
+
+    }
+
+    Camera* getCamera() {
+        return camera;
     }
 
 private:
+    Camera* camera;
+
     std::vector<const char*> primativeTypes; // Sphere, Cube
 
     std::vector<const char*> meshNames;

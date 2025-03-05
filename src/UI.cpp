@@ -150,9 +150,9 @@ void UI::renderSettings() {
         camUpdate = true;
     }
 
-    if (ImGui::SliderFloat("Exposure", &exposure, 0.1, 10)) {
+    /*if (ImGui::SliderFloat("Exposure", &exposure, 0.1, 10)) {
         camUpdate = true;
-    }
+    }*/
 
     if (ImGui::Checkbox("Depth of Field", &depthOfField)) {
         config.DepthOfField = depthOfField;

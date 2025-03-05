@@ -119,7 +119,6 @@ void LoadMesh::createBVH() {
         std::vector<Triangle*> currentTriangles = currentNode->getTriangles();
         if (currentTriangles.size() <= config.trisPerNode) {
             currentNode->setLeaf(true);
-            currentNode->setTriangle(currentNode->getTriangles()[0]);
             continue; // node is already a leaf node
         }
 
@@ -209,7 +208,10 @@ std::pair<Vector3, Vector3> LoadMesh::triangleBounds(std::vector<Triangle*> tria
 }
 
 void LoadMesh::cleanBVH(BVHNode *node) {
-    node->getTriangles().clear();
+
+    if (!node->getLeaf()) {
+        node->getTriangles().clear();
+    }
     if (node->getNodeLeft() != nullptr) {
         cleanBVH(node->getNodeLeft());
     }

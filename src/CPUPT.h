@@ -3,13 +3,12 @@
 
 #include <vector>
 #include <mutex>
-#include <numbers>
 #include <random>
 
-#include "BoundingBox.h"
 #include "SceneObject.h"
 #include "Camera.h"
 #include "Ray.h"
+
 #include "Renderer.h"
 #include "DirectionSampler.h"
 #include "SurfaceIntegrator.h"
@@ -79,16 +78,6 @@ private:
         float emission;
         Vector3 colour;
     };
-
-    struct LinearBVHNode {
-        BoundingBox bounds;
-        int leftChild;
-        int rightChild;
-        int objectIndex;
-        bool isLeaf;
-        int numChildren;
-    };
-    std::vector<LinearBVHNode> bvhNodes;
 
     bool debug;
 };

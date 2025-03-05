@@ -1,20 +1,13 @@
 #include "CPUPT.h"
 
 #include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
 
-#include "Window.h"
-#include "Renderer.h"
-
-#include <atomic>
 #include <algorithm>
 #include <chrono>
 #include <future>
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include <numbers>
 #include <stack>
 #include <vector>
 
@@ -28,9 +21,13 @@
 
 #include "SystemManager.h"
 
+thread_local std::mt19937 CPUPT::rng(std::random_device{}());
+
 CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *>& sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList), iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
+
+    camera = systemManager->getSceneObjectManager()->getCamera();
 }
 
 void CPUPT::launchRenderThread() {
@@ -170,55 +167,6 @@ void CPUPT::renderLoop() {
         float frameTimeSec = std::chrono::duration<float>(durationTimeRays).count();
         UI::RaysPerSecond = (config.raysPerPixel * internalResX * internalResY) / (frameTimeSec);
         //-----------------------
-    }
-}
-
-void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
-    for (int x = xstart; x <= xend; x++) {
-        for (int y = ystart; y <= yend; y++) {
-            float red = lumR[y * internalResX + x];
-            float green = lumG[y * internalResX + x];
-            float blue = lumB[y * internalResX + x];
-
-            float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
-
-            if (luminance > 0) {
-                // Extended Reinhard Tone Mapping - returns value [0, 1]
-                float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
-
-                red = red / luminance * mappedLuminance;
-                green = green / luminance * mappedLuminance;
-                blue = blue / luminance * mappedLuminance;
-
-                // Apply gamma correction
-                float gamma = 2.2f;
-                float invGamma = 1.0f / gamma;
-                red = pow(red, invGamma);
-                green = pow(green, invGamma);
-                blue = pow(blue, invGamma);
-
-                red *= 255;
-                green *= 255;
-                blue *= 255;
-
-                red = std::min(red, 255.0f);
-                green = std::min(green, 255.0f);
-                blue = std::min(blue, 255.0f);
-            }
-
-            // upscale and store in RGB buffer considering aspect ratio
-            for (int i = 0; i < upScale; i++) {
-                for (int j = 0; j < upScale; j++) {
-                    int outX = static_cast<int>(x * upScale + i);
-                    int outY = static_cast<int>(y * upScale + j);
-                    int offset = (outY * resX + outX) * 3;
-
-                    RGBBuffer[offset] = red;
-                    RGBBuffer[offset + 1] = green;
-                    RGBBuffer[offset + 2] = blue;
-                }
-            }
-        }
     }
 }
 
@@ -391,10 +339,56 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
     } // end y
 }
 
-thread_local std::mt19937 CPUPT::rng(std::random_device{}());
+void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
+    for (int x = xstart; x <= xend; x++) {
+        for (int y = ystart; y <= yend; y++) {
+            float red = lumR[y * internalResX + x];
+            float green = lumG[y * internalResX + x];
+            float blue = lumB[y * internalResX + x];
+
+            float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
+
+            if (luminance > 0) {
+                // Extended Reinhard Tone Mapping - returns value [0, 1]
+                float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
+
+                red = red / luminance * mappedLuminance;
+                green = green / luminance * mappedLuminance;
+                blue = blue / luminance * mappedLuminance;
+
+                // Apply gamma correction
+                float gamma = 2.2f;
+                float invGamma = 1.0f / gamma;
+                red = pow(red, invGamma);
+                green = pow(green, invGamma);
+                blue = pow(blue, invGamma);
+
+                red *= 255;
+                green *= 255;
+                blue *= 255;
+
+                red = std::min(red, 255.0f);
+                green = std::min(green, 255.0f);
+                blue = std::min(blue, 255.0f);
+            }
+
+            // upscale and store in RGB buffer considering aspect ratio
+            for (int i = 0; i < upScale; i++) {
+                for (int j = 0; j < upScale; j++) {
+                    int outX = static_cast<int>(x * upScale + i);
+                    int outY = static_cast<int>(y * upScale + j);
+                    int offset = (outY * resX + outX) * 3;
+
+                    RGBBuffer[offset] = red;
+                    RGBBuffer[offset + 1] = green;
+                    RGBBuffer[offset + 2] = blue;
+                }
+            }
+        }
+    }
+}
 
 void CPUPT::initialiseObjects() {
-    camera = systemManager->getCamera();
 
     resX = config.resX;
     resY = config.resY;

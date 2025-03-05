@@ -44,42 +44,62 @@ std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
 MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
     Vector3 rayDirection = ray.getDir();
 
-    Triangle* triangle = leafNode->getTriangle();
-    Vector3 v0 = triangle->v0;
-    Vector3 v1 = triangle->v1;
-    Vector3 v2 = triangle->v2;
+    float bestT = std::numeric_limits<float>::infinity();
+    float bestU = std::numeric_limits<float>::infinity();
+    float bestV = std::numeric_limits<float>::infinity();
+    Triangle* bestTriangle;
 
-    v0 = (v0 + pos) / scale;
-    v1 = (v1 + pos) / scale;
-    v2 = (v2 + pos) / scale;
+    for (Triangle* triangle : leafNode->getTriangles()) {
+        Vector3 v0 = triangle->v0;
+        Vector3 v1 = triangle->v1;
+        Vector3 v2 = triangle->v2;
 
-    Vector3 edge1 = v1 - v0;
-    Vector3 edge2 = v2 - v0;
+        v0 = (v0 + pos) / scale;
+        v1 = (v1 + pos) / scale;
+        v2 = (v2 + pos) / scale;
 
-    Vector3 h = rayDirection.cross(edge2);
-    float a = edge1.dot(h);
-    if (a > -std::numeric_limits<float>::epsilon() && a < std::numeric_limits<float>::epsilon()) {
-        return {nullptr, -1.0f, -1.0f, nullptr}; // ray parallel to triangle
+        Vector3 edge1 = v1 - v0;
+        Vector3 edge2 = v2 - v0;
+
+        Vector3 h = rayDirection.cross(edge2);
+        float a = edge1.dot(h);
+        if (a > -std::numeric_limits<float>::epsilon() && a < std::numeric_limits<float>::epsilon()) {
+            continue; // ray parallel to triangle
+        }
+
+        float f = 1.0f / a;
+        Vector3 s = ray.getOrigin() - v0;
+        float u = f * s.dot(h);
+
+        if (u < 0.0 || u > 1.0) {
+            continue;
+        }
+
+        Vector3 q = s.cross(edge1);
+        float v = f * rayDirection.dot(q);
+
+        if (v < 0.0f || u + v > 1.0f) {
+            continue;
+        }
+
+        float t = f * edge2.dot(q);
+
+        if (t < bestT) {
+            bestT = t;
+            bestU = u;
+            bestV = v;
+            bestTriangle = triangle;
+        }
     }
 
-    float f = 1.0f / a;
-    Vector3 s = ray.getOrigin() - v0;
-    float u = f * s.dot(h);
-
-    if (u < 0.0 || u > 1.0) {
-        return {nullptr, -1.0f, -1.0f, nullptr};
+    // return best intersection
+    if (bestT != std::numeric_limits<float>::infinity()) {
+        return {nullptr, bestT, 0.0f, bestTriangle, (bestU, bestV, 1.0f - bestU - bestV)};
     }
 
-    Vector3 q = s.cross(edge1);
-    float v = f * rayDirection.dot(q);
+    // no intersection
+    return {nullptr, -1.0f, -1.0f, nullptr};
 
-    if (v < 0.0f || u + v > 1.0f) {
-        return {nullptr, -1.0f, -1.0f, nullptr};
-    }
-
-    float t = f * edge2.dot(q);
-
-    return {nullptr, t, 0.0f, triangle, (u, v, 1.0f - u - v)};
 }
 
 

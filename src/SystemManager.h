@@ -47,7 +47,7 @@ public:
         delete materialManager;
     }
 
-    void initialize(Camera *camera) {
+    void initialize() {
         // --- Initialize ImGui ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -56,11 +56,9 @@ public:
         ImGui_ImplSDL2_InitForSDLRenderer(window->getSDLWindow(), renderer->getSDLRenderer());
         ImGui_ImplSDLRenderer2_Init(renderer->getSDLRenderer());
 
-        this->camera = camera;
-
         cpupt->initialiseObjects();
 
-        inputManager = new InputManager(camera, window);
+        inputManager = new InputManager(sceneObjectManager->getCamera(), window);
         inputManager->setSystemManager(this);
 
         resX = config.resX;
@@ -132,10 +130,6 @@ public:
         return inputManager;
     }
 
-    Camera *getCamera() {
-        return camera;
-    }
-
     void updateRGBBuffer(uint8_t *newRGBBuffer) {
         RGBBuffer = newRGBBuffer;
     }
@@ -164,7 +158,6 @@ private:
     CPUPT *cpupt; // CPU path tracer
     Window *window; // SDL_Wndow
     Renderer *renderer; // SDL_Renderer
-    Camera *camera;
     InputManager *inputManager;
     MaterialManager *materialManager;
     SceneObjectManager *sceneObjectManager;

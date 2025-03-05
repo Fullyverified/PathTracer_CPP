@@ -93,7 +93,6 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
 }
 
 struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform) {
-    //std::cout<<"Searching Mesh Tree"<<std::endl;
 
     if (!isLeaf) {
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray);
@@ -106,20 +105,17 @@ struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObj
 
     if (isLeaf) {
         // only return the node if the ray actually points at the object itself
-        //std::cout << "Returning this"<<std::endl;
+        //std::cout << "Is leaf"<<std::endl;
         MeshObject::meshIntersection meshIntersection = transform.meshObject->intersectTriangles(ray, this);
         if (meshIntersection.close != -1.0f) {
             return {this, meshIntersection.close, meshIntersection.close, meshIntersection.triangle, meshIntersection.bcoords};
         }
         return {nullptr, -1.0f, -1.0f}; // early exit
     }
+
     //std::cout <<"Determining left and right nodes"<<std::endl;
-    MeshObject::meshIntersection hitLeft = nodeLeft == nullptr
-                                               ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f)
-                                               : nodeLeft->searchBVHTreeMesh(ray, transform);
-    MeshObject::meshIntersection hitRight = nodeRight == nullptr
-                                                ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f)
-                                                : nodeRight->searchBVHTreeMesh(ray, transform);
+    MeshObject::meshIntersection hitLeft = nodeLeft == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f) : nodeLeft->searchBVHTreeMesh(ray, transform);
+    MeshObject::meshIntersection hitRight = nodeRight == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f) : nodeRight->searchBVHTreeMesh(ray, transform);
 
     if (hitLeft.node != nullptr && hitRight.node != nullptr) {
         // both valid nodes

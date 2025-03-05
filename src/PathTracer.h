@@ -2,19 +2,7 @@
 #define PATHTRACER_H
 
 #include "SDL.h"
-
-#include <vector>
-#include "Vector3.h"
-#include "Camera.h"
-#include "Sphere.h"
-#include "AABCubeBounds.h"
-#include "AABCubeCenter.h"
-#include "LoadMesh.h"
-#include "MeshObject.h"
-#include "Material.h"
 #include "SystemManager.h"
-#include "MaterialManager.h"
-#include "SceneObjectManager.h"
 
 class PathTracer {
 public:
@@ -26,10 +14,8 @@ public:
 
     void run() {
 
-        Camera *camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
         SystemManager systemManager;
-
-        systemManager.initialize(camera);
+        systemManager.initialize();
 
         // start render thread
         systemManager.render();
@@ -60,7 +46,7 @@ public:
                     systemManager.getInputManager()->processInput(event);
                 }
             }
-            systemManager.getInputManager()->processInputContinuous(systemManager.getCamera(), deltaTime);
+            systemManager.getInputManager()->processInputContinuous(systemManager.getSceneObjectManager()->getCamera(), deltaTime);
 
             // Physics
             systemManager.update(deltaTime);
