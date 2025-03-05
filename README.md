@@ -5,18 +5,19 @@ A CPU Path tracer.
 
 # Features  
 Multiple Importance Sampling (MIS)  
+Russian Roulette Termination  
 BVH Acceleration  
 Multithreading  
 PBR Materials  
 Meshes and Primitives  
 Extended Reinhard Tone Mapping  
 Controls - WASD and Mouse  
-UI  
+Scene and Material Editor  
 
 # To Do  
 ~~Multiple Importance Sampling (MIS)~~  
-Material and Scene Editor  
-Russian Roulette Termination  
+~~Material and Scene Editor~~  
+~~Russian Roulette Termination~~  
 Denoising  
 Next Event Estimation (NEE)  
 Restir GI  
