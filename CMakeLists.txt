@@ -135,6 +135,10 @@ add_executable(PathTracer_CPP
         src/SceneObjectManager.h
         src/BVH.h
         src/BVH.cpp
+        src/DirectionSampler.cpp
+        src/DirectionSampler.h
+        src/SurfaceIntegrator.cpp
+        src/SurfaceIntegrator.h
 )
 
 # Link Vulkan and libraries
