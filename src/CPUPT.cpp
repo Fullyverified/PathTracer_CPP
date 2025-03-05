@@ -106,7 +106,7 @@ void CPUPT::renderLoop() {
         }
 
         Camera cameraCopy = *camera; // dereference camera and copy
-        bool sky = config.sky; // copy sky bool
+        bool sky = config.sky; // copy bool
 
         auto startTimeRays = std::chrono::high_resolution_clock::now();
 
@@ -248,7 +248,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                             Vector3 horizonColour(1.0f, 1.0f, 1.0f);
                             float t = 0.5f * (ray.getDir().y + 1.0f); // Map y from -1 to 1 to 0 to 1
                             Vector3 skyColor = (1.0f - t) * horizonColour + t * topColour;
-                            finalColour = finalColour + throughput * skyColor;
+                            finalColour = finalColour + throughput * skyColor * 0.25;
                         }
                         break;
                     }
