@@ -46,22 +46,21 @@ void CPUPT::joinRenderThread() {
 }
 
 void CPUPT::renderLoop() {
+    std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
+
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
     std::vector<std::future<void> > threadsTM;
 
-    initialiseObjects();
-    std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
+    DenoiseInput denoiseInput{};
+    initialiseObjects(denoiseInput);
 
-    std::cout << "Constructing BVH" << std::endl;
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
 
-    std::cout << "Starting render loop" << std::endl;
-
-    // render loop code
+    // render loop
     while (systemManager->getIsRunning()) {
         auto frameStartTime = std::chrono::high_resolution_clock::now();
 
@@ -83,7 +82,7 @@ void CPUPT::renderLoop() {
             }
 
             if (UI::resUpdate) {
-                initialiseObjects(); // change buffer size
+                initialiseObjects(denoiseInput); // change buffer size
                 denoiser->resize(internalResX * internalResY);
                 UI::resUpdate = false;
                 UI::resizeBuffer = true;
@@ -105,7 +104,7 @@ void CPUPT::renderLoop() {
         if (UI::upscalingUpdate) {
             UI::upscalingUpdate = false;
             config.upScale = UI::upscale;
-            updateUpscaling();
+            updateUpscaling(denoiseInput);
             denoiser->resize(internalResX * internalResY);
         }
 
@@ -126,7 +125,7 @@ void CPUPT::renderLoop() {
         std::atomic<int> nextSegment(0);
 
         // Create a worker for each segment
-        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, sky, &mutex]() {
+        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, sky, &denoiseInput, &mutex]() {
             while (true) {
                 int segmentIndex = nextSegment.fetch_add(1);
                 if (segmentIndex >= totalSegments) {
@@ -139,7 +138,7 @@ void CPUPT::renderLoop() {
                 int endX = std::min(startX + tileSize - 1, internalResX - 1);
                 int startY = tileY * tileSize;
                 int endY = std::min(startY + tileSize - 1, internalResY - 1);
-                traceRay(cameraCopy, startX, endX, startY, endY, iterations, sky, mutex);
+                traceRay(cameraCopy, startX, endX, startY, endY, iterations, sky, denoiseInput, mutex);
             }
         };
 
@@ -158,31 +157,27 @@ void CPUPT::renderLoop() {
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
 
-        auto startTimeDN = std::chrono::high_resolution_clock::now();
-
         ////////////////////////////////////
         // Denoising
         ////////////////////////////////////
+        auto startTimeDN = std::chrono::high_resolution_clock::now();
 
         config.denoise = UI::denoise;
         config.denoiseIterations = UI::denoiseIterations;
 
         if (config.denoise) {
-            denoiseInput.lumR = lumR;
-            denoiseInput.lumG = lumG;
-            denoiseInput.lumB = lumB;
+            denoiseInput.lumR = &lumR;
+            denoiseInput.lumG = &lumG;
+            denoiseInput.lumB = &lumB;
             denoiseInput.resX = internalResX;
             denoiseInput.resY = internalResY;
             denoiseInput.numIterations = config.denoiseIterations;
 
-            DenoiseOutput denoisedOutput = denoiser->launchDenoiseThreads(denoiseInput, segments);
-            lumR = denoisedOutput.lumR;
-            lumG = denoisedOutput.lumG;
-            lumB = denoisedOutput.lumB;
+            denoiser->launchDenoiseThreads(denoiseInput, segments);
         }
 
-        auto durationTimeDN = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
-        UI::denoisingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
+        auto durationTimeDN = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeDN);
+        UI::denoisingTime = std::chrono::duration<float>(durationTimeDN).count() * 1000;
 
         ////////////////////////////////////
         // Tone mapping
@@ -229,7 +224,7 @@ void CPUPT::renderLoop() {
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const {
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, DenoiseInput& denoiseInput, std::mutex &mutex) const {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (int y = ystart; y <= yend; y++) {
@@ -471,7 +466,7 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
     }
 }
 
-void CPUPT::initialiseObjects() {
+void CPUPT::initialiseObjects(DenoiseInput& denoiseInput) {
     resX = config.resX;
     resY = config.resY;
 
@@ -492,17 +487,13 @@ void CPUPT::initialiseObjects() {
     hdrG.resize(res, 0.0f);
     hdrB.resize(res, 0.0f);
 
-    denoiseInput.lumR.resize(res, 0.0f);
-    denoiseInput.lumG.resize(res, 0.0f);
-    denoiseInput.lumB.resize(res, 0.0f);
-
     denoiseInput.normalBuffer.resize(res, 0.0f);
     denoiseInput.depthBuffer.resize(res, 0.0f);
     denoiseInput.albedoBuffer.resize(res, 0.0f);
     denoiseInput.emissionBuffer.resize(res, 0.0f);
 }
 
-void CPUPT::updateUpscaling() {
+void CPUPT::updateUpscaling(DenoiseInput& denoiseInput) {
     upScale = config.upScale;
 
     internalResX = config.resX / config.upScale;
@@ -516,10 +507,6 @@ void CPUPT::updateUpscaling() {
     hdrR.resize(res, 0.0f);
     hdrG.resize(res, 0.0f);
     hdrB.resize(res, 0.0f);
-
-    denoiseInput.lumR.resize(res, 0.0f);
-    denoiseInput.lumG.resize(res, 0.0f);
-    denoiseInput.lumB.resize(res, 0.0f);
 
     denoiseInput.normalBuffer.resize(res, 0.0f);
     denoiseInput.depthBuffer.resize(res, 0.0f);

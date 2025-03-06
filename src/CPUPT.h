@@ -32,7 +32,7 @@ public:
     void joinRenderThread();
 
     // traversal logic
-    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, DenoiseInput& denoiseInput, std::mutex &mutex) const;
 
     // tone mapping
     void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
@@ -41,8 +41,8 @@ public:
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
 
     // cleanup
-    void initialiseObjects();
-    void updateUpscaling();
+    void initialiseObjects(DenoiseInput& denoiseInput);
+    void updateUpscaling(DenoiseInput& denoiseInput);
 
     void deleteObjects();
 
@@ -57,10 +57,6 @@ private:
     DirectionSampler* directionSampler;
     SurfaceIntegrator* surfaceIntergrator;
     Denoiser* denoiser;
-
-    // denoising
-    mutable DenoiseInput denoiseInput;
-    mutable DenoiseOutput denoiseOutput;
 
     // scene objects
     std::vector<SceneObject *>& sceneObjectsList;

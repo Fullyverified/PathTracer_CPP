@@ -7,10 +7,9 @@
 #include "Vector3.h"
 
 struct DenoiseInput {
-    // raw pixel data
-    mutable std::vector<float> lumR;
-    mutable std::vector<float> lumG;
-    mutable std::vector<float> lumB;
+    std::vector<float>* lumR;
+    std::vector<float>* lumG;
+    std::vector<float>* lumB;
 
     mutable std::vector<Vector3> normalBuffer; // normal of primary ray hit
     mutable std::vector<float> depthBuffer; // depth of primary ray hit
@@ -21,19 +20,13 @@ struct DenoiseInput {
     int resX, resY;
 };
 
-struct DenoiseOutput {
-    std::vector<float> lumR;
-    std::vector<float> lumG;
-    std::vector<float> lumB;
-};
-
 class Denoiser {
 public:
 
     Denoiser(int res);
     ~Denoiser();
 
-    DenoiseOutput launchDenoiseThreads(DenoiseInput& denoiseInput, int segments);
+    void launchDenoiseThreads(DenoiseInput& denoiseInput, int segments);
 
     void A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier);
 
@@ -59,9 +52,9 @@ public:
     }
 
     void resize(int res) {
-        lumR.resize(res, 0.0f);
+        /*lumR.resize(res, 0.0f);
         lumG.resize(res, 0.0f);
-        lumB.resize(res, 0.0f);
+        lumB.resize(res, 0.0f);*/
     }
 
 private:
@@ -70,10 +63,10 @@ private:
 
     int numThreads;
 
-    // denoised pixels
+    /*// denoised pixels
     mutable std::vector<float> lumR;
     mutable std::vector<float> lumG;
-    mutable std::vector<float> lumB;
+    mutable std::vector<float> lumB;*/
 };
 
 #endif //DENOISER_H

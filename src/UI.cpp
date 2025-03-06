@@ -70,17 +70,19 @@ void UI::renderSettings() {
 
     ImGui::Text("Rays /s: %d", RaysPerSecond);
 
+    // Frame time
     std::string frameTimeStr = std::to_string(static_cast<int>(frameTime)) + " ms";
     ImGui::Text("Frame Time: %s", frameTimeStr.c_str());
 
+    // Path tracing time
     std::string pathTraceTimeStr = std::to_string(static_cast<int>(pathTracingTime)) + " ms";
     ImGui::Text("Path Trace: %s", pathTraceTimeStr.c_str());
 
-    if (config.denoise) {
-        std::string denoisingTimeStr = std::to_string(static_cast<int>(denoisingTime)) + " ms";
-        ImGui::Text("Denoising: %s", denoisingTimeStr);
-    }
+    // Denoising time
+    std::string denoisingTimeStr = std::to_string(static_cast<int>(denoisingTime)) + " ms";
+    ImGui::Text("Denoising: %s", denoisingTimeStr);
 
+    // Tone mapping time
     std::string toneMappingTimeStr = std::to_string(static_cast<int>(toneMappingTime)) + " ms";
     ImGui::Text("Tone Mapping: %s", toneMappingTimeStr);
 

@@ -56,8 +56,6 @@ public:
         ImGui_ImplSDL2_InitForSDLRenderer(window->getSDLWindow(), renderer->getSDLRenderer());
         ImGui_ImplSDLRenderer2_Init(renderer->getSDLRenderer());
 
-        cpupt->initialiseObjects();
-
         inputManager = new InputManager(sceneObjectManager->getCamera(), window);
         inputManager->setSystemManager(this);
 

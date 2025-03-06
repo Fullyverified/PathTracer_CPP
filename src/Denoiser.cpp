@@ -12,11 +12,7 @@ Denoiser::~Denoiser() {
 
 }
 
-DenoiseOutput Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int segments) {
-
-    std::copy(denoiseInput.lumR.begin(), denoiseInput.lumR.end(), lumR.begin());
-    std::copy(denoiseInput.lumG.begin(), denoiseInput.lumG.end(), lumG.begin());
-    std::copy(denoiseInput.lumB.begin(), denoiseInput.lumB.end(), lumB.begin());
+void Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int segments) {
 
     std::vector<std::future<void>> threads;
     std::mutex mutex;
@@ -38,7 +34,6 @@ DenoiseOutput Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int seg
     }
     threads.clear();
 
-    return DenoiseOutput{lumR, lumG, lumB};
 }
 
 void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier) {
@@ -50,6 +45,8 @@ void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, i
     std::vector<float>& depthBuffer = denoiseInput.depthBuffer;
     std::vector<Vector3>& albedoBuffer = denoiseInput.albedoBuffer;
     std::vector<float>& emissionBuffer = denoiseInput.emissionBuffer;
+
+
 
     // A-Trous kernel - pixel weights
     float kernel[5][5] = {
@@ -99,9 +96,9 @@ void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, i
 
                         float weight = kernelWeight * normalWeight * depthWeight * albedoWeight * emissionWeight;
 
-                        colourSum.x += lumR[sampleY * resX + sampleX] * weight;
-                        colourSum.y += lumG[sampleY * resX + sampleX] * weight;
-                        colourSum.z += lumB[sampleY * resX + sampleX] * weight;
+                        //colourSum.x += denoiseInput.lumR[sampleY * resX + sampleX] * weight;
+                        //colourSum.y += denoiseInput.lumG[sampleY * resX + sampleX] * weight;
+                        //colourSum.z += denoiseInput.lumB[sampleY * resX + sampleX] * weight;
                         weightSum += weight;
                     }
                 }
@@ -109,13 +106,13 @@ void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, i
                 {
                     std::lock_guard<std::mutex> lock(mutex);
                     if (weightSum > 0.0f || depthBuffer[y * resX + x] != -1) {
-                        lumR[y * resX + x] = colourSum.x / weightSum;
-                        lumG[y * resX + x] = colourSum.y / weightSum;
-                        lumB[y * resX + x] = colourSum.z / weightSum;
+                        //lumR[y * resX + x] = colourSum.x / weightSum;
+                        //lumG[y * resX + x] = colourSum.y / weightSum;
+                        //lumB[y * resX + x] = colourSum.z / weightSum;
                     } else {
-                        lumR[y * resX + x] = denoiseInput.lumR[y * resX + x];
-                        lumG[y * resX + x] = denoiseInput.lumG[y * resX + x];
-                        lumB[y * resX + x] = denoiseInput.lumB[y * resX + x];
+                        //lumR[y * resX + x] = lumR[y * resX + x];
+                        //lumG[y * resX + x] = lumG[y * resX + x];
+                        //lumB[y * resX + x] = lumB[y * resX + x];
                     }
                 }
             }
