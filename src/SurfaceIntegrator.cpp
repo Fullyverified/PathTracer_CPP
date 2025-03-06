@@ -119,6 +119,12 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
         return 1;
     }
 
+    if (internal) {
+        // Internal - only refraction, therefore only refraction PDF which is 1
+        return brdf * cosTheta_wi;
+    }
+    // External, include all PDFs
+
     float p_specular = mat->metallic;
     float effective_pdf_specular = pdf_specular * p_specular; // metallic branch
 
