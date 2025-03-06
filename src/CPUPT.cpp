@@ -157,9 +157,8 @@ void CPUPT::renderLoop() {
 
         auto durationTimeRays = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
         UI::pathTracingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
-        //-----------------------
-        auto startTimeTM = std::chrono::high_resolution_clock::now();
 
+        auto startTimeDN = std::chrono::high_resolution_clock::now();
 
         ////////////////////////////////////
         // Denoising
@@ -182,9 +181,15 @@ void CPUPT::renderLoop() {
             lumB = denoisedOutput.lumB;
         }
 
+        auto durationTimeDN = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeRays);
+        UI::denoisingTime = std::chrono::duration<float>(durationTimeRays).count() * 1000;
+
         ////////////////////////////////////
         // Tone mapping
         ////////////////////////////////////
+
+        auto startTimeTM = std::chrono::high_resolution_clock::now();
+
         maxLuminance = 0;
         currentLuminance = 0;
         for (int i = 0; i < internalResX * internalResY; i++) {

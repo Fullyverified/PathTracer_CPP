@@ -12,6 +12,7 @@
 
 int UI::RaysPerSecond = 0;
 float UI::pathTracingTime = 0;
+float UI::denoisingTime = 0;
 float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
@@ -74,6 +75,11 @@ void UI::renderSettings() {
 
     std::string pathTraceTimeStr = std::to_string(static_cast<int>(pathTracingTime)) + " ms";
     ImGui::Text("Path Trace: %s", pathTraceTimeStr.c_str());
+
+    if (config.denoise) {
+        std::string denoisingTimeStr = std::to_string(static_cast<int>(denoisingTime)) + " ms";
+        ImGui::Text("Denoising: %s", denoisingTimeStr);
+    }
 
     std::string toneMappingTimeStr = std::to_string(static_cast<int>(toneMappingTime)) + " ms";
     ImGui::Text("Tone Mapping: %s", toneMappingTimeStr);

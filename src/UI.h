@@ -15,6 +15,7 @@ public:
 
     static int RaysPerSecond;
     static float pathTracingTime;
+    static float denoisingTime;
     static float toneMappingTime;
     static float frameTime;
     static int accumulatedRays;
