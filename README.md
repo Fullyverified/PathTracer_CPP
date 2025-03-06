@@ -34,3 +34,4 @@ It uses SDl2, ImGui and SDL2_Img. I disabled Vulkan for now since I still haven'
 Probably doesn't work on Linux at the moment  
 Rare pitch black pixel, most likely an issue with BRDF and PDF  
 Scale does not working properly for mesh objects  
+Denoising is WIP and broken  
