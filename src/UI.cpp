@@ -20,6 +20,8 @@ int UI::minBounces = config.minBounces;
 int UI::maxBounces = config.maxBounces;
 bool UI::accumulateRays = true;
 bool UI::sky = config.sky;
+bool UI::denoise = config.denoise;
+int UI::denoiseIterations = config.denoiseIterations;
 
 int UI::numThreads = std::thread::hardware_concurrency();
 
@@ -115,6 +117,16 @@ void UI::renderSettings() {
     if (ImGui::SliderInt("##CPU Threads", &numThreads, 1, std::thread::hardware_concurrency(), "CPU Threads %i")) {
         config.threads = numThreads;
     }
+
+    ImGui::Separator();
+
+    // Denoising
+    ImGui::Checkbox("Denoising", &denoise);
+
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+    ImGui::SliderInt("##Denoiser Iterations", &denoiseIterations, 0, 5, "Denoise Steps %i");
 
     ImGui::Separator();
 

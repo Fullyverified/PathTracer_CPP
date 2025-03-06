@@ -13,6 +13,8 @@
 #include "DirectionSampler.h"
 #include "SurfaceIntegrator.h"
 
+#include "Denoiser.h"
+
 class SystemManager;
 
 class CPUPT {
@@ -54,11 +56,18 @@ private:
     SystemManager* systemManager;
     DirectionSampler* directionSampler;
     SurfaceIntegrator* surfaceIntergrator;
+    Denoiser* denoiser;
 
+    // denoising
+    mutable DenoiseInput denoiseInput;
+    mutable DenoiseOutput denoiseOutput;
+
+    // scene objects
     std::vector<SceneObject *>& sceneObjectsList;
     BVHNode* rootNode;
     Camera* camera;
 
+    // pixel buffers
     mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
     mutable std::vector<float> hdrR, hdrG, hdrB;
     float maxLuminance, currentLuminance;
@@ -67,22 +76,16 @@ private:
     int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY, upScale;
     float aspectRatio;
 
+    // multithreading
     std::pair<int, int> boundsX;
     std::pair<int, int> boundsY;
 
     std::pair<int, int> boundsXThread;
     std::pair<int, int> boundsYThread;
 
-    static thread_local std::mt19937 rng; // Thread-local RNG
-
     std::thread renderThread;
 
-    struct BounceInfo {
-        float dot;
-        float metallic;
-        float emission;
-        Vector3 colour;
-    };
+    static thread_local std::mt19937 rng; // Thread-local RNG
 
     bool debug;
 };

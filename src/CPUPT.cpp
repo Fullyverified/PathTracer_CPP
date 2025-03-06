@@ -27,6 +27,7 @@ CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObje
                                                                                            iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
+    denoiser = new Denoiser(config.resX / config.upScale * config.resY / config.upScale);
 
     camera = systemManager->getSceneObjectManager()->getCamera();
 }
@@ -50,8 +51,6 @@ void CPUPT::renderLoop() {
     std::vector<std::future<void> > threads;
     std::vector<std::future<void> > threadsTM;
 
-    // Initialise Objects
-    std::cout << "Constructing Objects" << std::endl;
     initialiseObjects();
     std::cout << "Avaliable Threads: " << std::thread::hardware_concurrency() << std::endl;
 
@@ -59,6 +58,8 @@ void CPUPT::renderLoop() {
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
+
+    std::cout << "Starting render loop" << std::endl;
 
     // render loop code
     while (systemManager->getIsRunning()) {
@@ -83,6 +84,7 @@ void CPUPT::renderLoop() {
 
             if (UI::resUpdate) {
                 initialiseObjects(); // change buffer size
+                denoiser->resize(internalResX * internalResY);
                 UI::resUpdate = false;
                 UI::resizeBuffer = true;
             }
@@ -104,7 +106,12 @@ void CPUPT::renderLoop() {
             UI::upscalingUpdate = false;
             config.upScale = UI::upscale;
             updateUpscaling();
+            denoiser->resize(internalResX * internalResY);
         }
+
+        ////////////////////////////////////
+        // Path tracing
+        ////////////////////////////////////
 
         Camera cameraCopy = *camera; // dereference camera and copy
         bool sky = config.sky; // copy bool
@@ -142,6 +149,7 @@ void CPUPT::renderLoop() {
             threadsPT.emplace_back(worker);
         }
         // Block until all threads are finished
+
         for (std::thread &thread: threadsPT) {
             thread.join();
         }
@@ -152,7 +160,31 @@ void CPUPT::renderLoop() {
         //-----------------------
         auto startTimeTM = std::chrono::high_resolution_clock::now();
 
-        // tone mapping
+
+        ////////////////////////////////////
+        // Denoising
+        ////////////////////////////////////
+
+        config.denoise = UI::denoise;
+        config.denoiseIterations = UI::denoiseIterations;
+
+        if (config.denoise) {
+            denoiseInput.lumR = lumR;
+            denoiseInput.lumG = lumG;
+            denoiseInput.lumB = lumB;
+            denoiseInput.resX = internalResX;
+            denoiseInput.resY = internalResY;
+            denoiseInput.numIterations = config.denoiseIterations;
+
+            DenoiseOutput denoisedOutput = denoiser->launchDenoiseThreads(denoiseInput, segments);
+            lumR = denoisedOutput.lumR;
+            lumG = denoisedOutput.lumG;
+            lumB = denoisedOutput.lumB;
+        }
+
+        ////////////////////////////////////
+        // Tone mapping
+        ////////////////////////////////////
         maxLuminance = 0;
         currentLuminance = 0;
         for (int i = 0; i < internalResX * internalResY; i++) {
@@ -250,6 +282,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                             Vector3 skyColor = (1.0f - t) * horizonColour + t * topColour;
                             finalColour = finalColour + throughput * skyColor * 0.25;
                         }
+
+                        if (currentBounce == 0 && config.denoise == true) {
+                            denoiseInput.depthBuffer[y * internalResX + x] = -1;
+                        }
                         break;
                     }
 
@@ -269,6 +305,14 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // Grab the material
                     Material *mat = hitObject->getMaterial();
+
+                    // Fill denoising buffers
+                    if (currentBounce == 0 && config.denoise == true) {
+                        denoiseInput.normalBuffer[y * internalResX + x] = ray.getNormal();
+                        denoiseInput.depthBuffer[y * internalResX + x] = leafNode.close;
+                        denoiseInput.albedoBuffer[y * internalResX + x] = mat->colour;
+                        denoiseInput.emissionBuffer[y * internalResX + x] = mat->emission;
+                    }
 
                     // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                     float randomSample = dist(rng);
@@ -442,6 +486,15 @@ void CPUPT::initialiseObjects() {
     hdrR.resize(res, 0.0f);
     hdrG.resize(res, 0.0f);
     hdrB.resize(res, 0.0f);
+
+    denoiseInput.lumR.resize(res, 0.0f);
+    denoiseInput.lumG.resize(res, 0.0f);
+    denoiseInput.lumB.resize(res, 0.0f);
+
+    denoiseInput.normalBuffer.resize(res, 0.0f);
+    denoiseInput.depthBuffer.resize(res, 0.0f);
+    denoiseInput.albedoBuffer.resize(res, 0.0f);
+    denoiseInput.emissionBuffer.resize(res, 0.0f);
 }
 
 void CPUPT::updateUpscaling() {
@@ -458,12 +511,24 @@ void CPUPT::updateUpscaling() {
     hdrR.resize(res, 0.0f);
     hdrG.resize(res, 0.0f);
     hdrB.resize(res, 0.0f);
+
+    denoiseInput.lumR.resize(res, 0.0f);
+    denoiseInput.lumG.resize(res, 0.0f);
+    denoiseInput.lumB.resize(res, 0.0f);
+
+    denoiseInput.normalBuffer.resize(res, 0.0f);
+    denoiseInput.depthBuffer.resize(res, 0.0f);
+    denoiseInput.albedoBuffer.resize(res, 0.0f);
+    denoiseInput.emissionBuffer.resize(res, 0.0f);
+
+    denoiser->resize(res);
 }
 
 void CPUPT::deleteObjects() {
     delete[] RGBBuffer;
     delete directionSampler;
     delete surfaceIntergrator;
+    delete denoiser;
 }
 
 SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {

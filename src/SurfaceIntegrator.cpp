@@ -65,7 +65,7 @@ Vector3 SurfaceIntegrator::computeRefractionBRDF(Vector3 col, float F, float n1,
 
 float SurfaceIntegrator::refractionPDF() const {
     // refraction
-    // For a delta lobe, it’s customary to treat the PDF = 1
+    // For a delta lobe, the PDF = 1
     // because sampling that single direction has probability 1 in that branch.
     return 1;
 }

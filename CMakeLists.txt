@@ -139,6 +139,8 @@ add_executable(PathTracer_CPP
         src/DirectionSampler.h
         src/SurfaceIntegrator.cpp
         src/SurfaceIntegrator.h
+        src/Denoiser.cpp
+        src/Denoiser.h
 )
 
 # Link Vulkan and libraries
