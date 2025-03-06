@@ -154,6 +154,10 @@ public:
         return cpupt->getClickedObject(x, y);
     }
 
+    void debugRay(int x, int y) {
+        cpupt->debugRay(x, y);
+    }
+
 private:
     CPUPT *cpupt; // CPU path tracer
     Window *window; // SDL_Wndow

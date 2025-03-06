@@ -46,6 +46,8 @@ public:
 
     // UI Functions
     SceneObject* getClickedObject(int screenX, int screenY);
+    void debugRay(int screenX, int screenY);
+
 
 private:
 

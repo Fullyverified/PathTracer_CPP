@@ -24,7 +24,7 @@ public:
     void setPos(Vector3 newPos) override {pos = newPos;}
     [[nodiscard]] Vector3 getDir() const override {return dir;}
     void setDir(Vector3 newDir) override {dir = newDir;}
-    [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
+    [[nodiscard]] Vector3 getScale() const override {return scale;}
     void setScale(Vector3 newScale) override {scale = newScale;}
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}

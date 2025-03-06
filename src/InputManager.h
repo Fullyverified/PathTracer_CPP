@@ -38,10 +38,13 @@ public:
 
         if (event.type == SDL_MOUSEBUTTONUP) {
             if (event.button.button == SDL_BUTTON_LEFT) {
-                if (!UI::isWindowHovered)
+                if (!UI::isWindowHovered) {
                     getClickedObject(event.button.x, event.button.y);
+                    //debugRay(event.button.x, event.button.y);
+                }
             }
         }
+
     }
 
     void processInputContinuous(Camera *camera, float deltaTime) {
@@ -119,6 +122,8 @@ public:
     }
 
     void getClickedObject(int x, int y);
+
+    void debugRay(int x, int y);
 
     void setSystemManager(SystemManager *systemManager);
 

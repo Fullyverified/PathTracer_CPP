@@ -469,33 +469,6 @@ void UI::sceneEditor() {
             camUpdate = true;
         }
 
-        ImGui::Text("Rotation: ");
-        Vector3 direction = selectedObject->getPos();
-
-        // X Axis
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-        if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
-            selectedObject->setDir(direction);
-            sceneUpdate = true;
-            camUpdate = true;
-        }
-
-        // Y Axis
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-        if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
-            selectedObject->setDir(direction);
-            sceneUpdate = true;
-            camUpdate = true;
-        }
-
-        // Z Axis
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-        if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
-            selectedObject->setDir(direction);
-            sceneUpdate = true;
-            camUpdate = true;
-        }
-
         ImGui::Text("Scale: ");
         Vector3 scale = selectedObject->getScale();
 
@@ -509,7 +482,6 @@ void UI::sceneEditor() {
 
         // Y Axis
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
-
         if (ImGui::DragFloat("##Scale Y", &scale.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
             selectedObject->setScale(scale);
             sceneUpdate = true;
@@ -522,6 +494,35 @@ void UI::sceneEditor() {
             selectedObject->setScale(scale);
             sceneUpdate = true;
             camUpdate = true;
+        }
+
+        if (selectedObject->getType() == "Mesh") {
+            ImGui::Text("Rotation: ");
+            Vector3 direction = selectedObject->getDir();
+
+            // X Axis
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+            if (ImGui::DragFloat("##Rotation X", &direction.x, 0.1f, 0.0f, 0.0f, "X %.3f")) {
+                selectedObject->setDir(direction);
+                sceneUpdate = true;
+                camUpdate = true;
+            }
+
+            // Y Axis
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+            if (ImGui::DragFloat("##Rotation Y", &direction.y, 0.1f, 0.0f, 0.0f, "Y %.3f")) {
+                selectedObject->setDir(direction);
+                sceneUpdate = true;
+                camUpdate = true;
+            }
+
+            // Z Axis
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
+            if (ImGui::DragFloat("##Rotation Z", &direction.z, 0.1f, 0.0f, 0.0f, "Z %.3f")) {
+                selectedObject->setDir(direction);
+                sceneUpdate = true;
+                camUpdate = true;
+            }
         }
     }
 

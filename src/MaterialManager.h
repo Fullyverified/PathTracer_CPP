@@ -76,7 +76,7 @@ public:
 
         materials["Mirror"] = new Material{"Mirror", Vector3(1, 1, 1), 0, 1, 1, 0, 0};
         materials["Glass"] = new Material{"Glass", Vector3(1, 1, 1), 0.0, 0, 1.5, 1, 0};
-        materials["Diamond"] = new Material{"Diamond", Vector3(1, 1, 1), 0.0, 0, 1, 1, 0};
+        materials["Diamond"] = new Material{"Diamond", Vector3(1, 1, 1), 0.0, 0, 2.42, 1, 0};
 
         materials["Light"] = new Material{"Light", Vector3(1, 1, 1), 0.75, 0, 1, 0, 15};
         materials["RedGlow"] = new Material{"RedGlow", Vector3(1, 0, 0), 0.75, 0, 1, 0, 3};

@@ -32,6 +32,7 @@ void MeshObject::getNormal(Ray &ray) const {
 std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
     Transform transform = {pos, dir, scale, this};
     transform.rayToObj(ray); // transform ray to object space
+
     MeshObject::meshIntersection result = getMeshNode()->searchBVHTreeMesh(ray, transform);
     transform.rayToWorld(ray); // revert transformation
 
@@ -44,16 +45,19 @@ std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
 MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
     Vector3 rayDirection = ray.getDir();
 
-    float bestT = std::numeric_limits<float>::infinity();
-    float bestU = std::numeric_limits<float>::infinity();
-    float bestV = std::numeric_limits<float>::infinity();
-    Triangle* bestTriangle;
+    float value = std::numeric_limits<float>::infinity();
+    float bestT = value;
+    float bestU = value;
+    float bestV = value;
+    Triangle* bestTriangle{};
 
     for (Triangle* triangle : leafNode->getTriangles()) {
+        // Grab triangle vertices
         Vector3 v0 = triangle->v0;
         Vector3 v1 = triangle->v1;
         Vector3 v2 = triangle->v2;
 
+        // Apply position and scale transformations
         v0 = (v0 + pos) / scale;
         v1 = (v1 + pos) / scale;
         v2 = (v2 + pos) / scale;
@@ -84,17 +88,18 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
         float t = f * edge2.dot(q);
 
-        if (t < bestT) {
+        if (t < bestT && t >= 0) {
             bestT = t;
             bestU = u;
             bestV = v;
             bestTriangle = triangle;
         }
+
     }
 
     // return best intersection
-    if (bestT != std::numeric_limits<float>::infinity()) {
-        return {nullptr, bestT, 0.0f, bestTriangle, (bestU, bestV, 1.0f - bestU - bestV)};
+    if (bestT != std::numeric_limits<float>::infinity() && -std::numeric_limits<float>::infinity()) {
+        return {nullptr, bestT, 0.0f, bestTriangle, Vector3(bestU, bestV, 1.0f - bestU - bestV)};
     }
 
     // no intersection
@@ -105,7 +110,7 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
     auto bounds = loadedMesh->getBounds();
-    return {bounds.first * scale + pos, bounds.second * scale + pos};
+    return {(bounds.first + pos) * scale, (bounds.second + pos) * scale};
 }
 
 int MeshObject::getObjID() const {
@@ -117,5 +122,5 @@ void MeshObject::printType() const {
 }
 
 std::string MeshObject::getType() const {
-    return "Mesh Object";
+    return "Mesh";
 }

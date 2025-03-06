@@ -3,7 +3,7 @@
 #include "Ray.h"
 
 Sphere::Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material* material) :
-pos(pos), scale(radiusx, radiusy, radiusz), material(material) {
+pos(pos), scale(radiusx, radiusy, radiusz), material(material), dir(1, 1, 1) {
     objID = ++objectCounter;
 }
 

@@ -23,7 +23,8 @@
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *>& sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList), iterations(0), numThreads(0) {
+CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
+                                                                                           iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
 
@@ -47,7 +48,7 @@ void CPUPT::renderLoop() {
     // initialise objects
     std::mutex mutex;
     std::vector<std::future<void> > threads;
-    std::vector<std::future<void >> threadsTM;
+    std::vector<std::future<void> > threadsTM;
 
     // Initialise Objects
     std::cout << "Constructing Objects" << std::endl;
@@ -141,8 +142,8 @@ void CPUPT::renderLoop() {
             threadsPT.emplace_back(worker);
         }
         // Block until all threads are finished
-        for (auto& t : threadsPT) {
-            t.join();
+        for (std::thread &thread: threadsPT) {
+            thread.join();
         }
         threadsPT.clear();
 
@@ -166,11 +167,11 @@ void CPUPT::renderLoop() {
                 boundsX = threadSegments(0, internalResX, segments, i);
                 boundsY = threadSegments(0, internalResY, segments, j);
                 threadsTM.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
-                                                boundsX.first, boundsX.second, boundsY.first,
-                                                boundsY.second, std::ref(mutex)));
+                                                  boundsX.first, boundsX.second, boundsY.first,
+                                                  boundsY.second, std::ref(mutex)));
             }
         }
-        for (std::future<void> &thread : threadsTM) {
+        for (std::future<void> &thread: threadsTM) {
             thread.get(); // Blocks until the thread completes its task
         }
         threadsTM.clear();
@@ -238,14 +239,13 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 ray.setInternal(false);
 
                 for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
-
                     // Intersect scene using BVH
                     BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         // Ray intersects nothing, break
                         if (sky) {
                             Vector3 topColour(0.53f, 0.81f, 0.98f);
-                            Vector3 horizonColour(1.0f, 1.0f, 1.0f);
+                            Vector3 horizonColour(0.0f, 0.0f, 0.0f);
                             float t = 0.5f * (ray.getDir().y + 1.0f); // Map y from -1 to 1 to 0 to 1
                             Vector3 skyColor = (1.0f - t) * horizonColour + t * topColour;
                             finalColour = finalColour + throughput * skyColor * 0.25;
@@ -268,7 +268,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     ray.setHitObject(hitObject);
 
                     // Grab the material
-                    Material* mat = hitObject->getMaterial();
+                    Material *mat = hitObject->getMaterial();
 
                     // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                     float randomSample = dist(rng);
@@ -294,7 +294,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         // Continue refraction from previous bounce
                         wi = directionSampler->RefractionDirection(ray, *hitObject);
                         newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
-
                     } else {
                         if (randomSample <= p_specular) {
                             // Specular (Metallic)
@@ -322,7 +321,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                                 newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
                             }
                         } else {
-                            std::cout << "Probabilities dont add up: " << randomSample<<std::endl;
+                            std::cout << "Probabilities dont add up: " << randomSample << std::endl;
                             break;
                         }
                     }
@@ -337,7 +336,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Russian roulete termination
                     // -------------------------------------------------------------
 
-                    float RR =  std::min(std::max(throughput.maxComponent(), 0.1f), 1.0f);
+                    float RR = std::min(std::max(throughput.maxComponent(), 0.1f), 1.0f);
 
                     // Ensure minimum number of bounces completed
                     if (currentBounce > config.minBounces) {
@@ -424,7 +423,6 @@ void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int ye
 }
 
 void CPUPT::initialiseObjects() {
-
     resX = config.resX;
     resY = config.resY;
 
@@ -468,15 +466,14 @@ void CPUPT::deleteObjects() {
     delete surfaceIntergrator;
 }
 
-SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
-
+SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
     int x = screenX / upScale;
     int y = screenY / upScale;
 
     // Ray cast to find clicked object
     Ray ray;
     ray.reset();
-    ray.setSelectorTrue(); // for debug
+    ray.setDebugTrue(); // for debug
     // Camera (primary) ray origin:
 
     ray.getOrigin().set(camera->getPos());
@@ -503,6 +500,172 @@ SceneObject* CPUPT::getClickedObject(int screenX, int screenY) {
     }
 
     return leafNode.node->getSceneObject();
+}
+
+void CPUPT::debugRay(int screenX, int screenY) {
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    int x = screenX / upScale;
+    int y = screenY / upScale;
+
+    // Ray cast to find clicked object
+    Ray ray;
+    ray.reset();
+    ray.setDebugTrue();
+    // Camera (primary) ray origin:
+
+    ray.getOrigin().set(camera->getPos());
+    ray.getPos().set(camera->getPos());
+
+    // Jitter the pixel position for MSAA
+    float jitterX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResX;
+    float jitterY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) / internalResY;
+    Vector3 pixelPosPlane(((((x + 0.5f + jitterX) / internalResX) * 2) - 1) * aspectRatio,
+                          1 - (((y + 0.5f + jitterY) / internalResY) * 2), 0);
+    Vector3 pixelPosScene(pixelPosPlane.getX() * camera->getPlaneWidth() / 2,
+                          pixelPosPlane.getY() * camera->getPlaneHeight() / 2, 0);
+
+
+    // Point ray according to pixel position (ray starts from camera origin)
+    ray.getDir().set(camera->getDir() + camera->getRight() * pixelPosScene.getX() + camera->getUp() * pixelPosScene.getY());
+    ray.getDir().normalise();
+
+    // Start loop
+    Vector3 finalColour(0.0f, 0.0f, 0.0f);
+    Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
+    std::cout<<"----------------------------"<<std::endl;
+    std::cout<<"New Ray:"<<std::endl;
+
+    ray.setInternal(false);
+    for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
+        std::cout<<"Bounce: "<<currentBounce<<std::endl;
+
+        std::cout<<"Ray direction";
+        ray.getDir().print();
+
+        // Intersect scene using BVH
+        BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
+        if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
+            // Ray intersects nothing, break
+            std::cout<<"No intersection"<<std::endl;
+            break;
+        }
+
+        // Move the ray to the exact hit point
+        SceneObject *hitObject = leafNode.node->getSceneObject();
+        std::cout<<"Intersection with: ";
+        hitObject->printType();
+        if (!ray.getInternal()) {
+            // outside of an object - march to entry
+            ray.march(leafNode.close);
+            std::cout<<"Ray external"<<std::endl;
+        } else {
+            // inside of an object - march to far side
+            ray.march(leafNode.far);
+            std::cout<<"Ray internal"<<std::endl;
+        }
+        std::cout<<"New ray position";
+        ray.getPos().print();
+
+        hitObject->getNormal(ray); // sets ray.getNormal()
+        std::cout<<"Object Normal: (external facing)";
+        ray.getNormal().print();
+        ray.getOrigin().set(ray.getPos()); // Set new ray origin
+        ray.setHitObject(hitObject);
+
+        // Grab the material
+        Material *mat = hitObject->getMaterial();
+
+        // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
+        float randomSample = dist(rng);
+        float p_specular = mat->metallic;
+        float p_transmission = mat->transmission * (1.0f - mat->metallic);
+        float p_diffuse = 1.0f - (p_specular + p_transmission);
+        // probabilites should add up to 1
+
+        Vector3 wo = ray.getDir() * -1; // outgoing direction
+        Vector3 wi;
+
+        Vector3 n = ray.getNormal();
+        Vector3 newThroughput;
+
+        // specular caused by IOR
+        float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
+        float R0 = surfaceIntergrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
+        float randomSample2 = dist(rng); // a second sample
+        // ----------------------
+
+        if (ray.getInternal()) {
+            // Refraction
+            // Continue refraction from previous bounce
+            std::cout<<"Continuing previous refraction"<<std::endl;
+            wi = directionSampler->RefractionDirection(ray, *hitObject);
+            newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
+        } else {
+            if (randomSample <= p_specular) {
+                // Specular (Metallic)
+                std::cout<<"Sampling specular (metallic)"<<std::endl;
+                wi = directionSampler->SpecularDirection(ray, *hitObject, false);
+                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
+            } else if (randomSample <= p_specular + p_transmission) {
+                // Blend in the possibility of refraction based on (transmission * (1 - metallic))
+                if (randomSample2 < R0) {
+                    // Specular (Glass)
+                    std::cout<<"Sampling specular (fresnel)"<<std::endl;
+                    wi = directionSampler->SpecularDirection(ray, *hitObject, false);
+                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                } else {
+                    // Refraction
+                    std::cout<<"Sampling refraction"<<std::endl;
+                    wi = directionSampler->RefractionDirection(ray, *hitObject);
+                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
+                }
+            } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
+                if (randomSample2 < R0) {
+                    // Specular Diffuse
+                    std::cout<<"Sampling specular (fresnel)"<<std::endl;
+                    wi = directionSampler->SpecularDirection(ray, *hitObject, false);
+                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                } else {
+                    // Dielectric reflection
+                    std::cout<<"Sampling diffuse (fresnel)"<<std::endl;
+                    wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
+                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
+                }
+            } else {
+                std::cout << "Probabilities dont add up: " << randomSample << std::endl;
+                break;
+            }
+        }
+
+        // 2) Add emission *through* the throughput
+        finalColour = finalColour + throughput * (mat->colour * mat->emission);
+
+        // 3) Update throughput with BRDF and PDF
+        throughput = throughput * newThroughput;
+
+        // -------------------------------------------------------------
+        // Russian roulete termination
+        // -------------------------------------------------------------
+
+        float RR = std::min(std::max(throughput.maxComponent(), 0.1f), 1.0f);
+
+        // Ensure minimum number of bounces completed
+        if (currentBounce > config.minBounces) {
+            if (dist(rng) > RR) {
+                // Add the remaining contribution before termination
+                finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                break; // Terminate the ray path early
+            }
+            // Scale the throughput to maintain an unbiased estimator
+            throughput = throughput / RR;
+        }
+
+        // Prepare for next bounce
+        ray.getDir().set(wi);
+        ray.updateOrigin(0.01);
+        std::cout<<"----------------------------"<<std::endl;
+    } // end for bounceDepth
 }
 
 std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, int step) {

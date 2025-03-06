@@ -35,9 +35,9 @@ public:
     void setInternal(bool internal) {this->internal = internal;}
     void flipInternal() {internal = internal == false;}
 
-    void setSelectorTrue() {selector = true;}
-    bool getSelector() {
-        return selector;
+    void setDebugTrue() {debug = true;}
+    bool getDebug() {
+        return debug;
     }
 
     void reset() {
@@ -61,7 +61,7 @@ public:
 
 private:
     Vector3 origin, pos, dir, normal, bCoords;
-    bool hit, internal, selector;
+    bool hit, internal, debug;
     SceneObject* sceneObject;
     Triangle* triangle;
 };

@@ -5,7 +5,7 @@
 #include <utility>
 #include <limits>
 
-AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, Material* material) : pos(pos), length(length), material(material) {
+AABCubeCenter::AABCubeCenter(Vector3 pos, Vector3 length, Material* material) : pos(pos), length(length), material(material), dir(1, 1, 1) {
     objID = ++objectCounter;
     minBounds = Vector3(pos.getX() - length.getX() / 2, pos.getY() - length.getY() / 2, pos.getZ() - length.getZ() / 2);
     maxBounds = Vector3(pos.getX() + length.getX() / 2, pos.getY() + length.getY() / 2, pos.getZ() + length.getZ() / 2);

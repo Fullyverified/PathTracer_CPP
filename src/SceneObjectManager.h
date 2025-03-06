@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -68,16 +68,18 @@ public:
 
     void removeSceneObject(SceneObject* sceneObject) {
         // Remove the pointer from the vector
-        std::cout<<"Calling delete method"<<std::endl;
         sceneObjects.erase(
             std::remove(sceneObjects.begin(), sceneObjects.end(), sceneObject),
             sceneObjects.end()
         );
-        std::cout<<"deleted"<<std::endl;
-        //delete sceneObject;
+        delete sceneObject;
     }
 
     void loadMeshes() {
+
+        LoadMesh* cube = new LoadMesh();
+        cube->load("cube.obj");
+        meshTypes["Cube"] = cube;
 
         LoadMesh* torus = new LoadMesh();
         torus->load("torus.obj");
@@ -115,8 +117,8 @@ public:
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(8, 0, 0), Vector3(1, 6, 7), materialManager->getMaterial("White"))); // back wall
 
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 3), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, -3), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 3), Vector3(14, 6, 1), materialManager->getMaterial("Red"))); // left wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, -3), Vector3(14, 6, 1), materialManager->getMaterial("Green"))); // right wall wall
 
         // Objects of Interest
         sceneObjects.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
@@ -132,8 +134,8 @@ public:
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(8, 0, 10), Vector3(1, 6, 7), materialManager->getMaterial("White"))); // back wall
 
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 13), Vector3(14, 12, 1), materialManager->getMaterial("Red"))); // left wall
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 7), Vector3(14, 12, 1), materialManager->getMaterial("Green"))); // right wall wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 13), Vector3(14, 6, 1), materialManager->getMaterial("Red"))); // left wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 7), Vector3(14, 6, 1), materialManager->getMaterial("Green"))); // right wall wall
 
         // Objects of Interest
         sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
@@ -148,15 +150,14 @@ public:
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(8,0,-10),Vector3(1,6,7),materialManager->getMaterial("White"))); // back wall
 
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,3,-7),Vector3(14,12,1),materialManager->getMaterial("Mirror"))); // left wall
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,3,-13),Vector3(14,12,1),materialManager->getMaterial("Mirror"))); // right wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,0,-7),Vector3(14,6,1),materialManager->getMaterial("Mirror"))); // left wall
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,0,-13),Vector3(14,6,1),materialManager->getMaterial("Mirror"))); // right wall
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // middle
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // left
 
         // BOX 3
-
     }
 
     Camera* getCamera() {
