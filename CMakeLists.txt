@@ -141,6 +141,8 @@ add_executable(PathTracer_CPP
         src/SurfaceIntegrator.h
         src/Denoiser.cpp
         src/Denoiser.h
+        src/ToneMapper.cpp
+        src/ToneMapper.h
 )
 
 # Link Vulkan and libraries

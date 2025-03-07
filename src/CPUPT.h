@@ -14,6 +14,7 @@
 #include "SurfaceIntegrator.h"
 
 #include "Denoiser.h"
+#include "ToneMapper.h"
 
 class SystemManager;
 
@@ -32,17 +33,14 @@ public:
     void joinRenderThread();
 
     // traversal logic
-    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, DenoiseInput& denoiseInput, std::mutex &mutex) const;
-
-    // tone mapping
-    void toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex);
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
 
     // multithreading logic
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
 
     // cleanup
-    void initialiseObjects(DenoiseInput& denoiseInput);
-    void updateUpscaling(DenoiseInput& denoiseInput);
+    void initialiseObjects();
+    void updateUpscaling();
 
     void deleteObjects();
 
@@ -57,6 +55,7 @@ private:
     DirectionSampler* directionSampler;
     SurfaceIntegrator* surfaceIntergrator;
     Denoiser* denoiser;
+    ToneMapper* toneMapper;
 
     // scene objects
     std::vector<SceneObject *>& sceneObjectsList;
@@ -64,13 +63,19 @@ private:
     Camera* camera;
 
     // pixel buffers
-    mutable std::vector<float> lumR, lumG, lumB; // mutable - no two threads will ever rw the same index
-    mutable std::vector<float> hdrR, hdrG, hdrB;
+    mutable std::vector<Vector3> lum;   // mutable - no two threads will ever rw the same index
+    mutable std::vector<Vector3> hdr;
     float maxLuminance, currentLuminance;
-    mutable uint8_t *RGBBuffer;
+    mutable uint8_t* RGBBuffer;
 
     int resX, resY, internalResX, internalResY, iterations, numThreads, mouseX, mouseY, upScale;
     float aspectRatio;
+
+    // denoising
+    mutable std::vector<Vector3> normalBuffer;
+    mutable std::vector<float> depthBuffer;
+    mutable std::vector<Vector3> albedoBuffer;
+    mutable std::vector<float> emissionBuffer;
 
     // multithreading
     std::pair<int, int> boundsX;

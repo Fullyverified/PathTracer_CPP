@@ -6,39 +6,15 @@
 #include <barrier>
 #include "Vector3.h"
 
-struct DenoiseInput {
-    std::vector<float>* lumR;
-    std::vector<float>* lumG;
-    std::vector<float>* lumB;
-
-    mutable std::vector<Vector3> normalBuffer; // normal of primary ray hit
-    mutable std::vector<float> depthBuffer; // depth of primary ray hit
-    mutable std::vector<Vector3> albedoBuffer; // surface colour of primary ray hit
-    mutable std::vector<float> emissionBuffer; // surface colour of primary ray hit
-    int numIterations; // number of denoising passes
-
-    int resX, resY;
-};
-
 class Denoiser {
 public:
 
-    Denoiser(int res);
+    Denoiser();
     ~Denoiser();
 
-    void launchDenoiseThreads(DenoiseInput& denoiseInput, int segments);
+    void launchDenoiseThreads(std::vector<Vector3>& colour, std::vector<Vector3>& normalBuffer, std::vector<float>& depthBuffer, std::vector<Vector3>& albedoBuffer, std::vector<float>& emissionBuffer, int numIterations, int resX, int resY, int segments);
 
-    void A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier);
-
-    // Vector functions
-    float dot(Vector3& first, Vector3& second) const {
-        float dot = first.x * second.x + first.y * second.y + first.z * second.z;
-        return dot;
-    }
-
-    float distance(Vector3& first, Vector3& second) const {
-        return std::sqrtf((first.x - second.x) * (first.y - second.y) * (first.z - second.z));
-    }
+    void A_TrousWaveletDenoising(std::vector<Vector3>& colour, std::vector<Vector3>& normalBuffer, std::vector<float>& depthBuffer, std::vector<Vector3>& albedoBuffer, std::vector<float>& emissionBuffer, int numIterations, int resX, int resY, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier);
 
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int step) {
         int res = end - start;
@@ -52,9 +28,7 @@ public:
     }
 
     void resize(int res) {
-        /*lumR.resize(res, 0.0f);
-        lumG.resize(res, 0.0f);
-        lumB.resize(res, 0.0f);*/
+        tmpResult.resize(res, 0.0f);
     }
 
 private:
@@ -63,10 +37,7 @@ private:
 
     int numThreads;
 
-    /*// denoised pixels
-    mutable std::vector<float> lumR;
-    mutable std::vector<float> lumG;
-    mutable std::vector<float> lumB;*/
+    mutable std::vector<Vector3> tmpResult;
 };
 
 #endif //DENOISER_H

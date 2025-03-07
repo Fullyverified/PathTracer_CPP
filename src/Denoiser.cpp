@@ -4,15 +4,14 @@
 
 #include "UI.h"
 
-Denoiser::Denoiser(int res) {
-    resize(res);
+Denoiser::Denoiser() {
 }
 
 Denoiser::~Denoiser() {
 
 }
 
-void Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int segments) {
+void Denoiser::launchDenoiseThreads(std::vector<Vector3>& colour, std::vector<Vector3>& normalBuffer, std::vector<float>& depthBuffer, std::vector<Vector3>& albedoBuffer, std::vector<float>& emissionBuffer, int numIterations, int resX, int resY, int segments) {
 
     std::vector<std::future<void>> threads;
     std::mutex mutex;
@@ -22,9 +21,9 @@ void Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int segments) {
 
     for (int j = 0; j < segments; j++) {
         for (int i = 0; i < segments; i++) {
-            boundsX = threadSegments(0, denoiseInput.resX, segments, i);
-            boundsY = threadSegments(0, denoiseInput.resY, segments, j);
-            threads.emplace_back(std::async(std::launch::async, &Denoiser::A_TrousWaveletDenoising, this, std::ref(denoiseInput),
+            boundsX = threadSegments(0, resX, segments, i);
+            boundsY = threadSegments(0, resY, segments, j);
+            threads.emplace_back(std::async(std::launch::async, &Denoiser::A_TrousWaveletDenoising, this, std::ref(colour), std::ref(normalBuffer), std::ref(depthBuffer), std::ref(albedoBuffer), std::ref(emissionBuffer), numIterations, resX, resY,
                                               boundsX.first, boundsX.second, boundsY.first,
                                               boundsY.second, std::ref(mutex), std::ref(syncBarrier)));
         }
@@ -33,19 +32,9 @@ void Denoiser::launchDenoiseThreads(DenoiseInput &denoiseInput, int segments) {
         thread.get(); // Blocks until the thread completes its task
     }
     threads.clear();
-
 }
 
-void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier) {
-    int resX = denoiseInput.resX;
-    int resY = denoiseInput.resY;
-    int numIterations = denoiseInput.numIterations;
-
-    std::vector<Vector3>& normalBuffer = denoiseInput.normalBuffer;
-    std::vector<float>& depthBuffer = denoiseInput.depthBuffer;
-    std::vector<Vector3>& albedoBuffer = denoiseInput.albedoBuffer;
-    std::vector<float>& emissionBuffer = denoiseInput.emissionBuffer;
-
+void Denoiser::A_TrousWaveletDenoising(std::vector<Vector3>& colour, std::vector<Vector3>& normalBuffer, std::vector<float>& depthBuffer, std::vector<Vector3>& albedoBuffer, std::vector<float>& emissionBuffer, int numIterations, int resX, int resY, int xstart, int xend, int ystart, int yend, std::mutex& mutex, std::barrier<>& syncBarrier) {
 
 
     // A-Trous kernel - pixel weights
@@ -84,35 +73,29 @@ void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, i
                         float kernelWeight = kernel[ky + 2][kx + 2];
 
                         // Edge-awareness evaluation
-                        float normalSimilarity = dot(pixelNormal, normalBuffer[sampleY * resX + sampleX]);
+                        float normalSimilarity = Vector3::dot(pixelNormal, normalBuffer[sampleY * resX + sampleX]);
+                        float albedoSimilarity = Vector3::distance(pixelAlbedo, albedoBuffer[sampleY * resX + sampleX]);
                         float depthDifference = std::fabs(pixelDepth - depthBuffer[sampleY * resX + sampleX]);
-                        float albedoSimilarity = distance(pixelAlbedo, albedoBuffer[sampleY * resX + sampleX]);
-                        float emissionSimilarity = pixelEmission > emissionBuffer[sampleY * resX + sampleX] ? pixelEmission / emissionBuffer[sampleY * resX + sampleX] : emissionBuffer[sampleY * resX + sampleX] / pixelEmission;
+                        //float emissionSimilarity = pixelEmission > emissionBuffer[sampleY * resX + sampleX] ? pixelEmission / emissionBuffer[sampleY * resX + sampleX] : emissionBuffer[sampleY * resX + sampleX] / pixelEmission;
 
-                        float normalWeight = (normalSimilarity > 0.90f) ? 1.0f : 0.4f;
-                        float depthWeight = (depthDifference < 0.04f) ? 1.0f : 0.4f;
-                        float albedoWeight = (albedoSimilarity < 0.1f) ? 1.0f : 0.4f;
-                        float emissionWeight = (emissionSimilarity < 0.9f) ? 0.2f : 1.0f;
+                        float normalWeight = std::exp(-std::max(0.0f, 1.0f - normalSimilarity) / 0.05f);
+                        float albedoWeight = std::exp(-albedoSimilarity * albedoSimilarity / (0.05f * 0.05f));
+                        float depthWeight = std::exp(-depthDifference * depthDifference / (0.05f * 0.05f));
+                        float intensityWeight = std::exp(-Vector3::distance(pixelAlbedo, albedoBuffer[sampleY * resX + sampleX]) / 0.5f);
+                        //float emissionWeight = (emissionSimilarity < 0.9f) ? 0.2f : 1.0f;
 
-                        float weight = kernelWeight * normalWeight * depthWeight * albedoWeight * emissionWeight;
+                        float weight = kernelWeight * normalWeight * albedoWeight * depthWeight * intensityWeight;
 
-                        //colourSum.x += denoiseInput.lumR[sampleY * resX + sampleX] * weight;
-                        //colourSum.y += denoiseInput.lumG[sampleY * resX + sampleX] * weight;
-                        //colourSum.z += denoiseInput.lumB[sampleY * resX + sampleX] * weight;
                         weightSum += weight;
+                        colourSum += colour[sampleY * resX + sampleX] * weight;
                     }
                 }
 
                 {
-                    std::lock_guard<std::mutex> lock(mutex);
                     if (weightSum > 0.0f || depthBuffer[y * resX + x] != -1) {
-                        //lumR[y * resX + x] = colourSum.x / weightSum;
-                        //lumG[y * resX + x] = colourSum.y / weightSum;
-                        //lumB[y * resX + x] = colourSum.z / weightSum;
+                        tmpResult[y * resX + x] = colourSum / weightSum;
                     } else {
-                        //lumR[y * resX + x] = lumR[y * resX + x];
-                        //lumG[y * resX + x] = lumG[y * resX + x];
-                        //lumB[y * resX + x] = lumB[y * resX + x];
+                        tmpResult[y * resX + x] = colour[y * resX + x];
                     }
                 }
             }
@@ -120,5 +103,13 @@ void Denoiser::A_TrousWaveletDenoising(DenoiseInput& denoiseInput, int xstart, i
         // Wait for all threads to finish this iteration before proceding
         syncBarrier.arrive_and_wait();
         stepSize *= 2;
+
+        // Update original colour bugger
+        for (int x = xstart; x <= xend; x++) {
+            for (int y = ystart; y <= yend; y++) {
+                colour[y * resX + x] = tmpResult[y * resX + x];
+            }
+        }
+
     }
 }

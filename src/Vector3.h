@@ -21,6 +21,20 @@ public:
         return {x + scalar, y + scalar, z + scalar};
     }
 
+    Vector3& operator+=(const Vector3& second) {
+        x += second.x;
+        y += second.y;
+        z += second.z;
+        return *this;
+    }
+
+    Vector3& operator+=(float scalar) {
+        x += scalar;
+        y += scalar;
+        z += scalar;
+        return *this;
+    }
+
     // subtracting
     [[nodiscard]] Vector3 operator-(const Vector3& second) const{
         return {x - second.x, y - second.y, z - second.z};
@@ -28,6 +42,20 @@ public:
 
     Vector3 operator-(float scalar) {
         return {x - scalar, y - scalar, z - scalar};
+    }
+
+    Vector3& operator-=(const Vector3& second) {
+        x -= second.x;
+        y -= second.y;
+        z -= second.z;
+        return *this;
+    }
+
+    Vector3& operator-=(float scalar) {
+        x -= scalar;
+        y -= scalar;
+        z -= scalar;
+        return *this;
     }
 
     // multiplying
@@ -39,6 +67,20 @@ public:
         return {x * scalar, y * scalar, z * scalar};
     }
 
+    Vector3& operator*=(const Vector3& second) {
+        x *= second.x;
+        y *= second.y;
+        z *= second.z;
+        return *this;
+    }
+
+    Vector3& operator*=(float scalar) {
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
+        return *this;
+    }
+
     // dividing
     [[nodiscard]] Vector3 operator/(const Vector3& second) const {
         return {x / second.x, y / second.y, z / second.z};
@@ -48,13 +90,43 @@ public:
         return {x / scalar, y / scalar, z / scalar};
     }
 
+    Vector3& operator/=(const Vector3& second) {
+        x /= second.x;
+        y /= second.y;
+        z /= second.z;
+        return *this;
+    }
+
+    Vector3& operator/=(float scalar) {
+        x /= scalar;
+        y /= scalar;
+        z /= scalar;
+        return *this;
+    }
+
     // vector operations
     [[nodiscard]] float dot(const Vector3& second) const {
         return x * second.x + y * second.y + z * second.z;
     }
 
+    static float dot(const Vector3& v1, const Vector3& v2) {
+        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    }
+
+    static float distance(const Vector3& v1, const Vector3& v2) {
+        return std::sqrtf((v1.x - v2.x) * (v1.y - v2.y) * (v1.z - v2.z));
+    }
+
+    static float distanceSqrd(const Vector3& v1, const Vector3& v2) {
+        return (v1.x - v2.x) * (v1.y - v2.y) * (v1.z - v2.z);
+    }
+
     [[nodiscard]] Vector3 cross(const Vector3& second) const {
         return {y * second.z - z * second.y, z * second.x - x * second.z, x * second.y - y * second.x};
+    }
+
+    Vector3 cross(const Vector3& v1, const Vector3& v2) {
+        return {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
     }
 
     void normalise() {
@@ -71,10 +143,6 @@ public:
         return half;
     }
 
-    Vector3 fresnelSchlick(float cosTheta, const Vector3 &F0) {
-        return F0 + (Vector3(1.0f, 1.0f, 1.0f) - F0) * std::pow(1.0f - cosTheta, 5.0f);
-    }
-
     float lengthSquared() const {
         return x * x + y * y + z * z;
     }
@@ -87,6 +155,7 @@ public:
         float dotP = this->dot(n);
         return Vector3(x - n.x, y - n.y, z - n.z) * dotP * 2;
     }
+
 
     // operator[]
     float& operator[](int index) {

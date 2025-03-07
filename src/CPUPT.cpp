@@ -27,7 +27,8 @@ CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObje
                                                                                            iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
-    denoiser = new Denoiser(config.resX / config.upScale * config.resY / config.upScale);
+    denoiser = new Denoiser();
+    toneMapper = new ToneMapper();
 
     camera = systemManager->getSceneObjectManager()->getCamera();
 }
@@ -53,8 +54,7 @@ void CPUPT::renderLoop() {
     std::vector<std::future<void> > threads;
     std::vector<std::future<void> > threadsTM;
 
-    DenoiseInput denoiseInput{};
-    initialiseObjects(denoiseInput);
+    initialiseObjects();
 
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
@@ -71,9 +71,11 @@ void CPUPT::renderLoop() {
             UI::camUpdate = false;
             camera->getCamMoved() = false;
 
-            config.fOV = UI::fOV;
-            config.exposure = UI::exposure;
-            camera->reInitilize(); // fov changes
+            if (UI::camUpdate) {
+                config.fOV = UI::fOV;
+                config.exposure = UI::exposure;
+                camera->reInitilize(); // fov changes
+            }
 
             if (UI::sceneUpdate) {
                 UI::sceneUpdate = false;
@@ -82,7 +84,7 @@ void CPUPT::renderLoop() {
             }
 
             if (UI::resUpdate) {
-                initialiseObjects(denoiseInput); // change buffer size
+                initialiseObjects(); // change buffer size
                 denoiser->resize(internalResX * internalResY);
                 UI::resUpdate = false;
                 UI::resizeBuffer = true;
@@ -90,12 +92,8 @@ void CPUPT::renderLoop() {
 
             // reset colour buffer
             for (int i = 0; i < internalResX * internalResY; i++) {
-                lumR[i] = 0.0f;
-                lumG[i] = 0.0f;
-                lumB[i] = 0.0f;
-                hdrR[i] = 0.0f;
-                hdrG[i] = 0.0f;
-                hdrB[i] = 0.0f;
+                lum[i] = Vector3(0, 0, 0);
+                hdr[i] = Vector3(0, 0, 0);
             }
             iterations = 0;
             UI::accumulatedRays = iterations * config.raysPerPixel;
@@ -104,8 +102,7 @@ void CPUPT::renderLoop() {
         if (UI::upscalingUpdate) {
             UI::upscalingUpdate = false;
             config.upScale = UI::upscale;
-            updateUpscaling(denoiseInput);
-            denoiser->resize(internalResX * internalResY);
+            updateUpscaling();
         }
 
         ////////////////////////////////////
@@ -125,7 +122,7 @@ void CPUPT::renderLoop() {
         std::atomic<int> nextSegment(0);
 
         // Create a worker for each segment
-        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, sky, &denoiseInput, &mutex]() {
+        auto worker = [this, &nextSegment, totalSegments, segmentsX, tileSize, &cameraCopy, sky, &mutex]() {
             while (true) {
                 int segmentIndex = nextSegment.fetch_add(1);
                 if (segmentIndex >= totalSegments) {
@@ -138,7 +135,7 @@ void CPUPT::renderLoop() {
                 int endX = std::min(startX + tileSize - 1, internalResX - 1);
                 int startY = tileY * tileSize;
                 int endY = std::min(startY + tileSize - 1, internalResY - 1);
-                traceRay(cameraCopy, startX, endX, startY, endY, iterations, sky, denoiseInput, mutex);
+                traceRay(cameraCopy, startX, endX, startY, endY, iterations, sky, mutex);
             }
         };
 
@@ -166,14 +163,7 @@ void CPUPT::renderLoop() {
         config.denoiseIterations = UI::denoiseIterations;
 
         if (config.denoise) {
-            denoiseInput.lumR = &lumR;
-            denoiseInput.lumG = &lumG;
-            denoiseInput.lumB = &lumB;
-            denoiseInput.resX = internalResX;
-            denoiseInput.resY = internalResY;
-            denoiseInput.numIterations = config.denoiseIterations;
-
-            denoiser->launchDenoiseThreads(denoiseInput, segments);
+            denoiser->launchDenoiseThreads(lum, normalBuffer, depthBuffer, albedoBuffer, emissionBuffer, config.denoiseIterations, internalResX, internalResY, segments);
         }
 
         auto durationTimeDN = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeDN);
@@ -185,30 +175,11 @@ void CPUPT::renderLoop() {
 
         auto startTimeTM = std::chrono::high_resolution_clock::now();
 
-        maxLuminance = 0;
-        currentLuminance = 0;
-        for (int i = 0; i < internalResX * internalResY; i++) {
-            // determine brightest amplitude in scene
-            currentLuminance = 0.2126f * lumR[i] + 0.7152f * lumG[i] + 0.0722f * lumB[i];
-            maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
-        }
-        maxLuminance *= config.exposure;
-
-        for (int j = 0; j < segments; j++) {
-            for (int i = 0; i < segments; i++) {
-                boundsX = threadSegments(0, internalResX, segments, i);
-                boundsY = threadSegments(0, internalResY, segments, j);
-                threadsTM.emplace_back(std::async(std::launch::async, &CPUPT::toneMap, this, maxLuminance,
-                                                  boundsX.first, boundsX.second, boundsY.first,
-                                                  boundsY.second, std::ref(mutex)));
-            }
-        }
-        for (std::future<void> &thread: threadsTM) {
-            thread.get(); // Blocks until the thread completes its task
-        }
-        threadsTM.clear();
+        toneMapper->launchToneMappingThreads(lum, RGBBuffer, maxLuminance, segments, resX, resY, internalResX, internalResY, upScale);
 
         systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
+
+        //-----------------------
 
         auto durationTimeTM = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeTM);
         auto finalFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - frameStartTime);
@@ -220,11 +191,10 @@ void CPUPT::renderLoop() {
 
         float frameTimeSec = std::chrono::duration<float>(durationTimeRays).count();
         UI::RaysPerSecond = (config.raysPerPixel * internalResX * internalResY) / (frameTimeSec);
-        //-----------------------
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, DenoiseInput& denoiseInput, std::mutex &mutex) const {
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const {
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     for (int y = ystart; y <= yend; y++) {
@@ -284,7 +254,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         }
 
                         if (currentBounce == 0 && config.denoise == true) {
-                            denoiseInput.depthBuffer[y * internalResX + x] = -1;
+
                         }
                         break;
                     }
@@ -308,10 +278,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // Fill denoising buffers
                     if (currentBounce == 0 && config.denoise == true) {
-                        denoiseInput.normalBuffer[y * internalResX + x] = ray.getNormal();
-                        denoiseInput.depthBuffer[y * internalResX + x] = leafNode.close;
-                        denoiseInput.albedoBuffer[y * internalResX + x] = mat->colour;
-                        denoiseInput.emissionBuffer[y * internalResX + x] = mat->emission;
+                        normalBuffer[y * internalResX + x] = ray.getNormal();
+                        depthBuffer[y * internalResX + x] = leafNode.close;
+                        albedoBuffer[y * internalResX + x] = mat->colour;
+                        emissionBuffer[y * internalResX + x] = mat->emission;
                     }
 
                     // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
@@ -401,72 +371,16 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // Ray terminated. Accumulate into the buffer.
                 // -------------------------------------------------------------
-                hdrR[y * internalResX + x] += finalColour.x;
-                hdrG[y * internalResX + x] += finalColour.y;
-                hdrB[y * internalResX + x] += finalColour.z;
+                hdr[y * internalResX + x] = hdr[y * internalResX + x] + finalColour;
 
                 // Update progressive buffer
-                lumR[y * internalResX + x] = hdrR[y * internalResX + x] / (
-                                                 static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
-                lumG[y * internalResX + x] = hdrG[y * internalResX + x] / (
-                                                 static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
-                lumB[y * internalResX + x] = hdrB[y * internalResX + x] / (
-                                                 static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
+                lum[y * internalResX + x] = hdr[y * internalResX + x] / (static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
             } // end raysPerPixel
         } // end x
     } // end y
 }
 
-void CPUPT::toneMap(float maxLuminance, int xstart, int xend, int ystart, int yend, std::mutex &mutex) {
-    for (int x = xstart; x <= xend; x++) {
-        for (int y = ystart; y <= yend; y++) {
-            float red = lumR[y * internalResX + x];
-            float green = lumG[y * internalResX + x];
-            float blue = lumB[y * internalResX + x];
-
-            float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
-
-            if (luminance > 0) {
-                // Extended Reinhard Tone Mapping - returns value [0, 1]
-                float mappedLuminance = (luminance * (1 + (luminance / (maxLuminance * maxLuminance)))) / (1 + luminance);
-
-                red = red / luminance * mappedLuminance;
-                green = green / luminance * mappedLuminance;
-                blue = blue / luminance * mappedLuminance;
-
-                // Apply gamma correction
-                float gamma = 2.2f;
-                float invGamma = 1.0f / gamma;
-                red = pow(red, invGamma);
-                green = pow(green, invGamma);
-                blue = pow(blue, invGamma);
-
-                red *= 255;
-                green *= 255;
-                blue *= 255;
-
-                red = std::min(red, 255.0f);
-                green = std::min(green, 255.0f);
-                blue = std::min(blue, 255.0f);
-            }
-
-            // upscale and store in RGB buffer considering aspect ratio
-            for (int i = 0; i < upScale; i++) {
-                for (int j = 0; j < upScale; j++) {
-                    int outX = static_cast<int>(x * upScale + i);
-                    int outY = static_cast<int>(y * upScale + j);
-                    int offset = (outY * resX + outX) * 3;
-
-                    RGBBuffer[offset] = red;
-                    RGBBuffer[offset + 1] = green;
-                    RGBBuffer[offset + 2] = blue;
-                }
-            }
-        }
-    }
-}
-
-void CPUPT::initialiseObjects(DenoiseInput& denoiseInput) {
+void CPUPT::initialiseObjects() {
     resX = config.resX;
     resY = config.resY;
 
@@ -480,20 +394,19 @@ void CPUPT::initialiseObjects(DenoiseInput& denoiseInput) {
     RGBBuffer = new uint8_t[resX * resY * 3];
 
     int res = internalResX * internalResY;
-    lumR.resize(res, 0.0f);
-    lumG.resize(res, 0.0f);
-    lumB.resize(res, 0.0f);
-    hdrR.resize(res, 0.0f);
-    hdrG.resize(res, 0.0f);
-    hdrB.resize(res, 0.0f);
 
-    denoiseInput.normalBuffer.resize(res, 0.0f);
-    denoiseInput.depthBuffer.resize(res, 0.0f);
-    denoiseInput.albedoBuffer.resize(res, 0.0f);
-    denoiseInput.emissionBuffer.resize(res, 0.0f);
+    lum.resize(res, Vector3(0.0f, 0.0f, 0.0f));
+    hdr.resize(res, Vector3(0.0f, 0.0f, 0.0f));
+
+    normalBuffer.resize(res, 0.0f);
+    depthBuffer.resize(res, 0.0f);
+    albedoBuffer.resize(res, 0.0f);
+    emissionBuffer.resize(res, 0.0f);
+
+    denoiser->resize(res);
 }
 
-void CPUPT::updateUpscaling(DenoiseInput& denoiseInput) {
+void CPUPT::updateUpscaling() {
     upScale = config.upScale;
 
     internalResX = config.resX / config.upScale;
@@ -501,17 +414,13 @@ void CPUPT::updateUpscaling(DenoiseInput& denoiseInput) {
 
     int res = internalResX * internalResY;
 
-    lumR.resize(res, 0.0f);
-    lumG.resize(res, 0.0f);
-    lumB.resize(res, 0.0f);
-    hdrR.resize(res, 0.0f);
-    hdrG.resize(res, 0.0f);
-    hdrB.resize(res, 0.0f);
+    lum.resize(res, Vector3(0.0f, 0.0f, 0.0f));
+    hdr.resize(res, Vector3(0.0f, 0.0f, 0.0f));
 
-    denoiseInput.normalBuffer.resize(res, 0.0f);
-    denoiseInput.depthBuffer.resize(res, 0.0f);
-    denoiseInput.albedoBuffer.resize(res, 0.0f);
-    denoiseInput.emissionBuffer.resize(res, 0.0f);
+    normalBuffer.resize(res, 0.0f);
+    depthBuffer.resize(res, 0.0f);
+    albedoBuffer.resize(res, 0.0f);
+    emissionBuffer.resize(res, 0.0f);
 
     denoiser->resize(res);
 }
@@ -521,6 +430,7 @@ void CPUPT::deleteObjects() {
     delete directionSampler;
     delete surfaceIntergrator;
     delete denoiser;
+    delete toneMapper;
 }
 
 SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
