@@ -18,7 +18,7 @@ Scene and Material Editor
 ~~Multiple Importance Sampling (MIS)~~  
 ~~Material and Scene Editor~~  
 ~~Russian Roulette Termination~~  
-Pipeline: Restir + Restir GI + ~~MIS~~  
+Pipeline: Restir + Restir GI + MIS  
 Denoising  
 Image textures, rougness maps, etc  
 Temporal frame reconstruction using motion vectors  
