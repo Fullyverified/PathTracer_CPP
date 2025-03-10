@@ -138,6 +138,20 @@ public:
         return {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
     }
 
+    float average() {
+        float total = x + y + z;
+        return total == 0 ? 0 : total / 3;
+    }
+
+    static float average(const Vector3& v1) {
+        float total = v1.x + v1.y + v1.z;
+        return total == 0 ? 0 : total / 3;
+    }
+
+    static float luminance(const Vector3& v1) {
+        return (v1.x * 0.2126f) + (v1.y * 0.7152f) + (v1.z * 0.0722f) ;
+    }
+
     void normalise() {
         const float magnitude = std::sqrt(x * x + y * y + z * z);
         if (magnitude == 0) return;

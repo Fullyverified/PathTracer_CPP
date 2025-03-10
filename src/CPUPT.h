@@ -19,12 +19,15 @@
 class SystemManager;
 
 struct Reservoir {
-    Vector3 candidateRadiance; // Selected indirect radiance
-    Vector3 candidateDirection; // Direction of candidate sample
+    Vector3 candidatePosition;
+    Vector3 candidateEmission; // Selected indirect radiance
+    float PDF; // PDF of explicity sampled sample
     float weightSum; // Sum of weights from all candidates considered
     int sampleCount; // Number of samples seen
 
-    Reservoir() : candidateRadiance(Vector3(0,0,0)), candidateDirection(Vector3(0,0,0)), weightSum(0.0f), sampleCount(0.0f) {}
+    float distToLight;
+
+    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f) {}
 };
 
 struct ReservoirGI {
@@ -39,7 +42,7 @@ struct ReservoirGI {
 class CPUPT {
 public:
 
-    CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList, std::vector<SceneObject *> &emmisiveObjectsList);
+    CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList);
     ~CPUPT() {
     }
 
@@ -80,7 +83,7 @@ private:
 
     // scene objects
     std::vector<SceneObject *>& sceneObjectsList;
-    std::vector<SceneObject*>& emissiveObjects; // for Restir Direct Illumination
+    std::vector<SceneObject*> emissiveObjects; // for Restir Direct Illumination
     BVHNode* rootNode;
     Camera* camera;
 

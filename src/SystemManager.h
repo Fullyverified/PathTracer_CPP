@@ -31,7 +31,7 @@ public:
         sceneObjectManager = new SceneObjectManager(materialManager);
         UI::sceneObjectManager = sceneObjectManager;
 
-        cpupt = new CPUPT(this, sceneObjectManager->getSceneObjects(), sceneObjectManager->getEmmisiveObjects());
+        cpupt = new CPUPT(this, sceneObjectManager->getSceneObjects());
 
     }
 

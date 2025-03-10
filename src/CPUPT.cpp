@@ -23,8 +23,7 @@
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList, std::vector<SceneObject *> &emmisiveObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
-                                                                                           emissiveObjects(emmisiveObjectsList), iterations(0), numThreads(0) {
+CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList), iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
     denoiser = new Denoiser();
@@ -59,7 +58,7 @@ void CPUPT::renderLoop() {
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
-    systemManager->getSceneObjectManager()->updateEmmisiveObjects();
+    emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
 
     // render loop
     while (systemManager->getIsRunning()) {
@@ -69,15 +68,12 @@ void CPUPT::renderLoop() {
         int segments = std::round(std::sqrt(numThreads));
 
         if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
-            UI::camUpdate = false;
-            camera->getCamMoved() = false;
-
             if (UI::camUpdate) {
                 config.fOV = UI::fOV;
                 config.exposure = UI::exposure;
                 config.DepthOfField = UI::depthOfField;
                 config.focalDistance = UI::focalDistance;
-                systemManager->getSceneObjectManager()->updateEmmisiveObjects();
+                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
                 camera->reInitilize(); // fov changes
             }
 
@@ -85,7 +81,7 @@ void CPUPT::renderLoop() {
                 UI::sceneUpdate = false;
                 bvh.constructBVHST(sceneObjectsList);
                 rootNode = bvh.getBVHNodes()[0];
-                systemManager->getSceneObjectManager()->updateEmmisiveObjects();
+                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
             }
 
             if (UI::resUpdate) {
@@ -105,12 +101,14 @@ void CPUPT::renderLoop() {
             config.ReSTIRGI = UI::ReSTIRGI;
             iterations = 0;
             UI::accumulatedRays = iterations * config.raysPerPixel;
+            UI::camUpdate = false;
+            camera->getCamMoved() = false;
         }
 
         if (UI::upscalingUpdate) {
-            UI::upscalingUpdate = false;
             config.upScale = UI::upscale;
             updateUpscaling();
+            UI::upscalingUpdate = false;
         }
 
         ////////////////////////////////////
@@ -341,14 +339,16 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         }
                     }
 
-                    // Compute direct lighting with ReSTIR at first bounce
+                    // -------------------------------------------------------------
+                    // ReSTIR Direct Illumination (first bounce only)
+                    // -------------------------------------------------------------
                     if (currentBounce == 0 && config.ReSTIR) {
                         Vector3 directLighting = restirDirectLighting(ray, hitObject);
                         finalColour = finalColour + directLighting;
                     }
 
                     // 2) Update colour
-                    if ((currentBounce == 0 || currentBounce > 1 )&& config.ReSTIR) {
+                    if ((currentBounce == 0 || currentBounce > 1 && config.ReSTIR)) {
                         finalColour = finalColour + throughput * (mat->colour * mat->emission);
                     } else if (!config.ReSTIR){
                         finalColour = finalColour + throughput * (mat->colour * mat->emission);
@@ -409,26 +409,32 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
         return Vector3(0.0f);
     }
 
+    if (ray.getDebug()) std::cout<<"Emmisive Objects Size: "<<emissiveObjects.size()<<std::endl;
+
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    std::uniform_int_distribution<int> lightDist(0, emissiveObjects.size() - 1);
     Material* hitMat = hitObject->getMaterial();
     const int M = config.lightSamples; // Number of candidate light samples
-    float weightSum = 0.0f;
-
-    Vector3 selectedLightPoint, selectedEmission; // Position and emission of selected light sample point
-    float selectedArea = 0.0f;
 
     Vector3 rayPos = ray.getPos();
     Vector3 n = ray.getNormal();
     Vector3 wo = -ray.getDir();
-
+    //&& i < emissiveObjects.size()
     // Resoiver sampling
-    for (int i = 0; i < M && !(i > emissiveObjects.size()); i++) {
-        if (ray.getDebug()) std::cout<<"Light Sample: "<<i<<std::endl;
 
+    Reservoir reservoir = {};
+
+    for (int i = 0; i < M; i++) {
+        if (ray.getDebug()) std::cout<<"Light Sample: "<<i<<std::endl;
         // Sample a light source
-        int lightIndex = dist(rng) * (emissiveObjects.size() - 1);
+        int lightIndex = lightDist(rng);
         SceneObject* light = emissiveObjects[lightIndex];
         const Material* lightMat = light->getMaterial();
+
+        if (ray.getDebug()) {
+            std::cout<<"Light Colour: ";
+            light->getMaterial()->colour.print();
+        }
 
         // Sample a point on the light
         Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
@@ -438,41 +444,43 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
         float cos_theta = std::max(0.0f, n.dot(wi));
 
         // Skip if facing away
-        if (cos_theta <= 0.0f) {
-            continue;
-        }
+        if (cos_theta <= 0.0f) continue;
 
         Vector3 lightEmission = lightMat->colour * lightMat->emission;
+        Vector3 BRDF_light = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
 
-        Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
+        float PDF_light = 1.0f / light->getArea();
 
-        Vector3 contrib = lightEmission * BRDF;
+        // Unbiased reservoir weight (importance)
+        Vector3 contrib = lightEmission * BRDF_light * (cos_theta / (distToLight * distToLight));
+        float importance = Vector3::luminance(contrib) / PDF_light;
 
-        float weightI = (contrib.x * 0.2126f + contrib.y * 0.7152f + contrib.z * 0.0722f) * cos_theta / (distToLight * distToLight);
+        reservoir.weightSum += importance;
+        reservoir.sampleCount++;
 
-        weightSum += weightI;
-        if (dist(rng) * weightSum < weightI) {
-            selectedLightPoint = lightPoint;
-            selectedEmission = lightEmission;
-            selectedArea = light->getArea();
+        if (dist(rng) * reservoir.weightSum < importance) {
+            reservoir.candidatePosition = lightPoint;
+            reservoir.candidateEmission = lightEmission;
+            reservoir.PDF = PDF_light;
+            reservoir.distToLight = distToLight;
         }
     }
 
-    if (weightSum == 0.0f) return Vector3(0.0f, 0.0f, 0.0f);
+    if (reservoir.sampleCount == 0 || reservoir.weightSum == 0) return Vector3(0.0f); // no valid samples
 
     // Shadow test
-    Vector3 wi = (selectedLightPoint - rayPos);
+    Vector3 wi = (reservoir.candidatePosition - rayPos);
     Vector3::normalise(wi);
     Ray shadowRay(rayPos + wi * 0.01f, wi);
-    float distToLight = Vector3::distance(selectedLightPoint, rayPos);
+    //float distToLight = Vector3::distance(selectedLightPoint, rayPos);
 
     if (ray.getDebug()) {
         std::cout<<"selectedLightPoint";
-        selectedLightPoint.print();
+        reservoir.candidatePosition.print();
         std::cout<<"rayPos";
         rayPos.print();
 
-        std::cout<<"Distance to light: "<<distToLight<<std::endl;
+        std::cout<<"Distance to light: "<<reservoir.distToLight<<std::endl;
         std::cout<<"Wi";
         wi.print();
     }
@@ -480,7 +488,7 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
     if (shadowResult.node == nullptr || !shadowResult.node->getLeaf()) {
         if (ray.getDebug()) {
-            std::cout<<"No object found"<<distToLight<<std::endl;
+            std::cout<<"No object found"<<reservoir.distToLight<<std::endl;
         }
         return Vector3(0.0f, 0.0f, 0.0f); // Occluded
     }
@@ -490,19 +498,20 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
         std::cout<<"shadowResult.close: "<<shadowResult.close<<std::endl;
     }
 
-    if (!(shadowResult.close < distToLight + 0.01f && shadowResult.close > distToLight - 0.01f)) {
+    if (!(shadowResult.close < reservoir.distToLight + 0.01f && shadowResult.close > reservoir.distToLight - 0.01f)) {
         if (ray.getDebug()) {
             std::cout<<"Occuluded"<<std::endl;
         }
         return Vector3(0.0f, 0.0f, 0.0f); // Occluded
     }
 
-    // Final contribution
+    // Compute unbiased final contribution
     float cos_theta = std::max(0.0f, n.dot(wi));
     Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
-    Vector3 contribution = selectedEmission * BRDF * cos_theta / (distToLight * distToLight) * (emissiveObjects.size() * selectedArea);
-    //contribution.sanitize();
+    Vector3 numerator = BRDF * reservoir.candidateEmission * (cos_theta / (reservoir.distToLight * reservoir.distToLight));
+    float denominator = (reservoir.weightSum / reservoir.sampleCount) * reservoir.PDF;
 
+    Vector3 contribution = numerator / denominator;
     return contribution;
 }
 

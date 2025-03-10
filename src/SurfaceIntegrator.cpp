@@ -140,61 +140,82 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
 }
 
 Vector3 SurfaceIntegrator::evaluateBRDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const {
-    Vector3 brdf, refract, specular, diffuse;
+    float cosTheta_wo = n.dot(wo);
+    float cosTheta_wi = n.dot(wi);
 
-    // Terms
+    // Compute common terms
     Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
     float D = distrubtionGGX(n, h, mat->roughness);
     float G = geometrySmithGGX(n, wo, wi, mat->roughness);
-    float cosTheta_wo = std::abs(Vector3::dot(wo, n));
-    float cosTheta_wi = std::abs(Vector3::dot(wi, n));
+    float denom = 4.0f * std::abs(cosTheta_wo) * std::abs(cosTheta_wi);
+    if (denom == 0) return Vector3(0);
 
-    // Use refraction-specific evaluation
-    Vector3 R0 = fresnelSchlickRefraction(cosTheta_wo, mat->IOR);
-    Vector3 refractBRDF = computeMicrofacetBRDF(D, R0, G, n, wo, wi);
-    refract = refractBRDF;
-
-    // Use metallic specular evaluation
-    Vector3 F0 = fresnelSchlickSpecular(cosTheta_wo, mat->colour);
-    specular = computeMicrofacetBRDF(D, F0, G, n, wo, wi);
-
-    // Diffuse component
-    diffuse = diffuseBRDF(mat->colour);
-
-    //diffuse = diffuse * (F0) + refract * (1 - F0);
-
-    // Combine contributions for other materials
     float p_specular = mat->metallic;
     float p_transmission = mat->transmission * (1 - mat->metallic);
     float p_diffuse = 1 - (p_specular + p_transmission);
 
-    brdf = specular * p_specular + refract * p_transmission + diffuse * p_diffuse;
+    if (cosTheta_wo * cosTheta_wi > 0) {
+        // Reflection
+        // Metallic specular
+        float cosTheta_h_wi = h.dot(wi);
+        Vector3 F_metallic = fresnelSchlickSpecular(cosTheta_h_wi, mat->colour);
+        Vector3 brdf_specular_metallic = (D * F_metallic * G) / denom;
 
-    return brdf;
+        // Dielectric specular
+        float F_dielectric = fresnelSchlickRefraction(cosTheta_h_wi, mat->IOR); // Air IOR = 1.0
+        Vector3 brdf_specular_dielectric = (D * F_dielectric * G) / denom;
+
+        // Diffuse
+        Vector3 brdf_diffuse = mat->colour / std::numbers::pi;
+
+        // Combine based on material properties
+        Vector3 brdf = p_specular * brdf_specular_metallic + p_transmission * brdf_specular_dielectric + p_diffuse * brdf_diffuse;
+        return brdf;
+    }
+    // Transmission
+    // Only non-metallic, transmissive materials contribute
+    float F_dielectric = fresnelSchlickRefraction(std::abs(cosTheta_wo), mat->IOR);
+    float n1, n2;
+    if (cosTheta_wo > 0) {
+        // Exiting material
+        n1 = mat->IOR;
+        n2 = 1.0f;
+    } else {
+        // Entering material
+        n1 = 1.0f;
+        n2 = mat->IOR;
+    }
+    Vector3 btdf = p_transmission * computeRefractionBRDF(mat->colour, F_dielectric, n1, n2);
+    return btdf;
+
 }
 
 float SurfaceIntegrator::evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const {
-    // compute terms
-    Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
-    float D = distrubtionGGX(n, h, mat->roughness);
-    float cosTheta_wi = std::abs(n.dot(wi));
-    float R0 = fresnelSchlickRefraction(cosTheta_wi, mat->IOR); // reflection portion
+    float cosTheta_wo = n.dot(wo);
+    float cosTheta_wi = n.dot(wi);
 
-    // compute pdf
-    float pdf_specular = microfacetPDF(n, wo, wi, D, h);
-    float pdf_refraction = refractionPDF();
-    float pdf_diffuse = diffusePDF(cosTheta_wi);
+    if (cosTheta_wo * cosTheta_wi > 0) {
+        // Reflection
+        Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
+        float D = distrubtionGGX(n, h, mat->roughness);
+        float pdf_specular = microfacetPDF(n, wo, wi, D, h);
+        float pdf_diffuse = diffusePDF(std::abs(cosTheta_wi));
 
-    float p_specular = mat->metallic;
-    float effective_pdf_specular = pdf_specular * p_specular; // metallic branch
+        float cosTheta_h_wi = h.dot(wi);
+        float R0 = fresnelSchlickRefraction(cosTheta_h_wi, mat->IOR);
 
-    float p_transmission = mat->transmission * (1 - mat->metallic);
-    float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
+        float p_specular = mat->metallic;
+        float p_transmission = mat->transmission * (1 - mat->metallic);
+        float p_diffuse = 1 - p_specular - p_transmission;
 
-    float p_diffuse = 1 - (p_specular + p_transmission);
-    float effective_pdf_diffuse = (R0 * pdf_specular + (1 - R0) * pdf_diffuse) * p_diffuse; // diffuse branch
-
-    float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
-
-    return effective_pdf;
+        float pdf = p_specular * pdf_specular +
+                    p_transmission * R0 * pdf_specular +
+                    p_diffuse * (R0 * pdf_specular + (1 - R0) * pdf_diffuse);
+        return pdf;
+    } else {
+        // Transmission
+        // For smooth dielectrics, PDF is delta; practically 0 unless wi matches refracted direction
+        // In direct lighting with area lights, this is typically handled separately
+        return 0.0f;
+    }
 }

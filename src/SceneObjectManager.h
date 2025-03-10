@@ -109,6 +109,7 @@ public:
     }
 
     void defaultScene() {
+
         // BOX1
         sceneObjects.emplace_back(new Sphere(Vector3(5, 2.5, 0), 0.8, 0.1, 0.8, materialManager->getMaterial("Light"))); // light on ceiling
 
@@ -153,9 +154,9 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,0,-7),Vector3(14,6,1),materialManager->getMaterial("Mirror"))); // left wall
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,0,-13),Vector3(14,6,1),materialManager->getMaterial("Mirror"))); // right wall
 
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // middle
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // left
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
 
         // BOX 3
     }
@@ -167,6 +168,7 @@ public:
 
     // For Restir DI
     std::vector<SceneObject*>& getEmmisiveObjects() {
+        updateEmmisiveObjects();
         return emissiveObjects;
     }
 
