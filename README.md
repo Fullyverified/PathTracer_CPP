@@ -5,6 +5,7 @@ A CPU Path tracer.
 
 # Features  
 Multiple Importance Sampling (MIS)  
+ReSTIR (spatiotemporal sampling to come)  
 Russian Roulette Termination  
 BVH Acceleration  
 Multithreading  
@@ -34,3 +35,5 @@ Probably doesn't work on Linux at the moment
 Rare pitch black pixel, most likely an issue with BRDF and PDF  
 Scale does not working properly for mesh objects  
 Denoising is WIP and broken  
+Mesh objects do not work as lights for ReSTIR  
+Making a Mesh object a light and moving it with ReSTIR will cause a crash  
