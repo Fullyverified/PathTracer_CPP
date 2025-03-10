@@ -43,26 +43,10 @@ public:
 
     Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, float R0, SampleType type, bool internal) const; // Final throughput
 
-    // Vector functions
-    float dot(Vector3& first, Vector3& second) const {
-        float dot = first.x * second.x + first.y * second.y + first.z * second.z;
-        return dot;
-    }
+    Vector3 evaluateBRDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
 
-    Vector3 mix(const Vector3 &a, const Vector3 &b, float factor) const {
-        return a * (1.0f - factor) + b * factor;
-    }
+    float evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
 
-    Vector3 normalOfHalfAngle(const Vector3 &wo, const Vector3 &wi) const {
-        Vector3 h = wo + wi;
-        h.normalise();
-        return h;
-    }
-
-    Vector3 reflect(Vector3& dir, Vector3& normal) const {
-        float dotP = dot(dir, normal);
-        return dir - normal * dotP * 2;
-    }
 
 private:
 };

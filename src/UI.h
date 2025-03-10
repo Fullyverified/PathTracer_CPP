@@ -23,6 +23,8 @@ public:
     static int minBounces;
     static int maxBounces;
     static bool accumulateRays;
+    static bool ReSTIR;
+    static bool ReSTIRGI;
     static bool sky;
     static bool denoise;
     static int denoiseIterations;

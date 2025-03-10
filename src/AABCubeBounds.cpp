@@ -80,6 +80,51 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     return {txmin, txmax};
 }
 
+Vector3 AABCubeBounds::samplePoint(float r1, float r2) const {
+    // Determine which face to sample from
+    int faceIndex = static_cast<int>(r1 * 6.0f);
+    r1 = fmod(r1 * 6.0f, 1.0f); // Recalculate r1 for face sampling
+
+    // Calculate dimensions of the rectangle
+    Vector3 size = maxBounds - minBounds;
+
+    // Calculate the point on the selected face
+    Vector3 pointOnFace;
+    switch (faceIndex) {
+        case 0: // Front face (z = maxBounds.z)
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, maxBounds.z);
+        break;
+        case 1: // Back face (z = minBounds.z)
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, minBounds.z);
+        break;
+        case 2: // Left face (x = minBounds.x)
+            pointOnFace = Vector3(minBounds.x, minBounds.y + r1 * size.y, minBounds.z + r2 * size.z);
+        break;
+        case 3: // Right face (x = maxBounds.x)
+            pointOnFace = Vector3(maxBounds.x, minBounds.y + r1 * size.y, minBounds.z + r2 * size.z);
+        break;
+        case 4: // Top face (y = maxBounds.y)
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, maxBounds.y, minBounds.z + r2 * size.z);
+        break;
+        case 5: // Bottom face (y = minBounds.y)
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y, minBounds.z + r2 * size.z);
+        break;
+    }
+
+    return pointOnFace;
+}
+
+float AABCubeBounds::getArea() const {
+    return area;
+}
+
+void AABCubeBounds::computeArea() {
+    float bottom = maxBounds.x - minBounds.x * maxBounds.z - minBounds.z;
+    float left = maxBounds.x - minBounds.x * maxBounds.y - minBounds.y;
+    float front = maxBounds.y - minBounds.y * maxBounds.z - minBounds.z;
+    area = (bottom * front * left) * 2;
+}
+
 std::pair<Vector3, Vector3> AABCubeBounds::getBounds() {
     return std::make_pair(minBounds, maxBounds);
     }

@@ -1,4 +1,7 @@
 #include "Sphere.h"
+
+#include <numbers>
+
 #include "Vector3.h"
 #include "Ray.h"
 
@@ -56,6 +59,29 @@ std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
     }
 
     return {sqrt1, sqrt2};
+}
+
+Vector3 Sphere::samplePoint(float r1, float r2) const {
+    // Convert random variables to spherical coordinates
+    float theta = 2.0f * std::numbers::pi * r1; // Azimuthal angle [0, 2π]
+    float phi = acos(2.0f * r2 - 1.0f); // Polar angle [0, π]
+
+    // Spherical to Cartesian conversion
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+
+    // Scale by the sphere's scale and position
+    Vector3 point = Vector3(x, y, z) * scale + pos;
+    return point;
+}
+
+float Sphere::getArea() const {
+    return area;
+}
+
+void Sphere::computeArea() {
+    area = 4.0f * std::numbers::pi * (std::pow(scale.x * scale.y, 1.6) + std::pow(scale.x * scale.z, 1.6) + std::pow(scale.y * scale.z, 1.6)) / 3;;
 }
 
 void Sphere::printType() const {

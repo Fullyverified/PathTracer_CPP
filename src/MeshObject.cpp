@@ -107,6 +107,42 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
 }
 
+Vector3 MeshObject::samplePoint(float r1, float r2) const {
+
+    std::vector<Triangle*> tris = loadedMesh->getTriangles();
+
+    int triIndex = static_cast<int>(r1 * tris.size());
+
+    Triangle* tri = tris[triIndex];
+
+    float sqrtR = std::sqrt(r2);
+    float u = 1.0f - sqrtR;
+    float v = sqrtR * (1.0f - r2);
+    float w = r2 * sqrtR;
+
+    // Calculate the point using barycentric interpolation
+    return tri->v0 * u + tri->v1 * v + tri->v2 * w;
+}
+
+float MeshObject::getArea() const {
+    return area;
+}
+
+void MeshObject::computeArea() {
+    float total = 0;
+    for (Triangle* triangle : triangles) {
+        Vector3 v0 = triangle->v0;
+        Vector3 v1 = triangle->v1;
+        Vector3 v2 = triangle->v2;
+
+        // Compute the cross product of (v1 - v0) and (v2 - v0)
+        Vector3 crossProduct = (v1 - v0).cross(v2 - v0);
+
+        // The area is half the magnitude of the cross product
+        total += 0.5f * crossProduct.length();
+    }
+    area = total;
+}
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
     auto bounds = loadedMesh->getBounds();

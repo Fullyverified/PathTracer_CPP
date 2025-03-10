@@ -31,7 +31,7 @@ public:
         sceneObjectManager = new SceneObjectManager(materialManager);
         UI::sceneObjectManager = sceneObjectManager;
 
-        cpupt = new CPUPT(this, sceneObjectManager->getSceneObjects());
+        cpupt = new CPUPT(this, sceneObjectManager->getSceneObjects(), sceneObjectManager->getEmmisiveObjects());
 
     }
 
@@ -149,6 +149,7 @@ public:
     }
 
     SceneObject* getClickedObject(int x, int y) {
+        //cpupt->debugPixelInfo(x, y);
         return cpupt->getClickedObject(x, y);
     }
 

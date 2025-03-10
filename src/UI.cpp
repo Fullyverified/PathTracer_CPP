@@ -16,6 +16,8 @@ float UI::denoisingTime = 0;
 float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
+bool UI::ReSTIR = config.ReSTIR;
+bool UI::ReSTIRGI = config.ReSTIRGI;
 int UI::numRays = config.raysPerPixel;
 int UI::minBounces = config.minBounces;
 int UI::maxBounces = config.maxBounces;
@@ -51,7 +53,7 @@ float UI::transmission = 0;
 float UI::emission = 0;
 
 MaterialManager *UI::materialManager = nullptr;
-std::string UI::materialKey = "";
+std::string UI::materialKey = "Default";
 std::string UI::newMatName = "";
 
 SceneObject *UI::selectedObject = nullptr;
@@ -102,21 +104,37 @@ void UI::renderSettings() {
 
     ImGui::Separator();
 
-    ImGui::Text("Russian Roulette Termination");
+    ImGui::Text("Multiple Importance Sampling (MIS)");
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::SliderInt("##Min ray bounces", &minBounces, 0, 5, "Min Bounces %i")) {
+        if (maxBounces < minBounces) {
+            maxBounces = minBounces;
+            config.maxBounces = minBounces;
+        }
         camUpdate = true;
         config.minBounces = minBounces;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::SliderInt("##Max ray bounces", &maxBounces, 0, 100, "Max bounces %i")) {
-        if (maxBounces <= minBounces) {
-            maxBounces = minBounces + 1;
+        if (maxBounces < minBounces) {
+            maxBounces = minBounces;
         }
         camUpdate = true;
         config.maxBounces = maxBounces;
+    }
+
+    ImGui::Separator();
+
+    // ReSTIR
+    if (ImGui::Checkbox("ReSTIR", &ReSTIR)) {
+        camUpdate = true;
+    }
+
+    // ReSTIR GI
+    if (ImGui::Checkbox("ReSTIR Global Illumination", &ReSTIRGI)) {
+        camUpdate = true;
     }
 
     ImGui::Separator();
@@ -193,7 +211,6 @@ void UI::renderSettings() {
     }*/
 
     if (ImGui::Checkbox("Depth of Field", &depthOfField)) {
-        config.DepthOfField = depthOfField;
         camUpdate = true;
     }
 
@@ -205,7 +222,6 @@ void UI::renderSettings() {
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::SliderFloat("##Focal Distance", &focalDistance, 0, 100, "Focal Distance %.3f")) {
-        config.focalDistance = focalDistance;
         camUpdate = true;
     }
 
@@ -214,16 +230,14 @@ void UI::renderSettings() {
     ImGui::Text("Resolution");
 
     ImGui::SetNextItemWidth(80); // Set fixed width for the input box
-    if (ImGui::InputInt("##ResX", &resX, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
-    }
+    ImGui::InputInt("##ResX", &resX, 0, 0, ImGuiInputTextFlags_CharsDecimal);
 
     ImGui::SameLine();
     ImGui::Text("x");
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(80);
-    if (ImGui::InputInt("##ResY", &resY, 0, 0, ImGuiInputTextFlags_CharsDecimal)) {
-    }
+    ImGui::InputInt("##ResY", &resY, 0, 0, ImGuiInputTextFlags_CharsDecimal);
 
     ImGui::SameLine();
 
@@ -276,6 +290,7 @@ void UI::materialEditor() {
             Material newMaterial{newMatName, Vector3(1, 1, 1), 0, 0, 1, 0, 0};
             materialManager->createMaterial(newMatName, newMaterial);
             materialKey = newMatName;
+            sceneObjectManager->updateEmmisiveObjects();
         }
         std::cout << "A Material with the name already exists" << std::endl;
     }
@@ -283,10 +298,8 @@ void UI::materialEditor() {
     // Drop down list of materials
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::Combo("##Materials", &currentIndex, materialNames.data(), static_cast<int>(materialNames.size()))) {
-        if (currentIndex > 0) {
-            // Ignore the placeholder selection
-            materialKey = materialNames[currentIndex];
-        }
+        // Ignore the placeholder selection
+        materialKey = materialNames[currentIndex];
     }
 
     // Update local variables to match selected material
@@ -305,64 +318,52 @@ void UI::materialEditor() {
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::ColorPicker3("##Colour", colourArray, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoSidePreview)) {
-        if (currentIndex != 0) {
-            // Update the Vector3 with the new color values
-            colour.x = colourArray[0];
-            colour.y = colourArray[1];
-            colour.z = colourArray[2];
-            materialManager->editMaterialColour(materialKey, colour);
-            camUpdate = true;
-        }
+        // Update the Vector3 with the new color values
+        colour.x = colourArray[0];
+        colour.y = colourArray[1];
+        colour.z = colourArray[2];
+        materialManager->editMaterialColour(materialKey, colour);
+        camUpdate = true;
     }
 
     // General Material Editing
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Roughness", &roughness, 0.0f, 1.0f, "Roughness %.3f")) {
-        if (currentIndex != 0) {
-            roughness = roughness > 1 ? 1 : roughness;
-            roughness = roughness < 0 ? 0 : roughness;
-            materialManager->editMaterialRoughness(materialKey, roughness);
-            camUpdate = true;
-        }
+        roughness = roughness > 1 ? 1 : roughness;
+        roughness = roughness < 0 ? 0 : roughness;
+        materialManager->editMaterialRoughness(materialKey, roughness);
+        camUpdate = true;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Metallic", &metallic, 0.0f, 1.0f, "Metallic %.3f")) {
-        if (currentIndex != 0) {
-            metallic = metallic > 1 ? 1 : metallic;
-            metallic = metallic < 0 ? 0 : metallic;
-            materialManager->editMaterialMetallic(materialKey, metallic);
-            camUpdate = true;
-        }
+        metallic = metallic > 1 ? 1 : metallic;
+        metallic = metallic < 0 ? 0 : metallic;
+        materialManager->editMaterialMetallic(materialKey, metallic);
+        camUpdate = true;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##IOR", &IOR, 1.0f, 10.0f, "IOR %.3f")) {
-        if (currentIndex != 0) {
-            IOR = IOR < 1 ? 1 : IOR;
-            materialManager->editMaterialIOR(materialKey, IOR);
-            camUpdate = true;
-        }
+        IOR = IOR < 1 ? 1 : IOR;
+        materialManager->editMaterialIOR(materialKey, IOR);
+        camUpdate = true;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (ImGui::SliderFloat("##Transmission", &transmission, 0.0f, 1.0f, "Transmission %.3f")) {
-        if (currentIndex != 0) {
-            transmission = transmission > 1 ? 1 : transmission;
-            transmission = transmission < 0 ? 0 : transmission;
-            materialManager->editMaterialTransmission(materialKey, transmission);
-            camUpdate = true;
-        }
+        transmission = transmission > 1 ? 1 : transmission;
+        transmission = transmission < 0 ? 0 : transmission;
+        materialManager->editMaterialTransmission(materialKey, transmission);
+        camUpdate = true;
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderFloat("##Emission", &emission, 0.0f, 1.0f, "Emission %.3f")) {
-        if (currentIndex != 0) {
-            emission = emission < 0 ? 0 : emission;
-            materialManager->editMaterialEmission(materialKey, emission);
-            camUpdate = true;
-        }
+    if (ImGui::SliderFloat("##Emission", &emission, 0.0f, 20.0f, "Emission %.3f")) {
+        emission = emission < 0 ? 0 : emission;
+        materialManager->editMaterialEmission(materialKey, emission);
+        camUpdate = true;
     }
 
     ImGui::End();

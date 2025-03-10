@@ -84,7 +84,7 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
     Vector3 brdf;
 
     // compute terms
-    Vector3 h = normalOfHalfAngle(wo, wi);
+    Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
     float D = distrubtionGGX(n, h, mat->roughness);
     float cosTheta_wi = std::abs(n.dot(wi));
 
@@ -95,13 +95,13 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
 
     // compute BRDF depending on sample type
     if (type == metallic || type == specularFresnel) {
-        float cosTheta_wo = std::abs(dot(wo, n));
+        float cosTheta_wo = std::abs(Vector3::dot(wo, n));
         Vector3 F = type == metallic ? fresnelSchlickSpecular(cosTheta_wo, mat->colour) : fresnelSchlickRefraction(cosTheta_wo, mat->IOR);
         float G = geometrySmithGGX(n, wo, wi, mat->roughness);
         Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
         brdf = brdf_specular;
     } else if (type == refreaction) {
-        float cosTheta = std::abs(dot(wo, n));
+        float cosTheta = std::abs(Vector3::dot(wo, n));
         float F = fresnelSchlickRefraction(cosTheta, mat->IOR);
         float N1, N2;
         if (!internal) {
@@ -137,4 +137,64 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
     float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
 
     return (brdf * cosTheta_wi) / effective_pdf;
+}
+
+Vector3 SurfaceIntegrator::evaluateBRDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const {
+    Vector3 brdf, refract, specular, diffuse;
+
+    // Terms
+    Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
+    float D = distrubtionGGX(n, h, mat->roughness);
+    float G = geometrySmithGGX(n, wo, wi, mat->roughness);
+    float cosTheta_wo = std::abs(Vector3::dot(wo, n));
+    float cosTheta_wi = std::abs(Vector3::dot(wi, n));
+
+    // Use refraction-specific evaluation
+    Vector3 R0 = fresnelSchlickRefraction(cosTheta_wo, mat->IOR);
+    Vector3 refractBRDF = computeMicrofacetBRDF(D, R0, G, n, wo, wi);
+    refract = refractBRDF;
+
+    // Use metallic specular evaluation
+    Vector3 F0 = fresnelSchlickSpecular(cosTheta_wo, mat->colour);
+    specular = computeMicrofacetBRDF(D, F0, G, n, wo, wi);
+
+    // Diffuse component
+    diffuse = diffuseBRDF(mat->colour);
+
+    //diffuse = diffuse * (F0) + refract * (1 - F0);
+
+    // Combine contributions for other materials
+    float p_specular = mat->metallic;
+    float p_transmission = mat->transmission * (1 - mat->metallic);
+    float p_diffuse = 1 - (p_specular + p_transmission);
+
+    brdf = specular * p_specular + refract * p_transmission + diffuse * p_diffuse;
+
+    return brdf;
+}
+
+float SurfaceIntegrator::evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const {
+    // compute terms
+    Vector3 h = Vector3::normalOfHalfAngle(wo, wi);
+    float D = distrubtionGGX(n, h, mat->roughness);
+    float cosTheta_wi = std::abs(n.dot(wi));
+    float R0 = fresnelSchlickRefraction(cosTheta_wi, mat->IOR); // reflection portion
+
+    // compute pdf
+    float pdf_specular = microfacetPDF(n, wo, wi, D, h);
+    float pdf_refraction = refractionPDF();
+    float pdf_diffuse = diffusePDF(cosTheta_wi);
+
+    float p_specular = mat->metallic;
+    float effective_pdf_specular = pdf_specular * p_specular; // metallic branch
+
+    float p_transmission = mat->transmission * (1 - mat->metallic);
+    float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
+
+    float p_diffuse = 1 - (p_specular + p_transmission);
+    float effective_pdf_diffuse = (R0 * pdf_specular + (1 - R0) * pdf_diffuse) * p_diffuse; // diffuse branch
+
+    float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
+
+    return effective_pdf;
 }

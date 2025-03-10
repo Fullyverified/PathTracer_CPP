@@ -5,6 +5,7 @@
 
 void InputManager::getClickedObject(int x, int y) {
     UI::selectedObject = systemManager->getClickedObject(x, y);
+    debugRay(x, y);
 }
 
 void InputManager::debugRay(int x, int y) {

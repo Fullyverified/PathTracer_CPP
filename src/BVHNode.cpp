@@ -93,6 +93,8 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
 
 struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform) {
 
+    //std::cout<<"Searching Mesh Tree"<<std::endl;
+
     if (!isLeaf) {
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray);
 

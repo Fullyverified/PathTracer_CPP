@@ -10,7 +10,10 @@ struct Config {
     float fOV = 45;
     int raysPerPixel = 1;
     int minBounces = 0;
-    int maxBounces = 6;
+    int maxBounces = 4;
+    int lightSamples = 8;
+    bool ReSTIR = true;
+    bool ReSTIRGI = false;
     int trisPerNode = 6;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
@@ -18,7 +21,7 @@ struct Config {
     int threads = 0; // 0 = default
     int tileSize = 16;
     bool denoise = false;
-    int denoiseIterations = 3;
+    int denoiseIterations = 1;
     float exposure = 1;
     float mouseSensitivity = 0.1f;
     bool sky = false;

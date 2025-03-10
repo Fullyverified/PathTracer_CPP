@@ -5,15 +5,20 @@
 #include <iostream>
 
 class Vector3 {
-
 public:
-    Vector3() : x(0), y(0), z(0) {} // default constructor
-    Vector3(const float &x, const float &y, const float &z) : x(x), y(y), z(z) {}
-    Vector3(const float &value) : x(value), y(value), z(value) {}
-    Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {}
+    Vector3() : x(0), y(0), z(0) {
+    } // default constructor
+    Vector3(const float &x, const float &y, const float &z) : x(x), y(y), z(z) {
+    }
+
+    Vector3(const float &value) : x(value), y(value), z(value) {
+    }
+
+    Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {
+    }
 
     // adding
-    [[nodiscard]] Vector3 operator+(const Vector3& second) const{
+    [[nodiscard]] Vector3 operator+(const Vector3 &second) const {
         return {x + second.x, y + second.y, z + second.z};
     }
 
@@ -21,14 +26,14 @@ public:
         return {x + scalar, y + scalar, z + scalar};
     }
 
-    Vector3& operator+=(const Vector3& second) {
+    Vector3 &operator+=(const Vector3 &second) {
         x += second.x;
         y += second.y;
         z += second.z;
         return *this;
     }
 
-    Vector3& operator+=(float scalar) {
+    Vector3 &operator+=(float scalar) {
         x += scalar;
         y += scalar;
         z += scalar;
@@ -36,7 +41,7 @@ public:
     }
 
     // subtracting
-    [[nodiscard]] Vector3 operator-(const Vector3& second) const{
+    [[nodiscard]] Vector3 operator-(const Vector3 &second) const {
         return {x - second.x, y - second.y, z - second.z};
     }
 
@@ -44,14 +49,18 @@ public:
         return {x - scalar, y - scalar, z - scalar};
     }
 
-    Vector3& operator-=(const Vector3& second) {
+    Vector3 operator-() const {
+        return {-x, -y, -z};
+    }
+
+    Vector3 &operator-=(const Vector3 &second) {
         x -= second.x;
         y -= second.y;
         z -= second.z;
         return *this;
     }
 
-    Vector3& operator-=(float scalar) {
+    Vector3 &operator-=(float scalar) {
         x -= scalar;
         y -= scalar;
         z -= scalar;
@@ -59,7 +68,7 @@ public:
     }
 
     // multiplying
-    [[nodiscard]] Vector3 operator*(const Vector3& second) const {
+    [[nodiscard]] Vector3 operator*(const Vector3 &second) const {
         return {x * second.x, y * second.y, z * second.z};
     }
 
@@ -67,14 +76,14 @@ public:
         return {x * scalar, y * scalar, z * scalar};
     }
 
-    Vector3& operator*=(const Vector3& second) {
+    Vector3 &operator*=(const Vector3 &second) {
         x *= second.x;
         y *= second.y;
         z *= second.z;
         return *this;
     }
 
-    Vector3& operator*=(float scalar) {
+    Vector3 &operator*=(float scalar) {
         x *= scalar;
         y *= scalar;
         z *= scalar;
@@ -82,7 +91,7 @@ public:
     }
 
     // dividing
-    [[nodiscard]] Vector3 operator/(const Vector3& second) const {
+    [[nodiscard]] Vector3 operator/(const Vector3 &second) const {
         return {x / second.x, y / second.y, z / second.z};
     }
 
@@ -90,14 +99,14 @@ public:
         return {x / scalar, y / scalar, z / scalar};
     }
 
-    Vector3& operator/=(const Vector3& second) {
+    Vector3 &operator/=(const Vector3 &second) {
         x /= second.x;
         y /= second.y;
         z /= second.z;
         return *this;
     }
 
-    Vector3& operator/=(float scalar) {
+    Vector3 &operator/=(float scalar) {
         x /= scalar;
         y /= scalar;
         z /= scalar;
@@ -105,27 +114,27 @@ public:
     }
 
     // vector operations
-    [[nodiscard]] float dot(const Vector3& second) const {
-        return x * second.x + y * second.y + z * second.z;
-    }
-
-    static float dot(const Vector3& v1, const Vector3& v2) {
+    static float dot(const Vector3 &v1, const Vector3 &v2) {
         return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
     }
 
-    static float distance(const Vector3& v1, const Vector3& v2) {
-        return std::sqrtf((v1.x - v2.x) * (v1.y - v2.y) * (v1.z - v2.z));
+    [[nodiscard]] float dot(const Vector3 &second) const {
+        return x * second.x + y * second.y + z * second.z;
     }
 
-    static float distanceSqrd(const Vector3& v1, const Vector3& v2) {
-        return (v1.x - v2.x) * (v1.y - v2.y) * (v1.z - v2.z);
+    static float distance(const Vector3 &v1, const Vector3 &v2) {
+        return sqrtf((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z));
     }
 
-    [[nodiscard]] Vector3 cross(const Vector3& second) const {
+    static float distanceSqrd(const Vector3 &v1, const Vector3 &v2) {
+        return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y) + (v1.z - v2.z) * (v1.z - v2.z);
+    }
+
+    [[nodiscard]] Vector3 cross(const Vector3 &second) const {
         return {y * second.z - z * second.y, z * second.x - x * second.z, x * second.y - y * second.x};
     }
 
-    Vector3 cross(const Vector3& v1, const Vector3& v2) {
+    Vector3 cross(const Vector3 &v1, const Vector3 &v2) {
         return {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
     }
 
@@ -135,6 +144,14 @@ public:
         x /= magnitude;
         y /= magnitude;
         z /= magnitude;
+    }
+
+    static void normalise(Vector3& v1) {
+        const float magnitude = std::sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
+        if (magnitude == 0) return;
+        v1.x /= magnitude;
+        v1.y /= magnitude;
+        v1.z /= magnitude;
     }
 
     Vector3 computeHalfVector(const Vector3 &viewDir, const Vector3 &lightDir) {
@@ -151,23 +168,37 @@ public:
         return std::sqrtf(x * x + y * y + z * z);
     }
 
-    Vector3 reflect(Vector3& n) {
+    static float length(Vector3& v1) {
+        return std::sqrtf(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
+    }
+
+    static Vector3 reflect(Vector3& wi, Vector3 &n) {
+        float dotP = dot(wi, n);
+        return Vector3(wi.x - n.x, wi.y - n.y, wi.z - n.z) * dotP * 2;
+    }
+
+    Vector3 reflect(Vector3 &n) {
         float dotP = this->dot(n);
         return Vector3(x - n.x, y - n.y, z - n.z) * dotP * 2;
     }
 
+    static Vector3 normalOfHalfAngle(const Vector3 &wo, const Vector3 &wi) {
+        Vector3 h = wo + wi;
+        h.normalise();
+        return h;
+    }
 
     // operator[]
-    float& operator[](int index) {
+    float &operator[](int index) {
         switch (index) {
-            case 0 : return x;
-            case 1 : return y;
-            case 2 : return z;
+            case 0: return x;
+            case 1: return y;
+            case 2: return z;
             default: throw std::out_of_range("Index out of range for Vector3");
         }
     }
 
-    const float& operator[](int index) const {
+    const float &operator[](int index) const {
         switch (index) {
             case 0: return x;
             case 1: return y;
@@ -204,37 +235,44 @@ public:
         z = other.z;
     }
 
-    void print() const {
-        std::cout<<"x: "<<x<<", y: "<<y<<", z: "<<z<<std::endl;
+    void sanitize() {
+        x = std::isfinite(x) ? x : 0.0f;
+        y = std::isfinite(y) ? y : 0.0f;
+        z = std::isfinite(z) ? z : 0.0f;
     }
 
-    void setX(float const &newX) {x = newX;}
-    void setY(float const &newY) {y = newY;}
-    void setZ(float const &newZ) {z = newZ;}
+    void print() const {
+        std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
+    }
 
-    [[nodiscard]] float getX() const {return x;}
-    [[nodiscard]] float getY() const {return y;}
-    [[nodiscard]] float getZ() const {return z;}
+    void setX(float const &newX) { x = newX; }
+    void setY(float const &newY) { y = newY; }
+    void setZ(float const &newZ) { z = newZ; }
+
+    [[nodiscard]] float getX() const { return x; }
+    [[nodiscard]] float getY() const { return y; }
+    [[nodiscard]] float getZ() const { return z; }
 
     float x, y, z;
+
 private:
 };
 
 // Non-member operator function
 
-inline Vector3 operator+(float scalar, const Vector3& vec) {
+inline Vector3 operator+(float scalar, const Vector3 &vec) {
     return {scalar + vec.x, scalar + vec.y, scalar + vec.z};
 }
 
-inline Vector3 operator-(float scalar, const Vector3& vec) {
+inline Vector3 operator-(float scalar, const Vector3 &vec) {
     return {scalar - vec.x, scalar - vec.y, scalar - vec.z};
 }
 
-inline Vector3 operator*(float scalar, const Vector3& vec) {
+inline Vector3 operator*(float scalar, const Vector3 &vec) {
     return {scalar * vec.x, scalar * vec.y, scalar * vec.z};
 }
 
-inline Vector3 operator/(float scalar, const Vector3& vec) {
+inline Vector3 operator/(float scalar, const Vector3 &vec) {
     return {scalar / vec.x, scalar / vec.y, scalar / vec.z};
 }
 

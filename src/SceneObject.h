@@ -10,6 +10,9 @@ class SceneObject {
 public:
 
     [[nodiscard]] virtual std::pair<float, float> getIntersectionDistance(Ray &ray) const = 0;
+    [[nodiscard]] virtual Vector3 samplePoint (float r1, float r2) const = 0; // Sample random point on an object for Restir GI
+    [[nodiscard]] virtual float getArea() const = 0;
+    virtual void computeArea() = 0;
     [[nodiscard]] virtual Vector3 getPos() const = 0;
     void virtual setPos(Vector3 newPos) = 0;
     [[nodiscard]] virtual Vector3 getDir() const = 0;

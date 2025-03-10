@@ -18,10 +18,28 @@
 
 class SystemManager;
 
+struct Reservoir {
+    Vector3 candidateRadiance; // Selected indirect radiance
+    Vector3 candidateDirection; // Direction of candidate sample
+    float weightSum; // Sum of weights from all candidates considered
+    int sampleCount; // Number of samples seen
+
+    Reservoir() : candidateRadiance(Vector3(0,0,0)), candidateDirection(Vector3(0,0,0)), weightSum(0.0f), sampleCount(0.0f) {}
+};
+
+struct ReservoirGI {
+    Vector3 candidateRadiance; // Selected indirect radiance
+    Vector3 candidateDirection; // Direction of candidate sample
+    float weightSum; // Sum of weights from all candidates considered
+    int sampleCount; // Number of samples seen
+
+    ReservoirGI() : candidateRadiance(Vector3(0,0,0)), candidateDirection(Vector3(0,0,0)), weightSum(0.0f), sampleCount(0.0f) {}
+};
+
 class CPUPT {
 public:
 
-    CPUPT(SystemManager* systemManager, std::vector<SceneObject *>& sceneObjectsList);
+    CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList, std::vector<SceneObject *> &emmisiveObjectsList);
     ~CPUPT() {
     }
 
@@ -35,6 +53,8 @@ public:
     // traversal logic
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
 
+    Vector3 restirDirectLighting(Ray& ray, SceneObject* hitObject) const;
+
     // multithreading logic
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
 
@@ -47,6 +67,7 @@ public:
     // UI Functions
     SceneObject* getClickedObject(int screenX, int screenY);
     void debugRay(int screenX, int screenY);
+    void debugPixelInfo(int screenX, int screenY);
 
 
 private:
@@ -59,6 +80,7 @@ private:
 
     // scene objects
     std::vector<SceneObject *>& sceneObjectsList;
+    std::vector<SceneObject*>& emissiveObjects; // for Restir Direct Illumination
     BVHNode* rootNode;
     Camera* camera;
 

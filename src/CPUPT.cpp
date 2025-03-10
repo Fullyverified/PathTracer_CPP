@@ -23,8 +23,8 @@
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
-                                                                                           iterations(0), numThreads(0) {
+CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList, std::vector<SceneObject *> &emmisiveObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
+                                                                                           emissiveObjects(emmisiveObjectsList), iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
     surfaceIntergrator = new SurfaceIntegrator();
     denoiser = new Denoiser();
@@ -59,6 +59,7 @@ void CPUPT::renderLoop() {
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
+    systemManager->getSceneObjectManager()->updateEmmisiveObjects();
 
     // render loop
     while (systemManager->getIsRunning()) {
@@ -74,6 +75,9 @@ void CPUPT::renderLoop() {
             if (UI::camUpdate) {
                 config.fOV = UI::fOV;
                 config.exposure = UI::exposure;
+                config.DepthOfField = UI::depthOfField;
+                config.focalDistance = UI::focalDistance;
+                systemManager->getSceneObjectManager()->updateEmmisiveObjects();
                 camera->reInitilize(); // fov changes
             }
 
@@ -81,6 +85,7 @@ void CPUPT::renderLoop() {
                 UI::sceneUpdate = false;
                 bvh.constructBVHST(sceneObjectsList);
                 rootNode = bvh.getBVHNodes()[0];
+                systemManager->getSceneObjectManager()->updateEmmisiveObjects();
             }
 
             if (UI::resUpdate) {
@@ -95,6 +100,9 @@ void CPUPT::renderLoop() {
                 lum[i] = Vector3(0, 0, 0);
                 hdr[i] = Vector3(0, 0, 0);
             }
+
+            config.ReSTIR = UI::ReSTIR;
+            config.ReSTIRGI = UI::ReSTIRGI;
             iterations = 0;
             UI::accumulatedRays = iterations * config.raysPerPixel;
         }
@@ -246,15 +254,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                         // Ray intersects nothing, break
                         if (sky) {
-                            Vector3 topColour(0.53f, 0.81f, 0.98f);
-                            Vector3 horizonColour(0.0f, 0.0f, 0.0f);
-                            float t = 0.5f * (ray.getDir().y + 1.0f); // Map y from -1 to 1 to 0 to 1
-                            Vector3 skyColor = (1.0f - t) * horizonColour + t * topColour;
-                            finalColour = finalColour + throughput * skyColor * 0.25;
-                        }
-
-                        if (currentBounce == 0 && config.denoise == true) {
-
+                            Vector3 skyColour(0.247f, 0.247f, 0.247f);
+                            finalColour = finalColour + throughput * skyColour * 0.25;
                         }
                         break;
                     }
@@ -291,7 +292,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     float p_diffuse = 1.0f - (p_specular + p_transmission);
                     // probabilites should add up to 1
 
-                    Vector3 wo = ray.getDir() * -1; // outgoing direction
+                    Vector3 wo = -ray.getDir(); // outgoing direction
                     Vector3 wi;
 
                     Vector3 n = ray.getNormal();
@@ -340,8 +341,19 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         }
                     }
 
-                    // 2) Add emission *through* the throughput
-                    finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                    // Compute direct lighting with ReSTIR at first bounce
+                    if (currentBounce == 0 && config.ReSTIR) {
+                        Vector3 directLighting = restirDirectLighting(ray, hitObject);
+                        finalColour = finalColour + directLighting;
+                    }
+
+                    // 2) Update colour
+                    if ((currentBounce == 0 || currentBounce > 1 )&& config.ReSTIR) {
+                        finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                    } else if (!config.ReSTIR){
+                        finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                    }
+                    finalColour.sanitize();
 
                     // 3) Update throughput with BRDF and PDF
                     throughput = throughput * newThroughput;
@@ -363,6 +375,17 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         throughput = throughput / RR;
                     }
 
+                    if (std::isinf(throughput.x) || std::isinf(throughput.x) || std::isinf(throughput.x)) {
+                        std::cout<<"throughput infinite: ";
+                        throughput.print();
+                        throughput = Vector3(0, 0, 0);
+                    }
+                    if (std::isnan(throughput.x) || std::isnan(throughput.x) || std::isnan(throughput.x)) {
+                        std::cout<<"throughput NaN: ";
+                        throughput.print();
+                        throughput = Vector3(0, 0, 0);
+                    }
+
                     // Prepare for next bounce
                     ray.getDir().set(wi);
                     ray.updateOrigin(0.01);
@@ -378,6 +401,109 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             } // end raysPerPixel
         } // end x
     } // end y
+}
+
+Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
+    if (emissiveObjects.size() == 0) {
+        if (ray.getDebug()) std::cout<<"No emmsive objects"<<std::endl;
+        return Vector3(0.0f);
+    }
+
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    Material* hitMat = hitObject->getMaterial();
+    const int M = config.lightSamples; // Number of candidate light samples
+    float weightSum = 0.0f;
+
+    Vector3 selectedLightPoint, selectedEmission; // Position and emission of selected light sample point
+    float selectedArea = 0.0f;
+
+    Vector3 rayPos = ray.getPos();
+    Vector3 n = ray.getNormal();
+    Vector3 wo = -ray.getDir();
+
+    // Resoiver sampling
+    for (int i = 0; i < M && !(i > emissiveObjects.size()); i++) {
+        if (ray.getDebug()) std::cout<<"Light Sample: "<<i<<std::endl;
+
+        // Sample a light source
+        int lightIndex = dist(rng) * (emissiveObjects.size() - 1);
+        SceneObject* light = emissiveObjects[lightIndex];
+        const Material* lightMat = light->getMaterial();
+
+        // Sample a point on the light
+        Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
+        Vector3 wi = lightPoint - rayPos;
+        wi.normalise();
+        float distToLight = (lightPoint - rayPos).length();
+        float cos_theta = std::max(0.0f, n.dot(wi));
+
+        // Skip if facing away
+        if (cos_theta <= 0.0f) {
+            continue;
+        }
+
+        Vector3 lightEmission = lightMat->colour * lightMat->emission;
+
+        Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
+
+        Vector3 contrib = lightEmission * BRDF;
+
+        float weightI = (contrib.x * 0.2126f + contrib.y * 0.7152f + contrib.z * 0.0722f) * cos_theta / (distToLight * distToLight);
+
+        weightSum += weightI;
+        if (dist(rng) * weightSum < weightI) {
+            selectedLightPoint = lightPoint;
+            selectedEmission = lightEmission;
+            selectedArea = light->getArea();
+        }
+    }
+
+    if (weightSum == 0.0f) return Vector3(0.0f, 0.0f, 0.0f);
+
+    // Shadow test
+    Vector3 wi = (selectedLightPoint - rayPos);
+    Vector3::normalise(wi);
+    Ray shadowRay(rayPos + wi * 0.01f, wi);
+    float distToLight = Vector3::distance(selectedLightPoint, rayPos);
+
+    if (ray.getDebug()) {
+        std::cout<<"selectedLightPoint";
+        selectedLightPoint.print();
+        std::cout<<"rayPos";
+        rayPos.print();
+
+        std::cout<<"Distance to light: "<<distToLight<<std::endl;
+        std::cout<<"Wi";
+        wi.print();
+    }
+
+    BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
+    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf()) {
+        if (ray.getDebug()) {
+            std::cout<<"No object found"<<distToLight<<std::endl;
+        }
+        return Vector3(0.0f, 0.0f, 0.0f); // Occluded
+    }
+
+    if (ray.getDebug()) {
+        shadowResult.node->getSceneObject()->printType();
+        std::cout<<"shadowResult.close: "<<shadowResult.close<<std::endl;
+    }
+
+    if (!(shadowResult.close < distToLight + 0.01f && shadowResult.close > distToLight - 0.01f)) {
+        if (ray.getDebug()) {
+            std::cout<<"Occuluded"<<std::endl;
+        }
+        return Vector3(0.0f, 0.0f, 0.0f); // Occluded
+    }
+
+    // Final contribution
+    float cos_theta = std::max(0.0f, n.dot(wi));
+    Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
+    Vector3 contribution = selectedEmission * BRDF * cos_theta / (distToLight * distToLight) * (emissiveObjects.size() * selectedArea);
+    //contribution.sanitize();
+
+    return contribution;
 }
 
 void CPUPT::initialiseObjects() {
@@ -543,6 +669,13 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // Grab the material
         Material *mat = hitObject->getMaterial();
 
+        std::cout<<"ReSTIR"<<std::endl;
+        // Compute direct lighting with ReSTIR at first bounce
+        if (currentBounce == 0 && config.ReSTIR) {
+            Vector3 directLighting = restirDirectLighting(ray, hitObject);
+            finalColour = finalColour + throughput * directLighting;
+        }
+
         // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
         float randomSample = dist(rng);
         float p_specular = mat->metallic;
@@ -550,7 +683,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
         float p_diffuse = 1.0f - (p_specular + p_transmission);
         // probabilites should add up to 1
 
-        Vector3 wo = ray.getDir() * -1; // outgoing direction
+        Vector3 wo = -ray.getDir(); // outgoing direction
         Vector3 wi;
 
         Vector3 n = ray.getNormal();
@@ -633,6 +766,14 @@ void CPUPT::debugRay(int screenX, int screenY) {
         ray.updateOrigin(0.01);
         std::cout<<"----------------------------"<<std::endl;
     } // end for bounceDepth
+}
+
+void CPUPT::debugPixelInfo(int screenX, int screenY) {
+    std::cout<<"X: "<<screenX<<", Y: "<<screenY<<std::endl;
+    std::cout<<"HDR: ";
+    hdr[screenY * internalResX + screenX].print();
+    std::cout<<"LUM: ";
+    lum[screenY * internalResX + screenX].print();
 }
 
 std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, int step) {

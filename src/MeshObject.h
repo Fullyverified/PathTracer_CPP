@@ -19,6 +19,9 @@ public:
 
     MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Vector3 samplePoint (float r1, float r2) const override;
+    float getArea() const override;
+    void computeArea() override;
     [[nodiscard]] MeshObject::meshIntersection intersectTriangles(Ray &ray, BVHNode* leafNode) const;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
     void setPos(Vector3 newPos) override {pos = newPos;}
@@ -59,6 +62,7 @@ public:
 
 private:
     Vector3 pos, dir, scale;
+    float area;
     Material* material;
     std::pair<Vector3, Vector3> bounds;
     std::vector<Triangle*> triangles;

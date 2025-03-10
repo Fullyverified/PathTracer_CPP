@@ -80,8 +80,8 @@ public:
 
         materials["Light"] = new Material{"Light", Vector3(1, 1, 1), 0.75, 0, 1, 0, 15};
         materials["RedGlow"] = new Material{"RedGlow", Vector3(1, 0, 0), 0.75, 0, 1, 0, 3};
-        materials["BlueGlow"] = new Material{"BlueGlow", Vector3(0, 1, 0), 0.75, 0, 1, 0, 3};
-        materials["GreenGlow"] = new Material{"GreenGlow", Vector3(0, 0, 1), 0.75, 0, 1, 0, 3};
+        materials["GreenGlow"] = new Material{"GreenGlow", Vector3(0, 1, 0), 0.75, 0, 1, 0, 3};
+        materials["BlueGlow"] = new Material{"BlueGlow", Vector3(0, 0, 1), 0.75, 0, 1, 0, 3};
 
         materials["SmoothPlastic"] = new Material{"SmoothPlastic", Vector3(1, 1, 1), 0.05, 0, 1, 0, 0};
         materials["SmoothMetal"] = new Material{"SmoothMetal", Vector3(1, 1, 1), 0.05, 1, 1, 0, 0};

@@ -24,7 +24,7 @@ public:
     std::pair<std::vector<Triangle*>, std::vector<Triangle*>> partitionTriangles(std::vector<Triangle*> triangles, int axis);
     [[nodiscard]] std::pair<Vector3, Vector3> triangleBounds(std::vector<Triangle*> triangles);
 
-    [[nodiscard]] std::vector<Triangle*> getTriangles() {return triangles;}
+    [[nodiscard]] std::vector<Triangle*>& getTriangles() {return triangles;}
     [[nodiscard]] BVHNode* getRootNode() {return rootNode;}
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds();
 

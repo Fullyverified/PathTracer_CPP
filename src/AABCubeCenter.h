@@ -9,6 +9,9 @@ class AABCubeCenter : public SceneObject {
 public:
     AABCubeCenter(Vector3 pos, Vector3 length, Material* material);
     std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Vector3 samplePoint (float r1, float r2) const override;
+    float getArea() const override;
+    void computeArea() override;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
     void setPos(Vector3 newPos) override {pos = newPos; updateBounds();}
     [[nodiscard]] Vector3 getDir() const override {return dir;}
@@ -31,7 +34,8 @@ public:
     AABCubeCenter& operator=(const AABCubeCenter& other) = delete; // disable copy assignment
 
 private:
-    Vector3 pos, dir, length, minBounds, maxBounds,  colour, luminance;;
+    Vector3 pos, dir, length, minBounds, maxBounds,  colour, luminance;
+    float area;
     Material* material;
 };
 

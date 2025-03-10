@@ -9,6 +9,9 @@ class AABCubeBounds : public SceneObject {
 public:
     AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material* material);
     [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Vector3 samplePoint (float r1, float r2) const override;
+    [[nodiscard]] float getArea() const override;
+    void computeArea() override;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
     void setPos(Vector3 newPos) override {pos = newPos;}
     [[nodiscard]] Vector3 getDir() const override {return dir;}
@@ -30,6 +33,7 @@ public:
 
 private:
     Vector3 minBounds, maxBounds, pos, dir, colour, luminance;
+    float area;
     Material* material;
 };
 

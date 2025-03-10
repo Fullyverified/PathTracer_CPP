@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -110,7 +110,7 @@ public:
 
     void defaultScene() {
         // BOX1
-        sceneObjects.emplace_back(new Sphere(Vector3(5, 2.5, 0), 1, 0.1, 1, materialManager->getMaterial("Light"))); // light on ceiling
+        sceneObjects.emplace_back(new Sphere(Vector3(5, 2.5, 0), 0.8, 0.1, 0.8, materialManager->getMaterial("Light"))); // light on ceiling
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // floor
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // roof
@@ -154,14 +154,30 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10,0,-13),Vector3(14,6,1),materialManager->getMaterial("Mirror"))); // right wall
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // middle
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // left
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // middle
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // left
 
         // BOX 3
     }
 
     Camera* getCamera() {
         return camera;
+    }
+
+
+    // For Restir DI
+    std::vector<SceneObject*>& getEmmisiveObjects() {
+        return emissiveObjects;
+    }
+
+    void updateEmmisiveObjects() {
+        emissiveObjects.clear();
+
+        for (SceneObject* sceneObject : sceneObjects) {
+            if (sceneObject->getMaterial()->emission > 0) {
+                emissiveObjects.emplace_back(sceneObject);
+            }
+        }
     }
 
 private:
@@ -173,6 +189,7 @@ private:
     std::unordered_map<const char*, LoadMesh*> meshTypes;
 
     std::vector<SceneObject*> sceneObjects; // Master list
+    std::vector<SceneObject*> emissiveObjects; // List of emissive objects
 
     MaterialManager* materialManager;
 };
