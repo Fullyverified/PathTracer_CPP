@@ -29,6 +29,12 @@ void MeshObject::getNormal(Ray &ray) const {
     ray.getNormal().normalise();
 }
 
+Vector3 MeshObject::getNormal(Vector3 sampledPos) const {
+    // not implementable for now
+
+    return {1, 1, 1};
+}
+
 std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
     Transform transform = {pos, dir, scale, this};
     transform.rayToObj(ray); // transform ray to object space

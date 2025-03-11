@@ -61,9 +61,11 @@ SceneObject *UI::selectedObject = nullptr;
 bool UI::isWindowHovered = false;
 
 void UI::renderSettings() {
-    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    if (ImGui::GetIO().WantCaptureMouse) {
         isWindowHovered = true;
-    } else { isWindowHovered = false; }
+    } else {
+        isWindowHovered = false;
+    }
 
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);

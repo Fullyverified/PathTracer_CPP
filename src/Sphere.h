@@ -19,6 +19,7 @@ public:
     [[nodiscard]] Vector3 getScale() const override {return scale;}
     void setScale(Vector3 newScale) override {scale = newScale; computeArea();}
     void getNormal(Ray &ray) const override;
+    [[nodiscard]] Vector3 getNormal(Vector3 sampledPos) const override;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() override;
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}

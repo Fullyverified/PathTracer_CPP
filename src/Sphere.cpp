@@ -23,6 +23,21 @@ void Sphere::getNormal(Ray &ray) const {
     ray.getNormal().normalise();
 }
 
+Vector3 Sphere::getNormal(Vector3 sampledPos) const {
+    Vector3 normal;
+    if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) {
+        normal.set(-sampledPos.x / (scale.x * scale.x),
+                            -sampledPos.y / (scale.y * scale.y),
+                            -sampledPos.z / (scale.z * scale.z));
+        return normal;
+    }
+    normal.set(2 * (sampledPos.x - pos.x) / (scale.x * scale.x),
+                        2 * (sampledPos.y - pos.y) / (scale.y * scale.y),
+                        2 * (sampledPos.z - pos.z) / (scale.z * scale.z));
+    normal.normalise();
+    return normal;
+}
+
 std::pair<Vector3, Vector3> Sphere::getBounds() {
     Vector3 min(pos.getX() - scale.x, pos.getY() - scale.y, pos.getZ() - scale.z);
     Vector3 max(pos.getX() + scale.x, pos.getY() + scale.y, pos.getZ() + scale.z);

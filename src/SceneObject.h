@@ -20,6 +20,7 @@ public:
     [[nodiscard]] virtual Vector3 getScale() const = 0;
     void virtual setScale(Vector3 newScale) = 0;
     virtual void getNormal(Ray &ray) const = 0;
+    [[nodiscard]] virtual Vector3 getNormal(Vector3 sampledPos) const = 0;
     [[nodiscard]] virtual std::pair<Vector3, Vector3> getBounds() = 0;
     [[nodiscard]] virtual Material* getMaterial() const = 0;
     virtual void setMaterial(Material* material) = 0;

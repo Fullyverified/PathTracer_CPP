@@ -46,6 +46,46 @@ void AABCubeBounds::getNormal(Ray &ray) const {
     }
 }
 
+Vector3 AABCubeBounds::getNormal(Vector3 sampledPoint) const {
+    Vector3 normal;
+
+    const float px = sampledPoint.x;
+    const float py = sampledPoint.y;
+    const float pz = sampledPoint.z;
+
+    // x
+    float xmin = std::abs(px - minBounds.getX());
+    float xmax = std::abs(px - maxBounds.getX());
+
+    // y
+    float ymin = std::abs(py - minBounds.getY());
+    float ymax = std::abs(py - maxBounds.getY());
+
+    // z
+    float zmin = std::abs(pz - minBounds.getZ());
+    float zmax = std::abs(pz - maxBounds.getZ());
+
+    // find smallest value
+    float minDist = std::min(xmin, std::min(xmax, std::min(ymin, std::min(ymax, std::min(zmin, zmax)))));
+
+    // set normal according the cloest face of the rays position
+    if (minDist == xmin) {
+       normal.set(-1, 0, 0);
+    } else if (minDist == xmax) {
+        normal.set(1, 0, 0);
+    } else if (minDist == ymin) {
+        normal.set(0, -1, 0);
+    } else if (minDist == ymax) {
+        normal.set(0, 1, 0);
+    } else if (minDist == zmin) {
+        normal.set(0, 0, -1);
+    } else if (minDist == zmax) {
+        normal.set(0, 0, 1);
+    }
+    normal.normalise();
+    return normal;
+}
+
 std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
