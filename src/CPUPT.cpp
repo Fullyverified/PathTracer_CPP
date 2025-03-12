@@ -75,7 +75,7 @@ void CPUPT::renderLoop() {
                 config.exposure = UI::exposure;
                 config.DepthOfField = UI::depthOfField;
                 config.focalDistance = UI::focalDistance;
-                config.spatioSampling = UI::spatioSampling;
+                config.spatialSampling = UI::spatialSampling;
                 config.temporalSampling = UI::temporalSampling;
                 config.minBounces = UI::minBounces;
                 config.maxBounces = UI::maxBounces;
@@ -508,7 +508,7 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
             if (config.ReSTIR) {
                 Vector3 totalContribution{0.0f};
 
-                int range = config.spatioSampling;
+                int range = config.spatialSampling;
                 float totalWeight = 0;
                 float samples = 0;
                 // select neighbouring resevoirs around that pixel

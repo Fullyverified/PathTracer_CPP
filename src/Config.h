@@ -13,7 +13,7 @@ struct Config {
     int maxBounces = 6;
     int lightSamples = 1;
     bool ReSTIR = true;
-    int spatioSampling = 0;
+    int spatialSampling = 0;
     int temporalSampling = 0;
     bool ReSTIRGI = false;
     int trisPerNode = 6;

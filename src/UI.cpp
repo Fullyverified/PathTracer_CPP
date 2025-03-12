@@ -156,7 +156,7 @@ void UI::renderSettings() {
 
     ImGui::Separator();
 
-    // Denoising
+    /*// Denoising
     ImGui::Checkbox("Denoising", &denoise);
 
     ImGui::SameLine();
@@ -164,7 +164,7 @@ void UI::renderSettings() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     ImGui::SliderInt("##Denoiser Iterations", &denoiseIterations, 0, 5, "Denoise Steps %i");
 
-    ImGui::Separator();
+    ImGui::Separator();*/
 
     std::string upscaleString = "Upscaling: " + std::to_string(upscale) + "x";
     ImGui::Text(upscaleString.c_str());

@@ -47,6 +47,12 @@ struct ReservoirGI {
     ReservoirGI() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f) {}
 };
 
+struct MotionVector {
+    float x, y;
+
+    MotionVector() : x(0.0f), y(0.0f) {}
+};
+
 class CPUPT {
 public:
 
