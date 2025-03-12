@@ -5,7 +5,7 @@ A CPU Path tracer.
 
 # Features  
 Multiple Importance Sampling (MIS)  
-ReSTIR (spatiotemporal sampling to come)  
+ReSTIR (Temporal sampling to come)  
 Russian Roulette Termination  
 BVH Acceleration  
 Multithreading  
