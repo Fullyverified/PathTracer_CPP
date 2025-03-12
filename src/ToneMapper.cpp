@@ -1,7 +1,7 @@
 #include "ToneMapper.h"
+#include "config.h"
 
-
-void ToneMapper::launchToneMappingThreads(std::vector<Vector3> &colour, uint8_t *RGBBuffer, float maxLuminance, int segments, int resx, int resy, int internalResX, int internalResY, int upScale) {
+void ToneMapper::launchToneMappingThreads(std::vector<Vector3> &colour, uint8_t *RGBBuffer, float maxLuminance, int segments, int resx, int resy, int internalResX, int internalResY, int upScale, int numThreads) {
 
     // Compute Max luminance
     float currentLuminance = 0;
@@ -10,26 +10,46 @@ void ToneMapper::launchToneMappingThreads(std::vector<Vector3> &colour, uint8_t 
         currentLuminance = 0.2126f * colour[i].x + 0.7152f * colour[i].y + 0.0722f * colour[i].z;
         maxLuminance = currentLuminance > maxLuminance ? currentLuminance : maxLuminance;
     }
-
-    // Tone Map
-
-    std::vector<std::future<void>> threads;
     std::mutex mutex;
 
-    for (int j = 0; j < segments; j++) {
-        for (int i = 0; i < segments; i++) {
-            boundsX = threadSegments(0, internalResX, segments, i);
-            boundsY = threadSegments(0, internalResY, segments, j);
-            threads.emplace_back(std::async(std::launch::async, &ToneMapper::extended_Reinhard, this, std::ref(colour), std::ref(RGBBuffer),
-                                              boundsX.first, boundsX.second, boundsY.first,
-                                              boundsY.second, internalResX, resx, upScale, maxLuminance, std::ref(mutex)));
-        }
-    }
-    for (std::future<void> &thread: threads) {
-        thread.get(); // Blocks until the thread completes its task
-    }
-    threads.clear();
+    // Calculate number of screen segments
+    int tileSize = config.tileSize;
+    int segmentsX = (internalResX + tileSize - 1) / tileSize; // Ceiling division
+    int segmentsY = (internalResY + tileSize - 1) / tileSize;
+    int totalSegments = segmentsX * segmentsY;
+    std::atomic<int> nextSegment(0);
 
+    // Create a worker for each segment
+    auto workerToneMap = [this, &nextSegment, totalSegments, segmentsX, tileSize, &mutex, &colour, &RGBBuffer, internalResX, internalResY, resx, upScale, maxLuminance]() {
+        while (true) {
+            int segmentIndex = nextSegment.fetch_add(1);
+            if (segmentIndex >= totalSegments) {
+                break;
+            }
+            // Convert segment index to tile coordinates
+            int tileY = segmentIndex / segmentsX;
+            int tileX = segmentIndex % segmentsX;
+            int startX = tileX * tileSize;
+            int endX = std::min(startX + tileSize - 1, internalResX - 1);
+            int startY = tileY * tileSize;
+            int endY = std::min(startY + tileSize - 1, internalResY - 1);
+            extended_Reinhard(colour, RGBBuffer,
+                                              startX, endX, startY,
+                                              endY, internalResX, resx, upScale, maxLuminance, std::ref(mutex));
+        }
+    };
+
+    // Launch worker threads
+    std::vector<std::thread> threadsTM;
+    for (int i = 0; i < numThreads; ++i) {
+        threadsTM.emplace_back(workerToneMap);
+    }
+    // Block until all threads are finished
+
+    for (std::thread &thread: threadsTM) {
+        thread.join();
+    }
+    threadsTM.clear();
 }
 
 void ToneMapper::extended_Reinhard(std::vector<Vector3> &HDR, uint8_t *RGBBuffer, int xstart, int xend, int ystart, int yend, int internalResX, int resX, int upScale, float maxLuminance, std::mutex &mutex) {

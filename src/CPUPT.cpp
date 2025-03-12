@@ -119,13 +119,14 @@ void CPUPT::renderLoop() {
 
         std::chrono::duration<long long, std::ratio<1, 1000> > durationTimeRays;
 
+        Camera cameraCopy = *camera; // dereference camera and copy
+        bool sky = config.sky; // copy bool
+
         for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
             ////////////////////////////////////////////////////////////////////////
             // Path tracing - Multiple Importance Sampling + Direct Illumination
             ////////////////////////////////////////////////////////////////////////
 
-            Camera cameraCopy = *camera; // dereference camera and copy
-            bool sky = config.sky; // copy bool
 
             auto startTimeRays = std::chrono::high_resolution_clock::now();
 
@@ -229,7 +230,7 @@ void CPUPT::renderLoop() {
 
         auto startTimeTM = std::chrono::high_resolution_clock::now();
 
-        toneMapper->launchToneMappingThreads(lum, RGBBuffer, maxLuminance, segments, resX, resY, internalResX, internalResY, upScale);
+        toneMapper->launchToneMappingThreads(lum, RGBBuffer, maxLuminance, segments, resX, resY, internalResX, internalResY, upScale, numThreads);
 
         systemManager->updateRGBBuffer(RGBBuffer); // push latest screen buffer
 
