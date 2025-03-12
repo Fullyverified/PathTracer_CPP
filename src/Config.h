@@ -11,7 +11,7 @@ struct Config {
     int raysPerPixel = 1;
     int minBounces = 0;
     int maxBounces = 0;
-    int lightSamples = 8;
+    int lightSamples = 1;
     bool ReSTIR = true;
     bool ReSTIRGI = false;
     int trisPerNode = 6;

@@ -298,6 +298,14 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         emissionBuffer[y * internalResX + x] = mat->emission;
                     }
 
+                    // -------------------------------------------------------------
+                    // ReSTIR Direct Illumination (first bounce only)
+                    // -------------------------------------------------------------
+                    if (currentBounce == 0 && config.ReSTIR) {
+                        Vector3 directLighting = restirDirectLighting(ray, hitObject);
+                        finalColour = finalColour + directLighting;
+                    }
+
                     // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                     float randomSample = dist(rng);
                     float p_specular = mat->metallic;
@@ -354,24 +362,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         }
                     }
 
-                    // -------------------------------------------------------------
-                    // ReSTIR Direct Illumination (first bounce only)
-                    // -------------------------------------------------------------
-                    if (currentBounce == 0 && config.ReSTIR) {
-                        Vector3 directLighting = restirDirectLighting(ray, hitObject);
-                        finalColour = finalColour + directLighting;
-                    }
-
-                    // 2) Update colour
-                    if (currentBounce != 1 && config.ReSTIR) {
-                        finalColour = finalColour + throughput * (mat->colour * mat->emission);
-                    } else if (!config.ReSTIR){
-                        finalColour = finalColour + throughput * (mat->colour * mat->emission);
-                    }
-                    finalColour.sanitize();
-
-                    // 3) Update throughput with BRDF and PDF
+                    // 2) Update throughput with BRDF and PDF
                     throughput = throughput * newThroughput;
+
+                    // 3) Update colour
+                    finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                    finalColour.sanitize();
 
                     // -------------------------------------------------------------
                     // Russian roulete termination
@@ -389,17 +385,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         // Scale the throughput to maintain an unbiased estimator
                         throughput = throughput / RR;
                     }
-
-                    /*if (std::isinf(throughput.x) || std::isinf(throughput.x) || std::isinf(throughput.x)) {
-                        std::cout<<"throughput infinite: ";
-                        throughput.print();
-                        throughput = Vector3(0, 0, 0);
-                    }
-                    if (std::isnan(throughput.x) || std::isnan(throughput.x) || std::isnan(throughput.x)) {
-                        std::cout<<"throughput NaN: ";
-                        throughput.print();
-                        throughput = Vector3(0, 0, 0);
-                    }*/
 
                     // Prepare for next bounce
                     ray.getDir().set(wi);
@@ -419,73 +404,37 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 }
 
 Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
-
-    if (ray.getDebug()) {
-        std::cout<<"---------------";
-    }
-
-
-    if (emissiveObjects.size() == 0) {
-        return Vector3(0.0f);
-    }
+    if (emissiveObjects.size() == 0) return Vector3(0.0f);
 
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::uniform_int_distribution<int> lightDist(0, emissiveObjects.size() - 1);
     Material* hitMat = hitObject->getMaterial();
-    const int M = config.lightSamples; // Number of candidate light samples
+    const int M = config.lightSamples;
 
     Vector3 rayPos = ray.getPos();
     Vector3 n = ray.getNormal();
     Vector3 wo = -ray.getDir();
 
-    if (ray.getDebug()) {
-        std::cout<<"rayPos: ";
-        rayPos.print();
-        std::cout<<"n: ";
-        n.print();
-        std::cout<<"wo: ";
-        wo.print();
-    }
-
-
-    // Resoiver sampling
     Reservoir reservoir = {};
     for (int i = 0; i < M; i++) {
-        // Sample a light source
+        reservoir.sampleCount++;
         int lightIndex = lightDist(rng);
         SceneObject* light = emissiveObjects[lightIndex];
         const Material* lightMat = light->getMaterial();
-
-        if (ray.getDebug()) {
-            std::cout<<"light Sample: "<<i<<std::endl;
-            rayPos.print();
-            std::cout<<"emissiveObjects["<<lightIndex<<"]"<<std::endl;
-        }
-
-        // Sample a point on the light
         Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
-
         Vector3 wi = lightPoint - rayPos;
         wi.normalise();
         float distToLight = (lightPoint - rayPos).length();
         float cos_theta = n.dot(wi);
-        // Skip if facing away
-        if (cos_theta <= 0.0f) continue;
-
-        Vector3 lightEmission = lightMat->colour * lightMat->emission;
-        Vector3 BRDF_light = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
-
-        //BRDF_light.print();
-
+        float importance = 0.0f;
         float PDF_light = (1.0f / emissiveObjects.size()) * (1.0f / light->getArea());
-
-        // Unbiased reservoir weight (importance)
-        Vector3 contrib = lightEmission * BRDF_light * (cos_theta / (distToLight * distToLight));
-        float importance = Vector3::luminance(contrib) / PDF_light;
-
+        Vector3 lightEmission = lightMat->colour * lightMat->emission;
+        if (cos_theta > 0.0f) {
+            Vector3 BRDF_light = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
+            Vector3 contrib = lightEmission * BRDF_light * (cos_theta / (distToLight * distToLight));
+            importance = Vector3::luminance(contrib) / PDF_light;
+        }
         reservoir.weightSum += importance;
-        reservoir.sampleCount++;
-
         if (dist(rng) * reservoir.weightSum < importance) {
             reservoir.candidatePosition = lightPoint;
             reservoir.candidateEmission = lightEmission;
@@ -494,47 +443,23 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
         }
     }
 
-    if (reservoir.sampleCount == 0 || reservoir.weightSum == 0) return Vector3(0.0f); // no valid samples
+    if (reservoir.weightSum == 0) return Vector3(0.0f);
 
     // Shadow test
     Vector3 wi = (reservoir.candidatePosition - rayPos);
     Vector3::normalise(wi);
     Ray shadowRay(rayPos + wi * 0.01f, wi);
-
-    if (ray.getDebug()) {
-        std::cout<<"wi: "<<std::endl;
-        wi.print();
-        std::cout<<"distToLight: "<<reservoir.distToLight<<std::endl;
-    }
-
     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
-    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf()) {
-        if (ray.getDebug()) {
-            std::cout<<"Occluded: ";
-        }
-        return Vector3(0.0f, 0.0f, 0.0f); // Occluded
+    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() ||
+        !(shadowResult.close < reservoir.distToLight + 0.03f && shadowResult.close > reservoir.distToLight - 0.03f)) {
+        return Vector3(0.0f);
     }
 
-    if (!(shadowResult.close < reservoir.distToLight + 0.01f && shadowResult.close > reservoir.distToLight - 0.01f)) {
-        if (ray.getDebug()) {
-            std::cout<<"Occluded: ";
-        }
-        return Vector3(0.0f, 0.0f, 0.0f); // Occluded
-    }
-
-    if (ray.getDebug()) {
-        std::cout<<"Not occluded: "<<std::endl;
-        std::cout<<"lightPoint: ";
-        reservoir.candidatePosition.print();
-    }
-
-    // Compute unbiased final contribution
     float cos_theta = std::max(0.0f, n.dot(wi));
     Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
     Vector3 numerator = BRDF * reservoir.candidateEmission * (cos_theta / (reservoir.distToLight * reservoir.distToLight));
-
     float w_selected = Vector3::luminance(numerator) / reservoir.PDF;
-    Vector3 contribution = (reservoir.weightSum / reservoir.sampleCount) * (numerator / w_selected);
+    Vector3 contribution = (numerator / reservoir.PDF) * (reservoir.weightSum / (M * w_selected));
 
     return contribution;
 }
@@ -681,6 +606,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
         SceneObject *hitObject = leafNode.node->getSceneObject();
         std::cout<<"Intersection with: ";
         hitObject->printType();
+        std::cout<<"Emission: "<<hitObject->getMaterial()->emission<<std::endl;;
         if (!ray.getInternal()) {
             // outside of an object - march to entry
             ray.march(leafNode.close);
@@ -706,7 +632,9 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // Compute direct lighting with ReSTIR at first bounce
         if (currentBounce == 0 && config.ReSTIR) {
             Vector3 directLighting = restirDirectLighting(ray, hitObject);
-            finalColour = finalColour + throughput * directLighting;
+            std::cout<<"Direct lighing: ";
+            directLighting.print();
+            finalColour = finalColour + directLighting;
         }
 
         // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
@@ -770,12 +698,17 @@ void CPUPT::debugRay(int screenX, int screenY) {
                 break;
             }
         }
+        std::cout<<"New throughput";
+        newThroughput.print();
+
 
         // 2) Add emission *through* the throughput
         finalColour = finalColour + throughput * (mat->colour * mat->emission);
 
         // 3) Update throughput with BRDF and PDF
         throughput = throughput * newThroughput;
+        std::cout<<"Updated throughput";
+        throughput.print();
 
         // -------------------------------------------------------------
         // Russian roulete termination
