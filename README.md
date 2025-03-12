@@ -37,3 +37,4 @@ Scale does not working properly for mesh objects
 Denoising is WIP and broken  
 Mesh objects do not work as lights for ReSTIR  
 Making a Mesh object a light and moving it with ReSTIR will cause a crash  
+Rare crash related to index out of bounds  
