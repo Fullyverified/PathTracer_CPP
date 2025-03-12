@@ -44,6 +44,7 @@ void AABCubeBounds::getNormal(Ray &ray) const {
     } else if (minDist == zmax) {
         ray.getNormal().set(0, 0, 1);
     }
+    ray.getNormal().normalise();
 }
 
 Vector3 AABCubeBounds::getNormal(Vector3 sampledPoint) const {

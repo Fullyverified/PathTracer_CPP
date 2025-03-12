@@ -17,6 +17,8 @@ float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
 bool UI::ReSTIR = config.ReSTIR;
+int UI::spatioSampling = 0;
+int UI::temporalSampling = 0;
 bool UI::ReSTIRGI = config.ReSTIRGI;
 int UI::numRays = config.raysPerPixel;
 int UI::minBounces = config.minBounces;
@@ -131,6 +133,13 @@ void UI::renderSettings() {
 
     // ReSTIR
     if (ImGui::Checkbox("ReSTIR", &ReSTIR)) {
+        camUpdate = true;
+    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderInt("##SpatialSamples", &spatioSampling, 0, 2, "Spatial samples %i")) {
+        camUpdate = true;
+    }
+    if (ImGui::SliderInt("##TemporalSamples", &temporalSampling, 0, 5, "Temporal samples %i")) {
         camUpdate = true;
     }
 

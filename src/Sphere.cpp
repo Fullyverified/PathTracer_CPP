@@ -15,6 +15,7 @@ void Sphere::getNormal(Ray &ray) const {
         ray.getNormal().set(-ray.getPos().getX() / (scale.x * scale.x),
                             -ray.getPos().getY() / (scale.y * scale.y),
                             -ray.getPos().getZ() / (scale.z * scale.z));
+        ray.getNormal().normalise();
         return;
     }
     ray.getNormal().set(2 * (ray.getPos().getX() - pos.getX()) / (scale.x * scale.x),

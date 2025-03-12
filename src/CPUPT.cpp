@@ -23,9 +23,10 @@
 
 thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
-CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList), iterations(0), numThreads(0) {
+CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
+                                                                                           iterations(0), numThreads(0) {
     directionSampler = new DirectionSampler();
-    surfaceIntergrator = new SurfaceIntegrator();
+    surfaceIntegrator = new SurfaceIntegrator();
     denoiser = new Denoiser();
     toneMapper = new ToneMapper();
 
@@ -53,27 +54,13 @@ void CPUPT::renderLoop() {
     std::vector<std::future<void> > threads;
     std::vector<std::future<void> > threadsTM;
 
+
     initialiseObjects();
 
     BVH bvh = BVH();
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
     emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
-
-    // debug
-    Vector3 wo(0, 1, 0);
-    Vector3 n(0, 1 ,0);
-    Vector3 wi = Vector3::reflect(wo, n);
-
-    Material mat;
-    mat.colour = Vector3(1, 1, 1);
-    mat.emission = 0;
-    mat.roughness = 0;
-    mat.metallic = 1;
-    mat.transmission = 0;
-    mat.IOR = 1;
-    Vector3 testBRDF = surfaceIntergrator->evaluateBRDF(wo, wi, &mat, n);
-    testBRDF.print();
 
     // render loop
     while (systemManager->getIsRunning()) {
@@ -88,6 +75,8 @@ void CPUPT::renderLoop() {
                 config.exposure = UI::exposure;
                 config.DepthOfField = UI::depthOfField;
                 config.focalDistance = UI::focalDistance;
+                config.spatioSampling = UI::spatioSampling;
+                config.temporalSampling = UI::temporalSampling;
                 emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
                 camera->reInitilize(); // fov changes
             }
@@ -184,7 +173,8 @@ void CPUPT::renderLoop() {
         config.denoiseIterations = UI::denoiseIterations;
 
         if (config.denoise) {
-            denoiser->launchDenoiseThreads(lum, normalBuffer, depthBuffer, albedoBuffer, emissionBuffer, config.denoiseIterations, internalResX, internalResY, segments);
+            denoiser->launchDenoiseThreads(lum, normalBuffer, depthBuffer, albedoBuffer, emissionBuffer, config.denoiseIterations, internalResX, internalResY,
+                                           segments);
         }
 
         auto durationTimeDN = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTimeDN);
@@ -292,17 +282,18 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // Fill denoising buffers
                     if (currentBounce == 0 && config.denoise == true) {
-                        normalBuffer[y * internalResX + x] = ray.getNormal();
                         depthBuffer[y * internalResX + x] = leafNode.close;
                         albedoBuffer[y * internalResX + x] = mat->colour;
                         emissionBuffer[y * internalResX + x] = mat->emission;
                     }
 
+                    normalBuffer[y * internalResX + x] = ray.getNormal();
                     // -------------------------------------------------------------
                     // ReSTIR Direct Illumination (first bounce only)
                     // -------------------------------------------------------------
                     if (currentBounce == 0 && config.ReSTIR) {
-                        Vector3 directLighting = restirDirectLighting(ray, hitObject);
+                        restirDirectLighting(ray, hitObject, x, y);
+                        Vector3 directLighting = restirSpatioTemporal(ray, hitObject, x, y);
                         finalColour = finalColour + directLighting;
                     }
 
@@ -321,7 +312,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                     // specular caused by IOR
                     float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-                    float R0 = surfaceIntergrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
+                    float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
                     float randomSample2 = dist(rng); // a second sample
                     // ----------------------
 
@@ -329,32 +320,32 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         // Refraction
                         // Continue refraction from previous bounce
                         wi = directionSampler->RefractionDirection(ray, *hitObject);
-                        newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
+                        newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
                     } else {
                         if (randomSample <= p_specular) {
                             // Specular (Metallic)
                             wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                            newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
                         } else if (randomSample <= p_specular + p_transmission) {
                             // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                             if (randomSample2 < R0) {
                                 // Specular (Glass)
                                 wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                             } else {
                                 // Refraction
                                 wi = directionSampler->RefractionDirection(ray, *hitObject);
-                                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
+                                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
                             }
                         } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                             if (randomSample2 < R0) {
                                 // Specular Diffuse
                                 wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                             } else {
                                 // Dielectric reflection
                                 wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
-                                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
+                                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
                             }
                         } else {
                             std::cout << "Probabilities dont add up: " << randomSample << std::endl;
@@ -362,12 +353,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         }
                     }
 
-                    // 2) Update throughput with BRDF and PDF
-                    throughput = throughput * newThroughput;
-
-                    // 3) Update colour
+                    // 2) Update colour
                     finalColour = finalColour + throughput * (mat->colour * mat->emission);
                     finalColour.sanitize();
+
+                    // 3) Update throughput with BRDF and PDF
+                    throughput = throughput * newThroughput;
 
                     // -------------------------------------------------------------
                     // Russian roulete termination
@@ -397,18 +388,19 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 hdr[y * internalResX + x] = hdr[y * internalResX + x] + finalColour;
 
                 // Update progressive buffer
-                lum[y * internalResX + x] = hdr[y * internalResX + x] / (static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
+                lum[y * internalResX + x] = hdr[y * internalResX + x] / (
+                                                static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
             } // end raysPerPixel
         } // end x
     } // end y
 }
 
-Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
-    if (emissiveObjects.size() == 0) return Vector3(0.0f);
+void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y) const {
+    if (emissiveObjects.size() == 0) return;
 
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::uniform_int_distribution<int> lightDist(0, emissiveObjects.size() - 1);
-    Material* hitMat = hitObject->getMaterial();
+    Material *hitMat = hitObject->getMaterial();
     const int M = config.lightSamples;
 
     Vector3 rayPos = ray.getPos();
@@ -419,8 +411,8 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
     for (int i = 0; i < M; i++) {
         reservoir.sampleCount++;
         int lightIndex = lightDist(rng);
-        SceneObject* light = emissiveObjects[lightIndex];
-        const Material* lightMat = light->getMaterial();
+        SceneObject *light = emissiveObjects[lightIndex];
+        const Material *lightMat = light->getMaterial();
         Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
         Vector3 wi = lightPoint - rayPos;
         wi.normalise();
@@ -430,7 +422,7 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
         float PDF_light = (1.0f / emissiveObjects.size()) * (1.0f / light->getArea());
         Vector3 lightEmission = lightMat->colour * lightMat->emission;
         if (cos_theta > 0.0f) {
-            Vector3 BRDF_light = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
+            Vector3 BRDF_light = surfaceIntegrator->evaluateBRDF(wo, wi, hitMat, n);
             Vector3 contrib = lightEmission * BRDF_light * (cos_theta / (distToLight * distToLight));
             importance = Vector3::luminance(contrib) / PDF_light;
         }
@@ -442,8 +434,10 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
             reservoir.distToLight = distToLight;
         }
     }
-
-    if (reservoir.weightSum == 0) return Vector3(0.0f);
+    if (reservoir.weightSum == 0) {
+        reservoirReSTIR[y * internalResX + x] = Reservoir{};
+        return; // early exist
+    }
 
     // Shadow test
     Vector3 wi = (reservoir.candidatePosition - rayPos);
@@ -452,17 +446,57 @@ Vector3 CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject) const {
     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
     if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() ||
         !(shadowResult.close < reservoir.distToLight + 0.03f && shadowResult.close > reservoir.distToLight - 0.03f)) {
-        return Vector3(0.0f);
+        reservoirReSTIR[y * internalResX + x] = Reservoir{};
+        return;
     }
 
-    float cos_theta = std::max(0.0f, n.dot(wi));
-    Vector3 BRDF = surfaceIntergrator->evaluateBRDF(wo, wi, hitMat, n);
-    Vector3 numerator = BRDF * reservoir.candidateEmission * (cos_theta / (reservoir.distToLight * reservoir.distToLight));
-    float w_selected = Vector3::luminance(numerator) / reservoir.PDF;
-    Vector3 contribution = (numerator / reservoir.PDF) * (reservoir.weightSum / (M * w_selected));
-
-    return contribution;
+    reservoirReSTIR[y * internalResX + x] = reservoir;
 }
+
+Vector3 CPUPT::restirSpatioTemporal(Ray &ray, SceneObject *hitObject, int x, int y) const {
+
+    Vector3 totalContribution{0.0f};
+
+    int range = config.spatioSampling;
+    float totalWeight = 0;
+    float samples = 0;
+
+    for (int j = y - range; j <= y + range; j++) {
+        if (j < 0 || j >= internalResY) continue;
+        for (int i = x - range; i <= x + range; i++) {
+            if (i < 0 || i >= internalResX) continue;
+            Reservoir sampleReservoir = reservoirReSTIR[j * internalResX + i];
+            float similarity = std::max(0.0f, Vector3::dot(normalBuffer[j * internalResX + i], normalBuffer[y * internalResX + x]));
+
+            if (similarity < 0.5) continue;
+            samples++;
+            if (sampleReservoir.weightSum == 0) continue;
+
+            const int M = config.lightSamples;
+            Material *hitMat = hitObject->getMaterial();
+            Vector3 rayPos = ray.getPos();
+            Vector3 n = ray.getNormal();
+            Vector3 wo = -ray.getDir();
+            Vector3 wi = (sampleReservoir.candidatePosition - rayPos);
+            wi.normalise();
+
+            float cos_theta = std::max(0.0f, n.dot(wi));
+            Vector3 BRDF = surfaceIntegrator->evaluateBRDF(wo, wi, hitMat, n);
+            Vector3 numerator = BRDF * sampleReservoir.candidateEmission * (cos_theta / (sampleReservoir.distToLight * sampleReservoir.distToLight));
+            float w_selected = Vector3::luminance(numerator) / sampleReservoir.PDF;
+            Vector3 contribution = (numerator / sampleReservoir.PDF) * (sampleReservoir.weightSum / (M * w_selected));
+
+            totalContribution += contribution * similarity;
+            totalWeight += similarity;
+        }
+    }
+
+    if (totalWeight == 0.0f) return {0.0f};
+
+    return totalContribution / samples;
+
+}
+
 
 void CPUPT::initialiseObjects() {
     resX = config.resX;
@@ -472,16 +506,22 @@ void CPUPT::initialiseObjects() {
 
     internalResX = resX / upScale;
     internalResY = resY / upScale;
+    int res = internalResX * internalResY;
 
     aspectRatio = static_cast<float>(resX) / resY;
 
+    // Pixel buffer
     RGBBuffer = new uint8_t[resX * resY * 3];
 
-    int res = internalResX * internalResY;
-
+    // Raw pixel data
     lum.resize(res, Vector3(0.0f, 0.0f, 0.0f));
     hdr.resize(res, Vector3(0.0f, 0.0f, 0.0f));
 
+    // ReSTIR and ReSTIRGI
+    reservoirReSTIR.resize(res, Reservoir{});
+    reservoirReSTIRGI.resize(res, ReservoirGI{});
+
+    // Denoising
     normalBuffer.resize(res, 0.0f);
     depthBuffer.resize(res, 0.0f);
     albedoBuffer.resize(res, 0.0f);
@@ -498,21 +538,25 @@ void CPUPT::updateUpscaling() {
 
     int res = internalResX * internalResY;
 
+    // Raw pixel data
     lum.resize(res, Vector3(0.0f, 0.0f, 0.0f));
     hdr.resize(res, Vector3(0.0f, 0.0f, 0.0f));
 
+    // ReSTIR and ReSTIRGI
+    reservoirReSTIR.resize(res, Reservoir{});
+    reservoirReSTIRGI.resize(res, ReservoirGI{});
+
+    // Denoising
     normalBuffer.resize(res, 0.0f);
     depthBuffer.resize(res, 0.0f);
     albedoBuffer.resize(res, 0.0f);
     emissionBuffer.resize(res, 0.0f);
-
-    denoiser->resize(res);
 }
 
 void CPUPT::deleteObjects() {
     delete[] RGBBuffer;
     delete directionSampler;
-    delete surfaceIntergrator;
+    delete surfaceIntegrator;
     delete denoiser;
     delete toneMapper;
 }
@@ -584,43 +628,43 @@ void CPUPT::debugRay(int screenX, int screenY) {
     // Start loop
     Vector3 finalColour(0.0f, 0.0f, 0.0f);
     Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
-    std::cout<<"----------------------------"<<std::endl;
-    std::cout<<"New Ray:"<<std::endl;
+    std::cout << "----------------------------" << std::endl;
+    std::cout << "New Ray:" << std::endl;
 
     ray.setInternal(false);
     for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
-        std::cout<<"Bounce: "<<currentBounce<<std::endl;
+        std::cout << "Bounce: " << currentBounce << std::endl;
 
-        std::cout<<"Ray direction";
+        std::cout << "Ray direction";
         ray.getDir().print();
 
         // Intersect scene using BVH
         BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
         if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
             // Ray intersects nothing, break
-            std::cout<<"No intersection"<<std::endl;
+            std::cout << "No intersection" << std::endl;
             break;
         }
 
         // Move the ray to the exact hit point
         SceneObject *hitObject = leafNode.node->getSceneObject();
-        std::cout<<"Intersection with: ";
+        std::cout << "Intersection with: ";
         hitObject->printType();
-        std::cout<<"Emission: "<<hitObject->getMaterial()->emission<<std::endl;;
+        std::cout << "Emission: " << hitObject->getMaterial()->emission << std::endl;;
         if (!ray.getInternal()) {
             // outside of an object - march to entry
             ray.march(leafNode.close);
-            std::cout<<"Ray external"<<std::endl;
+            std::cout << "Ray external" << std::endl;
         } else {
             // inside of an object - march to far side
             ray.march(leafNode.far);
-            std::cout<<"Ray internal"<<std::endl;
+            std::cout << "Ray internal" << std::endl;
         }
-        std::cout<<"New ray position";
+        std::cout << "New ray position";
         ray.getPos().print();
 
         hitObject->getNormal(ray); // sets ray.getNormal()
-        std::cout<<"Object Normal: (external facing)";
+        std::cout << "Object Normal: (external facing)";
         ray.getNormal().print();
         ray.getOrigin().set(ray.getPos()); // Set new ray origin
         ray.setHitObject(hitObject);
@@ -628,13 +672,16 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // Grab the material
         Material *mat = hitObject->getMaterial();
 
-        std::cout<<"ReSTIR"<<std::endl;
+        std::cout << "ReSTIR" << std::endl;
         // Compute direct lighting with ReSTIR at first bounce
         if (currentBounce == 0 && config.ReSTIR) {
-            Vector3 directLighting = restirDirectLighting(ray, hitObject);
+            /*restirDirectLighting(ray, hitObject, x, y);
+            //Vector3 directLighting = restirDirectLighting(ray, hitObject, x, y);
+
+            Vector3 directLighting = restirSpatioTemporal(ray, hitObject, x, y);
             std::cout<<"Direct lighing: ";
             directLighting.print();
-            finalColour = finalColour + directLighting;
+            finalColour = finalColour + directLighting;*/
         }
 
         // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
@@ -652,53 +699,53 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // specular caused by IOR
         float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-        float R0 = surfaceIntergrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
+        float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
         float randomSample2 = dist(rng); // a second sample
         // ----------------------
 
         if (ray.getInternal()) {
             // Refraction
             // Continue refraction from previous bounce
-            std::cout<<"Continuing previous refraction"<<std::endl;
+            std::cout << "Continuing previous refraction" << std::endl;
             wi = directionSampler->RefractionDirection(ray, *hitObject);
-            newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
+            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
         } else {
             if (randomSample <= p_specular) {
                 // Specular (Metallic)
-                std::cout<<"Sampling specular (metallic)"<<std::endl;
+                std::cout << "Sampling specular (metallic)" << std::endl;
                 wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
+                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
             } else if (randomSample <= p_specular + p_transmission) {
                 // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                 if (randomSample2 < R0) {
                     // Specular (Glass)
-                    std::cout<<"Sampling specular (fresnel)"<<std::endl;
+                    std::cout << "Sampling specular (fresnel)" << std::endl;
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                 } else {
                     // Refraction
-                    std::cout<<"Sampling refraction"<<std::endl;
+                    std::cout << "Sampling refraction" << std::endl;
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
                 }
             } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                 if (randomSample2 < R0) {
                     // Specular Diffuse
-                    std::cout<<"Sampling specular (fresnel)"<<std::endl;
+                    std::cout << "Sampling specular (fresnel)" << std::endl;
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
                 } else {
                     // Dielectric reflection
-                    std::cout<<"Sampling diffuse (fresnel)"<<std::endl;
+                    std::cout << "Sampling diffuse (fresnel)" << std::endl;
                     wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
-                    newThroughput = surfaceIntergrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
                 }
             } else {
                 std::cout << "Probabilities dont add up: " << randomSample << std::endl;
                 break;
             }
         }
-        std::cout<<"New throughput";
+        std::cout << "New throughput";
         newThroughput.print();
 
 
@@ -707,7 +754,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // 3) Update throughput with BRDF and PDF
         throughput = throughput * newThroughput;
-        std::cout<<"Updated throughput";
+        std::cout << "Updated throughput";
         throughput.print();
 
         // -------------------------------------------------------------
@@ -730,15 +777,15 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // Prepare for next bounce
         ray.getDir().set(wi);
         ray.updateOrigin(0.01);
-        std::cout<<"----------------------------"<<std::endl;
+        std::cout << "----------------------------" << std::endl;
     } // end for bounceDepth
 }
 
 void CPUPT::debugPixelInfo(int screenX, int screenY) {
-    std::cout<<"X: "<<screenX<<", Y: "<<screenY<<std::endl;
-    std::cout<<"HDR: ";
+    std::cout << "X: " << screenX << ", Y: " << screenY << std::endl;
+    std::cout << "HDR: ";
     hdr[screenY * internalResX + screenX].print();
-    std::cout<<"LUM: ";
+    std::cout << "LUM: ";
     lum[screenY * internalResX + screenX].print();
 }
 

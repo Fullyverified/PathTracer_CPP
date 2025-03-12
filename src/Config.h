@@ -13,6 +13,8 @@ struct Config {
     int maxBounces = 0;
     int lightSamples = 1;
     bool ReSTIR = true;
+    int spatioSampling = 0;
+    int temporalSampling = 0;
     bool ReSTIRGI = false;
     int trisPerNode = 6;
     bool DepthOfField = false;

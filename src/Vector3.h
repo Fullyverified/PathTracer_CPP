@@ -113,6 +113,10 @@ public:
         return *this;
     }
 
+    bool operator==(const Vector3& v1) const {
+        return (x == v1.x && y == v1.y && z == v1.z);
+    }
+
     // vector operations
     static float dot(const Vector3 &v1, const Vector3 &v2) {
         return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;

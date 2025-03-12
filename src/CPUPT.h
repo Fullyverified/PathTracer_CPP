@@ -31,12 +31,15 @@ struct Reservoir {
 };
 
 struct ReservoirGI {
-    Vector3 candidateRadiance; // Selected indirect radiance
-    Vector3 candidateDirection; // Direction of candidate sample
+    Vector3 candidatePosition;
+    Vector3 candidateEmission; // Selected indirect radiance
+    float PDF; // PDF of explicity sampled sample
     float weightSum; // Sum of weights from all candidates considered
     int sampleCount; // Number of samples seen
 
-    ReservoirGI() : candidateRadiance(Vector3(0,0,0)), candidateDirection(Vector3(0,0,0)), weightSum(0.0f), sampleCount(0.0f) {}
+    float distToLight;
+
+    ReservoirGI() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f) {}
 };
 
 class CPUPT {
@@ -56,7 +59,10 @@ public:
     // traversal logic
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
 
-    Vector3 restirDirectLighting(Ray& ray, SceneObject* hitObject) const;
+    // Computes resoivers
+    void restirDirectLighting(Ray& ray, SceneObject* hitObject, int x, int y) const;
+    // Computes direct lighting contribution using resoivers, spatiotemporaly
+    Vector3 restirSpatioTemporal(Ray& ray, SceneObject* hitObject, int x, int y) const;
 
     // multithreading logic
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
@@ -77,7 +83,7 @@ private:
 
     SystemManager* systemManager;
     DirectionSampler* directionSampler;
-    SurfaceIntegrator* surfaceIntergrator;
+    SurfaceIntegrator* surfaceIntegrator;
     Denoiser* denoiser;
     ToneMapper* toneMapper;
 
@@ -87,9 +93,11 @@ private:
     BVHNode* rootNode;
     Camera* camera;
 
-    // pixel buffers
-    mutable std::vector<Vector3> lum;   // mutable - no two threads will ever rw the same index
+    // mutable - no two threads will ever write the same index
+    mutable std::vector<Vector3> lum;   // pixel buffers
     mutable std::vector<Vector3> hdr;
+    mutable std::vector<Reservoir> reservoirReSTIR; // ReSTIR Resoivers
+    mutable std::vector<ReservoirGI> reservoirReSTIRGI; // ReSTIR GI Resoivers
     float maxLuminance, currentLuminance;
     mutable uint8_t* RGBBuffer;
 
