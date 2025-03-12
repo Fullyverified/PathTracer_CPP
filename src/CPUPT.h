@@ -27,7 +27,12 @@ struct Reservoir {
 
     float distToLight;
 
-    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f) {}
+    Vector3 rayPos;
+    Vector3 n;
+    Vector3 wo;
+    Material* hitMat;
+
+    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f), rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)) {}
 };
 
 struct ReservoirGI {
@@ -57,12 +62,12 @@ public:
     void joinRenderThread();
 
     // traversal logic
-    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, bool sky, std::mutex &mutex) const;
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, int currentRay, bool sky, std::mutex &mutex) const;
 
     // Computes resoivers
     void restirDirectLighting(Ray& ray, SceneObject* hitObject, int x, int y) const;
     // Computes direct lighting contribution using resoivers, spatiotemporaly
-    Vector3 restirSpatioTemporal(Ray& ray, SceneObject* hitObject, int x, int y) const;
+    void restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const;
 
     // multithreading logic
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);

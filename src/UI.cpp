@@ -114,7 +114,7 @@ void UI::renderSettings() {
     if (ImGui::SliderInt("##Min ray bounces", &minBounces, 0, 5, "Min Bounces %i")) {
         if (maxBounces < minBounces) {
             maxBounces = minBounces;
-            config.maxBounces = minBounces;
+            config.maxBounces = maxBounces;
         }
         camUpdate = true;
         config.minBounces = minBounces;
@@ -126,7 +126,6 @@ void UI::renderSettings() {
             maxBounces = minBounces;
         }
         camUpdate = true;
-        config.maxBounces = maxBounces;
     }
 
     ImGui::Separator();
