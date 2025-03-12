@@ -89,6 +89,10 @@ public:
         diamond->load("diamond.obj");
         meshTypes["Diamond"] = diamond;
 
+        LoadMesh* diamondFlat = new LoadMesh();
+        diamondFlat->load("diamondFlat.obj");
+        meshTypes["DiamondFlat"] = diamondFlat;
+
         LoadMesh* companionCube = new LoadMesh();
         companionCube->load("companionCube.obj");
         meshTypes["Companion Cube"] = companionCube;
@@ -140,7 +144,8 @@ public:
 
         // Objects of Interest
         sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
-        sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
+        sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Copper"))); // right sphere on floor
+        sceneObjects.emplace_back(new MeshObject(Vector3(4, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // statue left
 
         // BOX 2
 

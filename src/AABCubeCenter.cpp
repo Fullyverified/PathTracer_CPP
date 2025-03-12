@@ -162,9 +162,9 @@ Vector3 AABCubeCenter::samplePoint(float r1, float r2) const {
 
 
 void AABCubeCenter::computeArea() {
-    float bottom = maxBounds.x - minBounds.x * maxBounds.z - minBounds.z;
-    float left = maxBounds.x - minBounds.x * maxBounds.y - minBounds.y;
-    float front = maxBounds.y - minBounds.y * maxBounds.z - minBounds.z;
+    float bottom = fabs(maxBounds.x - minBounds.x * maxBounds.z - minBounds.z);
+    float left = fabs(maxBounds.x - minBounds.x * maxBounds.y - minBounds.y);
+    float front = fabs(maxBounds.y - minBounds.y * maxBounds.z - minBounds.z);
     area = (bottom * front * left) * 2;
 }
 

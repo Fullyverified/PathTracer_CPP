@@ -85,8 +85,8 @@ void UI::renderSettings() {
     ImGui::Text("Path Trace: %s", pathTraceTimeStr.c_str());
 
     // Denoising time
-    std::string denoisingTimeStr = std::to_string(static_cast<int>(denoisingTime)) + " ms";
-    ImGui::Text("Denoising: %s", denoisingTimeStr);
+    /*std::string denoisingTimeStr = std::to_string(static_cast<int>(denoisingTime)) + " ms";
+    ImGui::Text("Denoising: %s", denoisingTimeStr);*/
 
     // Tone mapping time
     std::string toneMappingTimeStr = std::to_string(static_cast<int>(toneMappingTime)) + " ms";
