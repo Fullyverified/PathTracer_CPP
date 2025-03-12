@@ -135,7 +135,7 @@ void UI::renderSettings() {
         camUpdate = true;
     }
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderInt("##SpatialSamples", &spatioSampling, 0, 2, "Spatial samples %i")) {
+    if (ImGui::SliderInt("##SpatialSamples", &spatialSampling, 0, 2, "Spatial samples %i")) {
         camUpdate = true;
     }
     if (ImGui::SliderInt("##TemporalSamples", &temporalSampling, 0, 5, "Temporal samples %i")) {
