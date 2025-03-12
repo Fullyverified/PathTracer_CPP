@@ -302,6 +302,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         Vector3 skyColour(0.247f, 0.247f, 0.247f);
                         finalColour = finalColour + throughput * skyColour * 0.25;
                     }
+                    if (currentBounce == 0) reservoirReSTIR[y * internalResX + x] = Reservoir{}; // reset reservoir
                     break;
                 }
 
@@ -333,12 +334,11 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // ReSTIR Direct Illumination (first bounce only)
                 // -------------------------------------------------------------
-                if (currentBounce == 0 && config.ReSTIR) {
-                    restirDirectLighting(ray, hitObject, x, y);
-                    //Vector3 directLighting = restirSpatioTemporal(ray, hitObject, x, y);
-                    //finalColour = finalColour + directLighting;
-                }
+                if (currentBounce == 0 && config.ReSTIR) restirDirectLighting(ray, hitObject, x, y);
 
+                // -------------------------------------------------------------
+                // Multiple Importance Sampling
+                // -------------------------------------------------------------
                 // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                 float randomSample = dist(rng);
                 float p_specular = mat->metallic;

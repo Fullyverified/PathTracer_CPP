@@ -10,7 +10,7 @@ struct Config {
     float fOV = 45;
     int raysPerPixel = 1;
     int minBounces = 0;
-    int maxBounces = 0;
+    int maxBounces = 6;
     int lightSamples = 1;
     bool ReSTIR = true;
     int spatioSampling = 0;
