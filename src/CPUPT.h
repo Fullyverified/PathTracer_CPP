@@ -25,6 +25,8 @@ struct Reservoir {
     float weightSum; // Sum of weights from all candidates considered
     int sampleCount; // Number of samples seen
 
+    Vector3 candidateNormal;
+
     float distToLight;
 
     Vector3 rayPos;

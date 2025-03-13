@@ -396,12 +396,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     }
                 }
 
-                // 2) Update colour
+                // 2) Update throughput with BRDF and PDF
+                throughput = throughput * newThroughput;
+
+                // 3) Update colour
                 finalColour = finalColour + throughput * (mat->colour * mat->emission);
                 finalColour.sanitize();
-
-                // 3) Update throughput with BRDF and PDF
-                throughput = throughput * newThroughput;
 
                 // -------------------------------------------------------------
                 // Russian roulete termination
@@ -466,7 +466,9 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
         Vector3 lightEmission = lightMat->colour * lightMat->emission;
         if (cos_theta > 0.0f) {
             Vector3 BRDF_light = surfaceIntegrator->evaluateBRDF(wo, wi, hitMat, n);
-            Vector3 contrib = lightEmission * BRDF_light * (cos_theta / (distToLight * distToLight));
+            Vector3 lightNormal = light->getNormal(lightPoint); // Assume this method exists
+            float cos_theta_y = std::max(0.0f, -lightNormal.dot(wi));
+            Vector3 contrib = lightEmission * cos_theta_y * BRDF_light * (cos_theta / (distToLight * distToLight));
             importance = Vector3::luminance(contrib) / PDF_light;
         }
         reservoir.weightSum += importance;
@@ -476,6 +478,7 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
             reservoir.PDF = PDF_light;
             reservoir.distToLight = distToLight;
             reservoir.hitMat = hitMat;
+            reservoir.candidateNormal = light->getNormal(lightPoint);
         }
     }
     if (reservoir.weightSum == 0) {
@@ -507,9 +510,10 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
         for (int x = xstart; x <= xend; x++) {
             if (config.ReSTIR) {
                 Vector3 totalContribution{0.0f};
+                Reservoir currentReservoir = reservoirReSTIR[y * internalResX + x];
+                //if (currentReservoir.weightSum == 0) continue;
 
                 int range = config.spatialSampling;
-                float totalWeight = 0;
                 float samples = 0;
                 // select neighbouring resevoirs around that pixel
                 for (int j = y - range; j <= y + range; j++) {
@@ -539,20 +543,17 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                         Vector3 contribution = (numerator / sampleReservoir.PDF) * (sampleReservoir.weightSum / (M * w_selected));
 
                         totalContribution += contribution * similarity;
-                        totalWeight += similarity;
                     }
                 }
 
-                if (totalWeight != 0.0f) {
+                if (samples != 0) {
                     // Update un-normalised buffer
                     hdr[y * internalResX + x] = hdr[y * internalResX + x] + totalContribution / samples;
-                    // Update progressive buffer
-                    lum[y * internalResX + x] = (hdr[y * internalResX + x] + totalContribution / samples);
                 }
             } // end ReSTIR
 
             // normalise progress buffer
-            lum[y * internalResX + x] /= static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel);
+            lum[y * internalResX + x] = hdr[y * internalResX + x] / (static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
         } // end x
     } // end y
 }
