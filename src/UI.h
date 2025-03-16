@@ -24,7 +24,7 @@ public:
     static int maxBounces;
     static bool accumulateRays;
     static bool ReSTIR;
-    static int spatialSampling;
+    static int spatialSamples;
     static int temporalSampling;
     static bool ReSTIRGI;
     static bool sky;

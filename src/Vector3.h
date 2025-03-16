@@ -186,16 +186,16 @@ public:
         return std::sqrtf(x * x + y * y + z * z);
     }
 
-    static float length(Vector3& v1) {
+    static float length(const Vector3& v1) {
         return std::sqrtf(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
     }
 
-    static Vector3 reflect(Vector3& wi, Vector3 &n) {
+    static Vector3 reflect(const Vector3& wi, Vector3 &n) {
         float dotP = dot(wi, n);
         return Vector3(wi.x - n.x, wi.y - n.y, wi.z - n.z) * dotP * 2;
     }
 
-    Vector3 reflect(Vector3 &n) {
+    Vector3 reflect(const Vector3 &n) {
         float dotP = this->dot(n);
         return Vector3(x - n.x, y - n.y, z - n.z) * dotP * 2;
     }

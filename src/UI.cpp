@@ -17,7 +17,7 @@ float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
 bool UI::ReSTIR = config.ReSTIR;
-int UI::spatialSampling = 0;
+int UI::spatialSamples = 0;
 int UI::temporalSampling = 0;
 bool UI::ReSTIRGI = config.ReSTIRGI;
 int UI::numRays = config.raysPerPixel;
@@ -135,7 +135,7 @@ void UI::renderSettings() {
         camUpdate = true;
     }
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderInt("##SpatialSamples", &spatialSampling, 0, 2, "Spatial samples %i")) {
+    if (ImGui::SliderInt("##SpatialSamples", &spatialSamples, 0, 2, "Spatial samples %i")) {
         camUpdate = true;
     }
     if (ImGui::SliderInt("##TemporalSamples", &temporalSampling, 0, 5, "Temporal samples %i")) {

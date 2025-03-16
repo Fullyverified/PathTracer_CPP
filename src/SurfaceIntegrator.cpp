@@ -1,4 +1,5 @@
 #include "SurfaceIntegrator.h"
+#include "CPUPT.h"
 
 float SurfaceIntegrator::distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const {
     roughness = std::max(roughness, 0.001f);
@@ -197,4 +198,23 @@ float SurfaceIntegrator::evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat
 
     float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
     return effective_pdf;
+}
+
+// For ReSTIR
+float SurfaceIntegrator::computeApproxPDF(Reservoir& q, Reservoir& candidate) const {
+    Vector3 dir = candidate.candidatePosition - q.rayPos;
+    float distance = dir.length();
+    dir.normalise();
+
+    float cosTheta_q = q.n.dot(dir);
+    float cosTheta_x = q.candidateNormal.dot(dir);
+
+    if (cosTheta_q <= 0 || cosTheta_x <= 0) return 0.0f; // early exit
+
+    Vector3 BRDF = evaluateBRDF(q.wo, dir, q.hitMat, q.n);
+    Vector3 Le = candidate.lightMat->emission * candidate.lightMat->colour;
+    float G = (cosTheta_q * cosTheta_x) / distance;
+
+    float approxPDF = Vector3::luminance(BRDF) * Vector3::luminance(Le) * G;
+    return approxPDF;
 }

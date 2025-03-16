@@ -20,21 +20,24 @@ class SystemManager;
 
 struct Reservoir {
     Vector3 candidatePosition;
-    Vector3 candidateEmission; // Selected indirect radiance
-    float PDF; // PDF of explicity sampled sample
     float weightSum; // Sum of weights from all candidates considered
     int sampleCount; // Number of samples seen
 
-    Vector3 candidateNormal;
-
     float distToLight;
-
+    float PDF; // PDF of explicity sampled sample
+    // Light point properties
+    Vector3 candidateEmission; // Selected indirect radiance
+    Vector3 candidateNormal;
+    Material* lightMat;
+    float lightArea;
+    // Hit point properties
     Vector3 rayPos;
     Vector3 n;
     Vector3 wo;
     Material* hitMat;
 
-    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f), rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)) {}
+    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f),
+    rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)), distToLight(0.0f), lightMat(nullptr), hitMat(nullptr), lightArea(0.0f) {}
 };
 
 struct ReservoirGI {
@@ -55,6 +58,10 @@ struct MotionVector {
     MotionVector() : x(0.0f), y(0.0f) {}
 };
 
+struct Pixel {
+    int x, y;
+};
+
 class CPUPT {
 public:
 
@@ -73,9 +80,12 @@ public:
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, int currentRay, bool sky, std::mutex &mutex) const;
 
     // Computes resoivers
+    void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
+
     void restirDirectLighting(Ray& ray, SceneObject* hitObject, int x, int y) const;
     // Computes direct lighting contribution using resoivers, spatiotemporaly
     void restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const;
+    Pixel neighbourCandidate(int x, int y) const;
 
     // multithreading logic
     std::pair<int, int> threadSegments(float start, float end, int &numThreads, int i);
@@ -135,6 +145,7 @@ private:
     static thread_local std::mt19937 rng; // Thread-local RNG
 
     bool debug;
+    mutable int total = 1;
 };
 
 #endif //RENDER_H

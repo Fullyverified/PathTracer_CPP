@@ -6,6 +6,10 @@
 #include "Vector3.h"
 #include "Material.h"
 
+class CPUPT;
+struct Reservoir;
+struct ReservoirGI;
+
 // To aid PDF and BRDF calculation
 enum SampleType {
     metallic,
@@ -46,6 +50,8 @@ public:
     Vector3 evaluateBRDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
 
     float evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
+
+    float computeApproxPDF(Reservoir& q, Reservoir& candidate) const;
 
 
 private:

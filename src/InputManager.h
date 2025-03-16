@@ -40,6 +40,7 @@ public:
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!UI::isWindowHovered) {
                     getClickedObject(event.button.x, event.button.y);
+                    std::cout<<"X: "<<event.button.x<<", Y: "<<event.button.y<<std::endl;
                     //debugRay(event.button.x, event.button.y);
                 }
             }

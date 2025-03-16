@@ -4,24 +4,33 @@
 struct Config {
     float resX = 1200;
     float resY = 1200;
+    float upScale = 4;
     float aspectX = 1;
     float aspectY = 1;
-    float upScale = 4;
-    float fOV = 45;
+    // Multiple Importance Sampling
     int raysPerPixel = 1;
     int minBounces = 0;
     int maxBounces = 6;
+    // ReSTIR
+    bool ReSTIR = false;
+    bool unbiased = true;
     int lightSamples = 1;
-    bool ReSTIR = true;
-    int spatialSampling = 0;
+    int sampleRadius = 0;
+    int spatialSamples = 0;
     int temporalSampling = 0;
+    // ReSTIR GI
     bool ReSTIRGI = false;
+    // BVH
     int trisPerNode = 6;
+    // Camera
+    float fOV = 45;
     bool DepthOfField = false;
     float apertureRadius = 0.05f;
     float focalDistance = 15.0f;
-    int threads = 12; // 0 = default
-    int tileSize = 16;
+    // Multithreading
+    int threads = 0; // 0 = default
+    int tileSize = 1;
+    // Denoising
     bool denoise = false;
     int denoiseIterations = 1;
     float exposure = 1;
