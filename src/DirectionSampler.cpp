@@ -83,8 +83,6 @@ Vector3 DirectionSampler::RefractionDirection(Ray &ray, SceneObject &sceneObject
 }
 
 Vector3 DirectionSampler::SpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
     const Material* mat = sceneObject.getMaterial();
     float rough = std::max(mat->roughness, 0.001f);
     float alpha = rough * rough; // for GGX
@@ -146,9 +144,7 @@ Vector3 DirectionSampler::SpecularDirection(Ray &ray, const SceneObject &sceneOb
 }
 
 Vector3 DirectionSampler::DiffuseDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     // Diffuse sampling - random direction above surface with cosine-weighted distribution
-
     // Surface normal
     Vector3 N = ray.getNormal();
     if (flipNormal) {

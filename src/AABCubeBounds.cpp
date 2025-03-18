@@ -4,10 +4,15 @@
 
 #include <utility>
 #include <limits>
+#include <random>
+
+thread_local std::mt19937 AABCubeBounds::rng(std::random_device{}());
 
 AABCubeBounds::AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material* material) :
 minBounds(minBounds), maxBounds(maxBounds), material(material) {
     objID = ++objectCounter;
+    size = maxBounds - minBounds;
+    faceDist = std::discrete_distribution<int>(weights.begin(), weights.end());
 }
 
 void AABCubeBounds::getNormal(Ray &ray) const {
@@ -122,37 +127,46 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
 }
 
 Vector3 AABCubeBounds::samplePoint(float r1, float r2) const {
-    // Determine which face to sample from
-    int faceIndex = static_cast<int>(r1 * 6.0f);
-    r1 = fmod(r1 * 6.0f, 1.0f); // Recalculate r1 for face sampling
-
-    // Calculate dimensions of the rectangle
-    Vector3 size = maxBounds - minBounds;
+    // Define weights for each face
+    std::discrete_distribution<int> faceDist(weights.begin(), weights.end());
+    int face = faceDist(rng);
 
     // Calculate the point on the selected face
     Vector3 pointOnFace;
-    switch (faceIndex) {
-        case 0: // Front face (z = maxBounds.z)
-            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, maxBounds.z);
-        break;
-        case 1: // Back face (z = minBounds.z)
-            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, minBounds.z);
-        break;
-        case 2: // Left face (x = minBounds.x)
+    switch (face) {
+        case 0: // Front face
             pointOnFace = Vector3(minBounds.x, minBounds.y + r1 * size.y, minBounds.z + r2 * size.z);
         break;
-        case 3: // Right face (x = maxBounds.x)
+        case 1: // Back face
             pointOnFace = Vector3(maxBounds.x, minBounds.y + r1 * size.y, minBounds.z + r2 * size.z);
         break;
-        case 4: // Top face (y = maxBounds.y)
+        case 2: // Left face
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, maxBounds.z);
+        break;
+        case 3: // Right face
+            pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y + r2 * size.y, minBounds.z);
+        break;
+        case 4: // Top face
             pointOnFace = Vector3(minBounds.x + r1 * size.x, maxBounds.y, minBounds.z + r2 * size.z);
         break;
-        case 5: // Bottom face (y = minBounds.y)
+        case 5: // Bottom face
             pointOnFace = Vector3(minBounds.x + r1 * size.x, minBounds.y, minBounds.z + r2 * size.z);
         break;
     }
 
     return pointOnFace;
+}
+
+void AABCubeBounds::updateFaceWeights() {
+    Vector3 size = maxBounds - minBounds;
+
+    // compute face areas
+    float area_yz = size.y * size.z; // Left and Right
+    float area_xy = size.x * size.y; // Front and Back
+    float area_xz = size.x * size.z; // Bottom and Top
+
+    // Define weights for each face
+    weights = {area_yz, area_yz, area_xy, area_xy, area_xz, area_xz};
 }
 
 float AABCubeBounds::getArea() const {

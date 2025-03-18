@@ -17,7 +17,9 @@ float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
 bool UI::ReSTIR = config.ReSTIR;
-int UI::spatialSamples = 0;
+bool UI::unbiased = config.unbiased;
+int UI::candidateSamples = config.candidateSamples;
+int UI::spatialSamplesK = config.spatialSamplesK;
 int UI::temporalSampling = 0;
 bool UI::ReSTIRGI = config.ReSTIRGI;
 int UI::numRays = config.raysPerPixel;
@@ -134,10 +136,23 @@ void UI::renderSettings() {
     if (ImGui::Checkbox("ReSTIR", &ReSTIR)) {
         camUpdate = true;
     }
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderInt("##SpatialSamples", &spatialSamples, 0, 2, "Spatial samples %i")) {
+
+    ImGui::SameLine();
+
+    if (ImGui::Checkbox("Unbiased", &unbiased)) {
         camUpdate = true;
     }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderInt("##CandidateSamples", &candidateSamples, 1, 64, "Candidate Samples %i")) {
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderInt("##SpatialSamples", &spatialSamplesK, 0, 5, "Spatial samples %i")) {
+        camUpdate = true;
+    }
+
     if (ImGui::SliderInt("##TemporalSamples", &temporalSampling, 0, 5, "Temporal samples %i")) {
         camUpdate = true;
     }

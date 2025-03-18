@@ -9,7 +9,9 @@
 
 class DirectionSampler {
 public:
-    DirectionSampler() {}
+    DirectionSampler() {
+        dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    }
     ~DirectionSampler() {}
 
     Vector3 SpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const;
@@ -20,6 +22,7 @@ public:
 
 private:
     static thread_local std::mt19937 rng;
+    mutable std::uniform_real_distribution<float> dist;
 };
 
 

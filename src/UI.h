@@ -18,16 +18,24 @@ public:
     static float denoisingTime;
     static float toneMappingTime;
     static float frameTime;
+    static bool sky;
+
+    // MIS
     static int accumulatedRays;
     static int numRays;
     static int minBounces;
     static int maxBounces;
     static bool accumulateRays;
+
+    // ReSTIR
     static bool ReSTIR;
-    static int spatialSamples;
+    static bool unbiased;
+    static int candidateSamples;
+    static int spatialSamplesK;
     static int temporalSampling;
+
     static bool ReSTIRGI;
-    static bool sky;
+
     static bool denoise;
     static int denoiseIterations;
 

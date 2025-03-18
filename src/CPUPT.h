@@ -146,6 +146,8 @@ private:
 
     bool debug;
     mutable int total = 1;
+
+    mutable std::uniform_real_distribution<float> dist;
 };
 
 #endif //RENDER_H
