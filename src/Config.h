@@ -15,7 +15,7 @@ struct Config {
     bool ReSTIR = false;
     bool unbiased = true;
     int candidateSamples = 8;
-    int sampleRadius = 0;
+    int sampleRadius = 2;
     int spatialSamplesK = 0;
     int temporalSampling = 0;
     // ReSTIR GI

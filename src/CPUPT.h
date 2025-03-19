@@ -37,8 +37,10 @@ struct Reservoir {
     Vector3 wo;
     Material* hitMat;
 
+    bool empty;
+
     Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), candidatePDF(0.0f), targetPDF(0.0f), weightSum(0.0f), sampleCount(0.0f),
-    rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)), distToLight(0.0f), lightMat(nullptr), hitMat(nullptr), lightArea(0.0f) {}
+    rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)), distToLight(0.0f), lightMat(nullptr), hitMat(nullptr), lightArea(0.0f), empty(true) {}
 };
 
 struct ReservoirGI {
@@ -149,6 +151,7 @@ private:
     mutable int total = 1;
 
     mutable std::uniform_real_distribution<float> dist;
+    mutable std::uniform_int_distribution<int> spatialDist;
 };
 
 #endif //RENDER_H

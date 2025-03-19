@@ -33,6 +33,7 @@ CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObje
     camera = systemManager->getSceneObjectManager()->getCamera();
 
     dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
 }
 
 void CPUPT::launchRenderThread() {
@@ -77,7 +78,6 @@ void CPUPT::renderLoop() {
                 config.exposure = UI::exposure;
                 config.DepthOfField = UI::depthOfField;
                 config.focalDistance = UI::focalDistance;
-                config.spatialSamplesK = UI::candidateSamples;
                 config.temporalSampling = UI::temporalSampling;
                 config.minBounces = UI::minBounces;
                 config.maxBounces = UI::maxBounces;
@@ -110,10 +110,11 @@ void CPUPT::renderLoop() {
             config.unbiased = UI::unbiased;
             config.candidateSamples = UI::candidateSamples;
             config.spatialSamplesK = UI::spatialSamplesK;
-            iterations = 0;
             UI::accumulatedRays = iterations * config.raysPerPixel;
             UI::camUpdate = false;
             camera->getCamMoved() = false;
+            iterations = 0;
+            spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
         }
 
         if (UI::upscalingUpdate) {
@@ -328,14 +329,16 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // Grab the material
                 Material *mat = hitObject->getMaterial();
 
-                // Fill denoising buffers
-                if (currentBounce == 0 && config.denoise == true) {
+                if (currentBounce == 0) {
+                    // primary ray only
+                    // ReSTIR
                     depthBuffer[y * internalResX + x] = leafNode.close;
+                    normalBuffer[y * internalResX + x] = ray.getNormal();
+                    // Denoising
                     albedoBuffer[y * internalResX + x] = mat->colour;
                     emissionBuffer[y * internalResX + x] = mat->emission;
                 }
 
-                normalBuffer[y * internalResX + x] = ray.getNormal();
                 // -------------------------------------------------------------
                 // ReSTIR Direct Illumination (first bounce only)
                 // -------------------------------------------------------------
@@ -442,12 +445,10 @@ void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) co
     r.weightSum += weight;
     r.sampleCount++;
 
-    //
     if (dist(rng) < (weight / r.weightSum)) {
         r.candidatePosition = candidate.candidatePosition;
         // extra things im storing for now
         r.candidatePDF = candidate.candidatePDF;
-        r.targetPDF = candidate.targetPDF;
         r.candidateEmission = candidate.candidateEmission;
         r.candidateNormal = candidate.candidateNormal;
         r.lightMat = candidate.lightMat;
@@ -457,9 +458,8 @@ void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) co
 
 void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y) const {
     Reservoir reservoir = {};
-
+    reservoirReSTIR[y * internalResX + x] = reservoir;
     if (emissiveObjects.size() == 0) {
-        reservoirReSTIR[y * internalResX + x] = reservoir;
         return;
     }
 
@@ -474,9 +474,10 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
     reservoir.wo = wo;
     reservoir.hitMat = hitObject->getMaterial();
 
-    // config.lightSamples = M
+    // M = config.lightSamples
     for (int i = 0; i < config.candidateSamples; i++) {
         reservoir.sampleCount++;
+
         SceneObject *light = emissiveObjects[lightDist(rng)];
         Material *lightMat = light->getMaterial();
         Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
@@ -508,16 +509,19 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
             reservoir.candidatePosition = lightPoint;
             reservoir.distToLight = distToLight;
             // extra things im storing for now
-            reservoir.candidatePDF = lightPDF;
             reservoir.targetPDF = targetPDF;
+            reservoir.candidatePDF = lightPDF;
             reservoir.candidateEmission = light->getMaterial()->emission;
             reservoir.candidateNormal = light->getNormal(lightPoint);
             reservoir.lightMat = lightMat;
             reservoir.lightArea = lightArea;
+            reservoir.empty = false;
         }
     }
     reservoirReSTIR[y * internalResX + x] = reservoir;
 }
+
+// float candidateRadiusPDF = (1 + config.sampleRadius * 2) * (1 + config.sampleRadius * 2) - 1.0f;
 
 void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const {
     // iterate over each pixel
@@ -525,68 +529,95 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             if (config.ReSTIR) {
-                Reservoir spatialReservoir = reservoirReSTIR[y * internalResX + x];
+                Reservoir currentReservoir = reservoirReSTIR[y * internalResX + x];
 
                 // Temporal Resampling
                 // WIP
 
                 // Spatial Resampling
                 for (int i = 0; i < config.spatialSamplesK; i++) {
-                    Pixel candidate = neighbourCandidate(x, y);
+                    Pixel candidate = neighbourCandidate(x, y); // select random pixel in specified radius
                     Reservoir neighbourReservoir = reservoirReSTIR[candidate.y * internalResX + candidate.x];
 
-                    Vector3 wi = (neighbourReservoir.candidatePosition - spatialReservoir.rayPos);
+                    if (neighbourReservoir.empty) continue;
+
+                    if (currentReservoir.hitMat == nullptr || currentReservoir.lightMat == nullptr) {
+                        std::cout<<"spatial current nullptr"<<std::endl;
+                    }
+                    if (neighbourReservoir.hitMat == nullptr || neighbourReservoir.lightMat == nullptr) {
+                        std::cout<<"spatial neighbour nullptr"<<std::endl;
+                    }
+
+                    // compute unshadowed contribtuion of neighbour sample at current point
+                    Vector3 wi = currentReservoir.rayPos - neighbourReservoir.candidatePosition;
                     float distToLight = wi.length();
                     Vector3::normalise(wi);
+
+                    Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(currentReservoir.wo, wi, currentReservoir.hitMat, currentReservoir.n);
+                    Vector3 Le = neighbourReservoir.lightMat->emission * neighbourReservoir.lightMat->colour;
+
+                    float cosTheta_q = std::max(0.0f, currentReservoir.n.dot(wi));
+                    float cosTheta_x = std::max(0.0f, currentReservoir.candidateNormal.dot(-wi));
+                    float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
+                    if (cosTheta_q == 0 || cosTheta_x == 0) continue; // neighbour candidate point is facing away or behind hit point
+
+                    Vector3 finalContribution = BRDF_x * Le * G;
+                    float targetPDFNew = Vector3::length(finalContribution);
+
+                    float weight = (neighbourReservoir.weightSum / neighbourReservoir.sampleCount) * (targetPDFNew / neighbourReservoir.targetPDF);
+
                     if (config.unbiased) {
+                        // unbiased - rejection based on shadow ray - slower
+
                         // Shadow test
-                        Ray shadowRay(spatialReservoir.rayPos + wi * 0.01f, wi);
+                        Ray shadowRay(currentReservoir.rayPos + wi * 0.01f, wi);
                         BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
                         if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() ||
-                            !(shadowResult.close < distToLight + 0.03f && shadowResult.close > distToLight - 0.03f)) {
+                            !(shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
                             // occulsion
                             continue;
                         }
+                    } else {
+                        // biased approach - rejection based on normal and depth - very fast
+                        Vector3 currentNormal = normalBuffer[y * internalResX + x];
+                        Vector3 neighbourNormal = normalBuffer[candidate.y * internalResX + candidate.x];
+                        float dot = Vector3::dot(currentNormal, neighbourNormal);
+                        if (dot < 0.75) continue;
+
+                        float currentDepth = depthBuffer[y * internalResX + x];
+                        float neighbourDepth = depthBuffer[candidate.y * internalResX + candidate.x];
+                        float depthFactor = currentDepth / neighbourDepth;
+                        if (depthFactor < 0.9 ||  depthFactor > 1.10) continue;
                     }
 
-                    // evaluate contribution at current pixel
-                    // Evaluate contribution at q
-
-                    Vector3 BRDF_q = surfaceIntegrator->evaluateBRDF(spatialReservoir.wo, wi, spatialReservoir.hitMat, spatialReservoir.n);
-                    Vector3 Le = neighbourReservoir.lightMat->colour * neighbourReservoir.lightMat->emission;
-                    float cosTheta_q = std::max(0.0f, spatialReservoir.n.dot(wi));
-                    float cosTheta_x = std::max(0.0f, neighbourReservoir.candidateNormal.dot(-wi));
-                    float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
-                    Vector3 contribution = BRDF_q * Le * G;
-
-                    // Compute weight consistent with initial sampling
-                    float lightPDF = (1.0f / neighbourReservoir.lightArea) * (1.0f / emissiveObjects.size());
-                    float weight = Vector3::length(contribution) / lightPDF;
-
                     // Update the reservoir
-                    reservoirUpdate(spatialReservoir, neighbourReservoir, weight);
+                    reservoirUpdate(currentReservoir, neighbourReservoir, weight);
                 }
 
                 // Compute final contribution
-                if (spatialReservoir.weightSum != 0) {
-
+                if (!currentReservoir.empty) {
+                    if (currentReservoir.hitMat == nullptr || currentReservoir.lightMat == nullptr) {
+                        std::cout<<"nullptr"<<std::endl;
+                    }
                     // Shadow ray test
-                    Vector3 wi = (spatialReservoir.candidatePosition - spatialReservoir.rayPos);
+                    Vector3 wi =  currentReservoir.candidatePosition - currentReservoir.rayPos;
                     float distToLight = Vector3::length(wi);
                     Vector3::normalise(wi);
-                    Ray shadowRay(spatialReservoir.rayPos, wi);
+                    Ray shadowRay(currentReservoir.rayPos, wi);
                     shadowRay.march(0.01f);
                     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
-                    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || (shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) { // occlusion test
-                        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(spatialReservoir.wo, wi, spatialReservoir.hitMat, spatialReservoir.n);
-                        Vector3 Le = spatialReservoir.lightMat->emission * spatialReservoir.lightMat->colour;
+                    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || (
+                            shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
+                        // occlusion test
+                        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(currentReservoir.wo, wi, currentReservoir.hitMat, currentReservoir.n);
+                        Vector3 Le = currentReservoir.lightMat->emission * currentReservoir.lightMat->colour;
 
-                        float cosTheta_q = std::max(0.0f, spatialReservoir.n.dot(wi));
-                        float cosTheta_x = std::max(0.0f, spatialReservoir.candidateNormal.dot(-wi));
+                        float cosTheta_q = std::max(0.0f, currentReservoir.n.dot(wi));
+                        float cosTheta_x = std::max(0.0f, currentReservoir.candidateNormal.dot(-wi));
                         float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
 
                         Vector3 finalContribution = BRDF_x * Le * G;
-                        float finalWeight = (spatialReservoir.weightSum / config.candidateSamples) / Vector3::length(finalContribution);
+                        float finalWeight = (currentReservoir.weightSum / currentReservoir.sampleCount) / Vector3::length(finalContribution);
 
                         // Update un-normalised buffer
                         hdr[y * internalResX + x] += finalContribution * finalWeight;
@@ -594,18 +625,18 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                 }
             } // end ReSTIR
             // normalise progress buffer
-            lum[y * internalResX + x] = hdr[y * internalResX + x] / (static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
+            lum[y * internalResX + x] = hdr[y * internalResX + x] / (
+                                            static_cast<float>(currentRay) + static_cast<float>(its) * static_cast<float>(config.raysPerPixel));
         } // end x
     } // end y
 }
 
 Pixel CPUPT::neighbourCandidate(int x, int y) const {
-    std::uniform_int_distribution<int> dist(-config.sampleRadius, config.sampleRadius);
 
     int xRand = dist(rng);
-    while (x + xRand < 0 || x + xRand >= internalResX) { xRand = dist(rng); }
+    while (x + xRand < 0 || x + xRand >= internalResX || x + xRand == x) { xRand = spatialDist(rng); }
     int yRand = dist(rng);
-    while (y + yRand < 0 || y + yRand >= internalResY) { yRand = dist(rng); }
+    while (y + yRand < 0 || y + yRand >= internalResY || y + yRand == y) { yRand = spatialDist(rng); }
 
     return {x + xRand, y + yRand};
 }

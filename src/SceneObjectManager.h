@@ -101,6 +101,10 @@ public:
         lucy->load("lucyScaled.obj");
         meshTypes["Lucy"] = lucy;
 
+        /*LoadMesh* stanfordDragon = new LoadMesh();
+        stanfordDragon->load("StanfordDragon.obj");
+        meshTypes["StanfordDragon"] = stanfordDragon;*/
+
         refreshMeshNames();
     }
 
