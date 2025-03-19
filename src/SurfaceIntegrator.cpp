@@ -115,7 +115,7 @@ Vector3 SurfaceIntegrator::computeThroughput(Vector3 &wo, Vector3 &wi, Material 
         Vector3 brdf_diffuse = diffuseBRDF(mat->colour);
         brdf = brdf_diffuse;
     } else {
-        return 1;
+        return {1.0f};
     }
 
     if (internal) {

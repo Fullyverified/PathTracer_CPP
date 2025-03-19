@@ -4,8 +4,11 @@
 #include "UI.h"
 
 void InputManager::getClickedObject(int x, int y) {
-    UI::selectedObject = systemManager->getClickedObject(x, y);
-    UI::materialKey = UI::selectedObject->getMaterial()->name;
+    SceneObject* clickedObject = systemManager->getClickedObject(x, y);
+    if (clickedObject != nullptr) {
+        UI::selectedObject = clickedObject;
+        UI::materialKey = UI::selectedObject->getMaterial()->name;
+    }
     debugRay(x, y);
 }
 

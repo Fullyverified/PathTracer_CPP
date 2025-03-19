@@ -24,7 +24,8 @@ struct Reservoir {
     int sampleCount; // Number of samples seen
 
     float distToLight;
-    float PDF; // PDF of explicity sampled sample
+    float candidatePDF; // PDF of the light
+    float targetPDF;
     // Light point properties
     Vector3 candidateEmission; // Selected indirect radiance
     Vector3 candidateNormal;
@@ -36,7 +37,7 @@ struct Reservoir {
     Vector3 wo;
     Material* hitMat;
 
-    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f),
+    Reservoir() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), candidatePDF(0.0f), targetPDF(0.0f), weightSum(0.0f), sampleCount(0.0f),
     rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)), distToLight(0.0f), lightMat(nullptr), hitMat(nullptr), lightArea(0.0f) {}
 };
 
