@@ -2,12 +2,14 @@
 #define RENDERER_H
 
 #include <SDL.h>
+#include <SDL_image.h>
 #include "Window.h"
 
 class Renderer {
 public:
     Renderer(Window& window, int& width, int& height) {
-
+        //int flags = IMG_INIT_PNG;
+        //IMG_Init(flags);
         renderer = SDL_CreateRenderer(window.getSDLWindow(), -1, SDL_RENDERER_ACCELERATED);
         initializeTexture(width, height);
     }

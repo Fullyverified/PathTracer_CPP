@@ -25,8 +25,9 @@ thread_local std::mt19937 CPUPT::rng(std::random_device{}());
 
 CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObjectsList) : systemManager(systemManager), sceneObjectsList(sceneObjectsList),
                                                                                            iterations(0), numThreads(0) {
+    materialManager = systemManager->getMaterialManager();
     directionSampler = new DirectionSampler();
-    surfaceIntegrator = new SurfaceIntegrator();
+    surfaceIntegrator = new SurfaceIntegrator(materialManager);
     denoiser = new Denoiser();
     toneMapper = new ToneMapper();
 
@@ -157,7 +158,7 @@ void CPUPT::renderLoop() {
                     int endX = std::min(startX + tileSize - 1, internalResX - 1);
                     int startY = tileY * tileSize;
                     int endY = std::min(startY + tileSize - 1, internalResY - 1);
-                    traceRay(cameraCopy, startX, endX, startY, endY, iterations, currentRay, sky, mutex);
+                    traceRay(cameraCopy, startX, endX, startY, endY, sky, mutex);
                 }
             };
 
@@ -256,7 +257,7 @@ void CPUPT::renderLoop() {
     }
 }
 
-void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, int currentRay, bool sky, std::mutex &mutex) const {
+void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, bool sky, std::mutex &mutex) const {
     for (int y = ystart; y <= yend; y++) {
         for (int x = xstart; x <= xend; x++) {
             // -------------------------------------------------------------
@@ -328,6 +329,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 // Grab the material
                 Material *mat = hitObject->getMaterial();
+                // Compute material properties at the hitpoint (mesh objects)
+                Material* sampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+                //Material* sampledMat = mat;
 
                 if (currentBounce == 0) {
                     // primary ray only
@@ -342,7 +346,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // ReSTIR Direct Illumination (first bounce only)
                 // -------------------------------------------------------------
-                if (currentBounce == 0 && config.ReSTIR) restirDirectLighting(ray, hitObject, x, y);
+
+                if (currentBounce == 0 && config.ReSTIR) {
+                    delete reservoirReSTIR[y * internalResX + x].hitMat;
+                    Material* ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+                    restirDirectLighting(ray, ReSTIRsampledMat, x, y);
+                }
 
                 // -------------------------------------------------------------
                 // Multiple Importance Sampling
@@ -362,7 +371,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 // specular caused by IOR
                 float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-                float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
+                float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, sampledMat->IOR); // reflection portion
                 float randomSample2 = dist(rng); // a second sample
                 // ----------------------
 
@@ -370,32 +379,32 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Refraction
                     // Continue refraction from previous bounce
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, true);
                 } else {
                     if (randomSample <= p_specular) {
                         // Specular (Metallic)
                         wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                        newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
+                        newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, metallic, false);
                     } else if (randomSample <= p_specular + p_transmission) {
                         // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                         if (randomSample2 < R0) {
                             // Specular (Glass)
                             wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, specularFresnel, false);
                         } else {
                             // Refraction
                             wi = directionSampler->RefractionDirection(ray, *hitObject);
-                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, false);
                         }
                     } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                         if (randomSample2 < R0) {
                             // Specular Diffuse
                             wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, specularFresnel, false);
                         } else {
                             // Dielectric reflection
                             wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
-                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, diffuse, false);
                         }
                     } else {
                         std::cout << "Probabilities dont add up: " << randomSample << std::endl;
@@ -407,10 +416,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 throughput = throughput * newThroughput;
 
                 // 3) Update colour
-                finalColour = finalColour + throughput * (mat->colour * mat->emission);
+                finalColour = finalColour + throughput * (sampledMat->colour * sampledMat->emission);
                 finalColour.sanitize();
 
-
+                delete sampledMat;
                 // -------------------------------------------------------------
                 // Russian roulete termination
                 // -------------------------------------------------------------
@@ -453,18 +462,16 @@ void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) co
         r.candidateNormal = candidate.candidateNormal;
         r.lightMat = candidate.lightMat;
         r.lightArea = candidate.lightArea;
+        r.empty = false;
     }
 }
 
-void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y) const {
+void CPUPT::restirDirectLighting(Ray &ray, Material* sampledMat, int x, int y) const {
     Reservoir reservoir = {};
     reservoirReSTIR[y * internalResX + x] = reservoir;
-    if (emissiveObjects.size() == 0) {
-        return;
-    }
+    if (emissiveObjects.size() == 0) return;
 
     std::uniform_int_distribution<int> lightDist(0, emissiveObjects.size() - 1);
-    Material *hitMat = hitObject->getMaterial();
 
     Vector3 rayPos = ray.getPos();
     Vector3 n = ray.getNormal();
@@ -472,7 +479,7 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
     reservoir.rayPos = rayPos;
     reservoir.n = n;
     reservoir.wo = wo;
-    reservoir.hitMat = hitObject->getMaterial();
+    reservoir.hitMat = sampledMat;
 
     // M = config.lightSamples
     for (int i = 0; i < config.candidateSamples; i++) {
@@ -489,7 +496,7 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
         if (cosTheta_q == 0 || cosTheta_x == 0) continue; // light point is facing away or behind hit point
         // = hitBRDF * emission * (distance^2 * cosTheta)
         // Pq(x) = hitPoint BRDF
-        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(wo, wi, hitMat, n);
+        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(wo, wi, sampledMat, n);
         // G(x) = cosTheta(x) * (cosTheta(q) / (x - q)^2
         float G = (cosTheta_x * cosTheta_q) / (distToLight * distToLight);
         // Le(x) = emission of light point
@@ -521,8 +528,6 @@ void CPUPT::restirDirectLighting(Ray &ray, SceneObject *hitObject, int x, int y)
     reservoirReSTIR[y * internalResX + x] = reservoir;
 }
 
-// float candidateRadiusPDF = (1 + config.sampleRadius * 2) * (1 + config.sampleRadius * 2) - 1.0f;
-
 void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const {
     // iterate over each pixel
 
@@ -531,84 +536,86 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
             if (config.ReSTIR) {
                 Reservoir currentReservoir = reservoirReSTIR[y * internalResX + x];
 
-                // Temporal Resampling
-                // WIP
+                if (currentReservoir.hitMat != nullptr) { //
 
-                // Spatial Resampling
-                for (int i = 0; i < config.spatialSamplesK; i++) {
-                    Pixel candidate = neighbourCandidate(x, y); // select random pixel in specified radius
-                    Reservoir neighbourReservoir = reservoirReSTIR[candidate.y * internalResX + candidate.x];
-
-                    if (neighbourReservoir.empty) continue;
-
-                    if (currentReservoir.hitMat == nullptr || currentReservoir.lightMat == nullptr) {
-                        std::cout<<"spatial current nullptr"<<std::endl;
-                    }
-                    if (neighbourReservoir.hitMat == nullptr || neighbourReservoir.lightMat == nullptr) {
-                        std::cout<<"spatial neighbour nullptr"<<std::endl;
-                    }
-
-                    // compute unshadowed contribtuion of neighbour sample at current point
-                    Vector3 wi = currentReservoir.rayPos - neighbourReservoir.candidatePosition;
-                    float distToLight = wi.length();
-                    Vector3::normalise(wi);
-
-                    Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(currentReservoir.wo, wi, currentReservoir.hitMat, currentReservoir.n);
-                    Vector3 Le = neighbourReservoir.lightMat->emission * neighbourReservoir.lightMat->colour;
-
-                    float cosTheta_q = std::max(0.0f, currentReservoir.n.dot(wi));
-                    float cosTheta_x = std::max(0.0f, currentReservoir.candidateNormal.dot(-wi));
-                    float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
-                    if (cosTheta_q == 0 || cosTheta_x == 0) continue; // neighbour candidate point is facing away or behind hit point
-
-                    Vector3 finalContribution = BRDF_x * Le * G;
-                    float targetPDFNew = Vector3::length(finalContribution);
-
-                    float weight = (neighbourReservoir.weightSum / neighbourReservoir.sampleCount) * (targetPDFNew / neighbourReservoir.targetPDF);
-
-                    if (config.unbiased) {
-                        // unbiased - rejection based on shadow ray - slower
-
-                        // Shadow test
-                        Ray shadowRay(currentReservoir.rayPos + wi * 0.01f, wi);
-                        BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
-                        if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() ||
-                            !(shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
-                            // occulsion
-                            continue;
-                        }
-                    } else {
-                        // biased approach - rejection based on normal and depth - very fast
-                        Vector3 currentNormal = normalBuffer[y * internalResX + x];
-                        Vector3 neighbourNormal = normalBuffer[candidate.y * internalResX + candidate.x];
-                        float dot = Vector3::dot(currentNormal, neighbourNormal);
-                        if (dot < 0.75) continue;
-
-                        float currentDepth = depthBuffer[y * internalResX + x];
-                        float neighbourDepth = depthBuffer[candidate.y * internalResX + candidate.x];
-                        float depthFactor = currentDepth / neighbourDepth;
-                        if (depthFactor < 0.9 ||  depthFactor > 1.10) continue;
-                    }
-
-                    // Update the reservoir
-                    reservoirUpdate(currentReservoir, neighbourReservoir, weight);
-                }
-
-                // Compute final contribution
-                if (!currentReservoir.empty) {
-                    if (currentReservoir.hitMat == nullptr || currentReservoir.lightMat == nullptr) {
-                        std::cout<<"nullptr"<<std::endl;
-                    }
+                    // Evaluate visibility for initial candidates
                     // Shadow ray test
-                    Vector3 wi =  currentReservoir.candidatePosition - currentReservoir.rayPos;
+                    Vector3 wi = currentReservoir.candidatePosition - currentReservoir.rayPos;
                     float distToLight = Vector3::length(wi);
                     Vector3::normalise(wi);
                     Ray shadowRay(currentReservoir.rayPos, wi);
                     shadowRay.march(0.01f);
                     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
-                    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || (
+                    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || !(
                             shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
-                        // occlusion test
+                        // not visible
+                        currentReservoir.weightSum = 0.0f;
+                    }
+
+                    // Temporal Resampling
+                    // WIP
+
+                    // Spatial Resampling
+                    for (int i = 0; i < config.spatialSamplesK; i++) {
+                        Pixel candidate = neighbourCandidate(x, y); // select random pixel in specified radius
+                        Reservoir neighbourReservoir = reservoirReSTIR[candidate.y * internalResX + candidate.x];
+
+                        if (neighbourReservoir.empty) {
+                            continue;
+                        }
+
+                        // compute unshadowed contribtuion of neighbour sample at current point
+                        Vector3 wi = currentReservoir.rayPos - neighbourReservoir.candidatePosition;
+                        float distToLight = wi.length();
+                        Vector3::normalise(wi);
+
+                        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(currentReservoir.wo, wi, currentReservoir.hitMat, currentReservoir.n);
+                        Vector3 Le = neighbourReservoir.lightMat->emission * neighbourReservoir.lightMat->colour;
+
+                        float cosTheta_q = std::max(0.0f, currentReservoir.n.dot(wi));
+                        float cosTheta_x = std::max(0.0f, currentReservoir.candidateNormal.dot(-wi));
+                        float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
+                        if (cosTheta_q == 0 || cosTheta_x == 0) continue; // neighbour candidate point is facing away or behind hit point
+
+                        Vector3 finalContribution = BRDF_x * Le * G;
+                        float targetPDFNew = Vector3::length(finalContribution);
+
+                        float neighborAvgWeight = neighbourReservoir.weightSum / neighbourReservoir.sampleCount;
+                        float currentAvgWeight = currentReservoir.weightSum / currentReservoir.sampleCount;
+
+                        float misWeight = (neighbourReservoir.weightSum * neighbourReservoir.sampleCount) / (targetPDFNew / neighbourReservoir.targetPDF);
+
+                        if (config.unbiased) {
+                            // unbiased - rejection based on shadow ray - slower
+
+                            // Shadow test
+                            Ray shadowRay(currentReservoir.rayPos + wi * 0.01f, wi);
+                            BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
+                            if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() ||
+                                !(shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
+                                // occulsion
+                                misWeight = 0.0f;
+                            }
+                        } else {
+                            // biased approach - rejection based on normal and depth - very fast
+                            Vector3 currentNormal = normalBuffer[y * internalResX + x];
+                            Vector3 neighbourNormal = normalBuffer[candidate.y * internalResX + candidate.x];
+                            float dot = Vector3::dot(currentNormal, neighbourNormal);
+                            if (dot < 0.75) misWeight = 0.0f;
+
+                            float currentDepth = depthBuffer[y * internalResX + x];
+                            float neighbourDepth = depthBuffer[candidate.y * internalResX + candidate.x];
+                            float depthFactor = currentDepth / neighbourDepth;
+                            if (depthFactor < 0.9 || depthFactor > 1.10) misWeight = 0.0f;
+                        }
+
+                        // Update the reservoir
+                        reservoirUpdate(currentReservoir, neighbourReservoir, misWeight);
+                    }
+
+                    // Compute final contribution
+                    if (!currentReservoir.empty && currentReservoir.weightSum != 0) {
+                        // Shadow ray test
                         Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(currentReservoir.wo, wi, currentReservoir.hitMat, currentReservoir.n);
                         Vector3 Le = currentReservoir.lightMat->emission * currentReservoir.lightMat->colour;
 
@@ -617,12 +624,13 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                         float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
 
                         Vector3 finalContribution = BRDF_x * Le * G;
-                        float finalWeight = (currentReservoir.weightSum / currentReservoir.sampleCount) / Vector3::length(finalContribution);
+                        float targetPDF =  Vector3::length(BRDF_x * Le * G);
+                        float finalWeight = (currentReservoir.weightSum / currentReservoir.sampleCount) / targetPDF;
 
                         // Update un-normalised buffer
                         hdr[y * internalResX + x] += finalContribution * finalWeight;
                     }
-                }
+                } // end empty check
             } // end ReSTIR
             // normalise progress buffer
             lum[y * internalResX + x] = hdr[y * internalResX + x] / (
@@ -632,7 +640,6 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
 }
 
 Pixel CPUPT::neighbourCandidate(int x, int y) const {
-
     int xRand = dist(rng);
     while (x + xRand < 0 || x + xRand >= internalResX || x + xRand == x) { xRand = spatialDist(rng); }
     int yRand = dist(rng);
@@ -796,12 +803,18 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // Grab the material
         Material *mat = hitObject->getMaterial();
-        std::cout << "Bounce: " << currentBounce << std::endl;
+        // Compute material properties at the hitpoint (mesh objects)
+        Material* sampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
 
-        std::cout << "Ray direction";
-        ray.getDir().print();
+        // -------------------------------------------------------------
+        // ReSTIR Direct Illumination (first bounce only)
+        // -------------------------------------------------------------
 
-        if (currentBounce == 0 && config.ReSTIR) restirDirectLighting(ray, hitObject, x, y);
+        if (currentBounce == 0 && config.ReSTIR) {
+            delete reservoirReSTIR[y * internalResX + x].hitMat;
+            Material* ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+            restirDirectLighting(ray, ReSTIRsampledMat, x, y);
+        }
 
         // -------------------------------------------------------------
         // Multiple Importance Sampling
@@ -821,40 +834,41 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // specular caused by IOR
         float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-        float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, mat->IOR); // reflection portion
+        float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, sampledMat->IOR); // reflection portion
         float randomSample2 = dist(rng); // a second sample
         // ----------------------
 
+        bool isMesh = hitObject->isMesh();
         if (ray.getInternal()) {
             // Refraction
             // Continue refraction from previous bounce
             wi = directionSampler->RefractionDirection(ray, *hitObject);
-            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, true);
+            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, true);
         } else {
             if (randomSample <= p_specular) {
                 // Specular (Metallic)
                 wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, metallic, false);
+                newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, metallic, false);
             } else if (randomSample <= p_specular + p_transmission) {
                 // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                 if (randomSample2 < R0) {
                     // Specular (Glass)
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, specularFresnel, false);
                 } else {
                     // Refraction
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, refreaction, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, false);
                 }
             } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                 if (randomSample2 < R0) {
                     // Specular Diffuse
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, specularFresnel, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, specularFresnel, false);
                 } else {
                     // Dielectric reflection
                     wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, mat, n, R0, diffuse, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, diffuse, false);
                 }
             } else {
                 std::cout << "Probabilities dont add up: " << randomSample << std::endl;
@@ -868,7 +882,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // 3) Update colour
         finalColour = finalColour + throughput * (mat->colour * mat->emission);
         finalColour.sanitize();
-
+        delete sampledMat;
 
         // -------------------------------------------------------------
         // Russian roulete termination

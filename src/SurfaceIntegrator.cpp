@@ -155,7 +155,8 @@ Vector3 SurfaceIntegrator::evaluateBRDF(Vector3 wo, Vector3 wi, const Material *
     // Metallic specular
     Vector3 F_metallic = fresnelSchlickSpecular(cosTheta_wi, mat->colour);
     Vector3 brdf_metallic;
-    if (cosTheta_wo > 0 && cosTheta_wi > 0) { // verify directions are in same hemisphere
+    if (cosTheta_wo > 0 && cosTheta_wi > 0) {
+        // verify directions are in same hemisphere
         brdf_metallic = computeMicrofacetBRDF(D, F_metallic, G, n, wo, wi);
     } else {
         brdf_metallic = Vector3(0, 0, 0);
@@ -172,7 +173,8 @@ Vector3 SurfaceIntegrator::evaluateBRDF(Vector3 wo, Vector3 wi, const Material *
     Vector3 brdf_refraction(0, 0, 0);
 
     // Combine based on material properties
-    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_diffuse));
+    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * (
+                                (R0) * brdf_specular_diffuse + ((1 - R0) * brdf_diffuse));
     return combined_brdf;
 }
 
@@ -201,7 +203,7 @@ float SurfaceIntegrator::evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat
 }
 
 // For ReSTIR
-float SurfaceIntegrator::computeApproxPDF(Reservoir& q, Reservoir& candidate) const {
+float SurfaceIntegrator::computeApproxPDF(Reservoir &q, Reservoir &candidate) const {
     Vector3 dir = candidate.candidatePosition - q.rayPos;
     float distance = dir.length();
     dir.normalise();

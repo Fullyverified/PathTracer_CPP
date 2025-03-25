@@ -14,6 +14,7 @@
 #include "SurfaceIntegrator.h"
 
 #include "Denoiser.h"
+#include "MaterialManager.h"
 #include "ToneMapper.h"
 
 class SystemManager;
@@ -80,12 +81,12 @@ public:
     void joinRenderThread();
 
     // traversal logic
-    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, int its, int currentRay, bool sky, std::mutex &mutex) const;
+    void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, bool sky, std::mutex &mutex) const;
 
     // Computes resoivers
     void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
 
-    void restirDirectLighting(Ray& ray, SceneObject* hitObject, int x, int y) const;
+    void restirDirectLighting(Ray& ray, Material* sampledMat, int x, int y) const;
     // Computes direct lighting contribution using resoivers, spatiotemporaly
     void restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const;
     Pixel neighbourCandidate(int x, int y) const;
@@ -108,6 +109,7 @@ public:
 private:
 
     SystemManager* systemManager;
+    MaterialManager* materialManager;
     DirectionSampler* directionSampler;
     SurfaceIntegrator* surfaceIntegrator;
     Denoiser* denoiser;

@@ -12,15 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 message(STATUS "Using CXX Flags: ${CMAKE_CXX_FLAGS}")
 
 if (WIN32)  # Windows environment (MinGW)
-    #set(VULKAN_SDK "C:/VulkanSDK/1.3.290.0")  # Adjust the path to your Vulkan SDK version
-    #set(Vulkan_INCLUDE_DIR "${VULKAN_SDK}/Include")
-    #set(Vulkan_LIBRARY "${VULKAN_SDK}/Lib/vulkan-1.lib")
-    #include_directories(${Vulkan_INCLUDE_DIR})
-
-    # Add GLM // if your vulkan SDK doesn't include GLM
-    #set(GLM_DIR ${CMAKE_SOURCE_DIR}/libraries/glm) # Adjust this path if necessary
-    #include_directories(${GLM_DIR})
-
     # Paths to your SDL2 and SDL2_image development folders
     set(SDL2_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL2-2.30.8)
     set(SDL2_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/SDL2_image-2.8.2)
@@ -49,19 +40,6 @@ endif()
 # Add TinyObjLoader
 set(TinyObjLoader_DIR ${CMAKE_SOURCE_DIR}/libraries/tinyobjloader) # Adjust this path if necessary
 include_directories(${TinyObjLoader_DIR})
-
-# Add VOLK
-#set(VOLK_DIR ${CMAKE_SOURCE_DIR}/libraries/volk)
-#include_directories(${VOLK_DIR})
-
-# Add VMA
-#set(VMA_DIR ${CMAKE_SOURCE_DIR}/libraries/VMA)
-#include_directories(${VMA_DIR})
-
-# Add STB_IMAGE
-#set(STB_IMAGE_DIR ${CMAKE_SOURCE_DIR}/libraries/stb_image)
-#include_directories(${STB_IMAGE_DIR})
-
 # Add IMGUI
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/libraries/imgui)
 add_library(imgui STATIC
@@ -76,27 +54,10 @@ add_library(imgui STATIC
 # Include directories
 target_include_directories(imgui PUBLIC ${IMGUI_DIR})
 
-# Add FMT
-#set(FMT_DIR ${CMAKE_SOURCE_DIR}/libraries/fmt)
-#include_directories(${FMT_DIR})
-#add_subdirectory(${FMT_DIR})
-
-# Add FASTGLTF
-#set(FASTGLTF_DIR ${CMAKE_SOURCE_DIR}/libraries/fastgltf)
-#add_subdirectory(${FASTGLTF_DIR})
-#include_directories(${FASTGLTF_DIR}/include)
-
-# Add VKBOOTSTRAP
-#set(VKBOOTSTRAP_DIR ${CMAKE_SOURCE_DIR}/libraries/vkbootstrap)
-#include_directories(${VKBOOTSTRAP_DIR})
-
-# source files
-#include_directories(Vulkan) # include Vulkan classes
-
 add_executable(PathTracer_CPP
         src/main.cpp #path tracer source files
+        src/Vector2.h
         src/Vector3.h
-        src/Vector3.cpp
         src/Sphere.h
         src/Sphere.cpp
         src/SceneObject.h
@@ -154,23 +115,11 @@ if (WIN32)
 
             imgui
             ${tinyObjLoader}
-
-            #${Vulkan_LIBRARY}
-            #fmt::fmt
-            #fastgltf::fastgltf
-            #${vkbootstrap}
-            #${volk}
     )
 elseif (UNIX)
     target_link_libraries(PathTracer_CPP
             ${SDL2_LIBRARIES}  # Use system-installed SDL2 libraries
             imgui
             ${tinyObjLoader}
-
-            #fastgltf
-            #Vulkan::Vulkan
-            #fmt::fmt
-            #${vkbootstrap}
-            #${volk}
     )
 endif()

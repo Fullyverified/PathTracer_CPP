@@ -16,7 +16,7 @@ void LoadMesh::load(const std::string &filename) {
     std::string warn, err;
 
 
-    std::filesystem::path meshDir = std::filesystem::current_path() / "meshes";
+    std::filesystem::path meshDir = std::filesystem::current_path() /"assets"/ "meshes";
 
     std::filesystem::path meshFile = meshDir / filename;
 
@@ -49,7 +49,7 @@ void LoadMesh::load(const std::string &filename) {
             );
 
             // normals
-            Vector3 n0(0, 0, 0), n1(0, 0, 0), n2(0, 0, 0);
+            Vector3 n0(0), n1(0), n2(0);
             if (idx0.normal_index >= 0) {
                 n0 = Vector3(
                     attrib.normals[3 * idx0.normal_index + 0],
@@ -71,7 +71,29 @@ void LoadMesh::load(const std::string &filename) {
                     attrib.normals[3 * idx2.normal_index + 2]
                 );
             }
-            triangles.emplace_back(new Triangle(v0, v1, v2, n0, n1, n2));
+
+            // text coords
+            Vector2 uv0(0), uv1(0), uv2(0);
+            if (idx0.texcoord_index >= 0) {
+                uv0 = Vector2(
+                    attrib.texcoords[2 * idx0.texcoord_index + 0],
+                    attrib.texcoords[2 * idx0.texcoord_index + 1]
+                );
+            }
+            if (idx1.texcoord_index >= 0) {
+                uv1 = Vector2(
+                    attrib.texcoords[2 * idx1.texcoord_index + 0],
+                    attrib.texcoords[2 * idx1.texcoord_index + 1]
+                );
+            }
+            if (idx2.texcoord_index >= 0) {
+                uv2 = Vector2(
+                    attrib.texcoords[2 * idx2.texcoord_index + 0],
+                    attrib.texcoords[2 * idx2.texcoord_index + 1]
+                );
+            }
+
+            triangles.emplace_back(new Triangle(v0, v1, v2, n0, n1, n2, uv0, uv1, uv2));
         }
     }
     computeBounds();

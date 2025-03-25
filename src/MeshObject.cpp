@@ -21,9 +21,9 @@ void MeshObject::getNormal(Ray &ray) const {
     Vector3 bCoords = ray.getBCoords();
     const Triangle* triangle = ray.getTriangle();
 
-    float u = bCoords.getX();
-    float v = bCoords.getY();
-    float w = bCoords.getZ();
+    float u = bCoords.x;
+    float v = bCoords.y;
+    float w = bCoords.z;
 
     ray.getNormal().set(triangle->n0 * w + triangle->n1 * u + triangle->n2 * v);
     ray.getNormal().normalise();

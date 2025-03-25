@@ -200,6 +200,14 @@ void UI::renderSettings() {
 
     ImGui::SameLine();
 
+    if (ImGui::Button("3x")) {
+        upscale = 3;
+        camUpdate = true;
+        upscalingUpdate = true;
+    }
+
+    ImGui::SameLine();
+
     if (ImGui::Button("4x")) {
         upscale = 4;
         camUpdate = true;

@@ -5,6 +5,8 @@
 
 #include "Vector3.h"
 #include "Material.h"
+#include "MaterialManager.h"
+#include "Ray.h"
 
 class CPUPT;
 struct Reservoir;
@@ -20,8 +22,10 @@ enum SampleType {
 
 class SurfaceIntegrator {
 public:
-    SurfaceIntegrator() {}
-    ~SurfaceIntegrator() {}
+    SurfaceIntegrator(MaterialManager* materialManager) : materialManager(materialManager) {}
+    ~SurfaceIntegrator() {
+        delete materialManager;
+    }
 
     float distrubtionGGX(const Vector3 &normal, const Vector3 &halfVector, float roughness) const; // Microfacet Distribution (D)
 
@@ -55,6 +59,7 @@ public:
 
 
 private:
+    MaterialManager* materialManager;
 };
 
 

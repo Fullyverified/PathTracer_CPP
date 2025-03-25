@@ -13,7 +13,7 @@ void InputManager::getClickedObject(int x, int y) {
 }
 
 void InputManager::debugRay(int x, int y) {
-    systemManager->debugRay(x, y);
+    //systemManager->debugRay(x, y);
 }
 
 void InputManager::setSystemManager(SystemManager* systemManager) {

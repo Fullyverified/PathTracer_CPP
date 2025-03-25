@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -148,8 +148,8 @@ public:
 
         // Objects of Interest
         sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
-        sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, 8.75), 0.8, 0.8, 0.8, materialManager->getMaterial("Copper"))); // right sphere on floor
-        //sceneObjects.emplace_back(new MeshObject(Vector3(4, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // statue left
+        sceneObjects.emplace_back(new MeshObject(Vector3(4.5, -2.5, 8.75), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Companion Cube"], materialManager->getMaterial("Weighted Cube"))); // companion cube
+        //sceneObjects.emplace_back(new MeshObject(Vector3(4, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // diamond
 
         // BOX 2
 

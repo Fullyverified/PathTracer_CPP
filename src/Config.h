@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 struct Config {
+    // initial state
     float resX = 1200;
     float resY = 1200;
     float upScale = 4;

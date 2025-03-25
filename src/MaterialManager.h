@@ -1,21 +1,34 @@
 #ifndef MATERIALMANAGER_H
 #define MATERIALMANAGER_H
 
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 
+#include <SDL_image.h>
 #include "Material.h"
 #include "Vector3.h"
+#include "Vector2.h"
+#include "Ray.h"
+#include "SceneObject.h"
 
 class MaterialManager {
 public:
 
     MaterialManager() {
+        loadTextures();
         addDefaultMaterials();
         refreshMaterialNames();
     }
 
-    ~MaterialManager() = default;
+    ~MaterialManager() {
+        for (auto& mat : materials) {
+            delete mat.second;
+        }
+        for (auto& texture : albedos) {
+            SDL_FreeSurface(texture.second);
+        }
+    }
 
     void loadMaterial(std::string& matName) {
         // from json file
@@ -87,6 +100,10 @@ public:
         materials["SmoothMetal"] = new Material{"SmoothMetal", Vector3(1, 1, 1), 0.05, 1, 1, 0, 0};
         materials["RoughPlastic"] = new Material{"RoughPlastic", Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
         materials["RoughMetal"] = new Material{"RoughMetal", Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
+
+        materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Companion Cube"]};
+        materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Weighted Cube"]};
+        materials["Button"] = new Material{"Button", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Button"]};
     }
 
     void editMaterial(std::string& matName, Material& mat) {
@@ -130,9 +147,145 @@ public:
         }
     }
 
+    void loadTextures() {
+        albedos["Weighted Cube"] = createTexture("weighted_cube_texture.png");
+        albedos["Companion Cube"] = createTexture("companion_cube_texture.png");
+        albedos["Button"] = createTexture("button_texture.png");
+    }
+
+    SDL_Surface* createTexture(std::string name) {
+        std::filesystem::path textureDir = std::filesystem::current_path() /"assets"/ "textures";
+        SDL_Surface* loaded = IMG_Load((textureDir / name).string().c_str());
+        if (!loaded) {
+            std::cerr << "Failed to load image: " << IMG_GetError() << std::endl;
+            return nullptr;
+        }
+
+        // Convert to a known pixel format (e.g. SDL_PIXELFORMAT_RGBA32)
+        SDL_Surface* converted = SDL_ConvertSurfaceFormat(loaded, SDL_PIXELFORMAT_RGBA32, 0);
+        SDL_FreeSurface(loaded); // Free the original loaded surface
+        return converted;
+    }
+
+    Material* sampleMatFromHitPoint(Ray& ray, const Material* mat, const SceneObject* hitObject) {
+
+        if (!hitObject->isMesh()) return new Material(mat->name, mat->colour, mat->roughness, mat->metallic, mat->IOR, mat->transmission, mat->emission);
+
+        if (ray.getTriangle() == nullptr) {
+            return new Material(mat->name, mat->colour, mat->roughness, mat->metallic, mat->IOR, mat->transmission, mat->emission);
+        }
+
+        // Compute texture coordinates
+        const Vector3 bCoords = ray.getBCoords();
+
+        float u = bCoords.x;
+        float v = bCoords.y;
+        float w = bCoords.z;
+
+        const Triangle* tri = ray.getTriangle();
+        Vector2 uv0 = tri->uv0;
+        Vector2 uv1 = tri->uv1;
+        Vector2 uv2 = tri->uv2;
+
+        Vector2 uvCoord = uv0 * w + uv1 * u + uv2 * v;
+
+        SDL_Surface* textureMap = mat->textureMap;
+        SDL_Surface* roughnessMap = mat->roughnessMap;
+        SDL_Surface* metallicMap = mat->metallicMap;
+        SDL_Surface* emissionMap = mat->emissionMap;
+
+        // Texture map
+        Vector3 texture;
+        if (textureMap == nullptr) {
+            texture = mat->colour;
+        } else {
+            int x = static_cast<int>(uvCoord.x * (textureMap->w - 1));
+            int y = static_cast<int>((1.0f - uvCoord.y) * (textureMap->h - 1));
+
+            x = std::clamp(x, 0, textureMap->w - 1);
+            y = std::clamp(y, 0, textureMap->h - 1);
+
+            Uint32* pixels = (Uint32*)textureMap->pixels;
+            Uint32 pixel = pixels[y * textureMap->w + x];
+
+            Uint8 r, g, b;
+            SDL_GetRGB(pixel, textureMap->format, &r, &g, &b);
+            texture = Vector3((int)r, (int)g, (int)b);
+            texture /= 255.0f;
+        }
+
+        // Roughness map
+        float roughness;
+        if (roughnessMap == nullptr) {
+            roughness = mat->roughness;
+        } else {
+            int x = static_cast<int>(uvCoord.x * (roughnessMap->w - 1));
+            int y = static_cast<int>((1.0f - uvCoord.y) * (roughnessMap->h - 1));
+
+            x = std::clamp(x, 0, roughnessMap->w - 1);
+            y = std::clamp(y, 0, roughnessMap->h - 1);
+
+            Uint32* pixels = (Uint32*)roughnessMap->pixels;
+            Uint32 pixel = pixels[y * roughnessMap->w + x];
+
+            Uint8 r, g, b;
+            SDL_GetRGB(pixel, roughnessMap->format, &r, &g, &b);
+            roughness = (int)r; // all channels should be equal (greyscale)
+            roughness /= 255.0f;
+        }
+
+        // Metallic map
+        float metallic;
+        if (metallicMap == nullptr) {
+            metallic = mat->metallic;
+        } else {
+            int x = static_cast<int>(uvCoord.x * (metallicMap->w - 1));
+            int y = static_cast<int>((1.0f - uvCoord.y) * (metallicMap->h - 1));
+
+            x = std::clamp(x, 0, metallicMap->w - 1);
+            y = std::clamp(y, 0, metallicMap->h - 1);
+
+            Uint32* pixels = (Uint32*)metallicMap->pixels;
+            Uint32 pixel = pixels[y * metallicMap->w + x];
+
+            Uint8 r, g, b;
+            SDL_GetRGB(pixel, metallicMap->format, &r, &g, &b);
+            metallic = (int)r; // all channels should be equal (greyscale)
+            metallic /= 255.0f;
+        }
+
+        // Emission map
+        float emission;
+        if (emissionMap == nullptr) {
+            emission = mat->emission;
+        } else {
+            int x = static_cast<int>(uvCoord.x * (emissionMap->w - 1));
+            int y = static_cast<int>((1.0f - uvCoord.y) * (emissionMap->h - 1));
+
+            x = std::clamp(x, 0, emissionMap->w - 1);
+            y = std::clamp(y, 0, emissionMap->h - 1);
+
+            Uint32* pixels = (Uint32*)emissionMap->pixels;
+            Uint32 pixel = pixels[y * emissionMap->w + x];
+
+            Uint8 r, g, b;
+            SDL_GetRGB(pixel, emissionMap->format, &r, &g, &b);
+            emission = (int)r; // all channels should be equal (greyscale)
+            emission /= 255.0f;
+            emission *= mat->emission;
+        }
+
+        return new Material(mat->name, texture, roughness, metallic, mat->IOR, mat->transmission, emission, textureMap, roughnessMap, metallicMap, emissionMap);
+    }
+
 private:
     std::unordered_map<std::string, Material*> materials;
     std::vector<const char*> materialNames;
+
+    std::unordered_map<std::string, SDL_Surface*> albedos;
+    std::unordered_map<std::string, SDL_Surface*> roughness;
+    std::unordered_map<std::string, SDL_Surface*> metallic;
+
 };
 
 

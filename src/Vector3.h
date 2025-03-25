@@ -14,7 +14,7 @@ public:
     Vector3(const float &value) : x(value), y(value), z(value) {
     }
 
-    Vector3(const Vector3 &other) : x(other.getX()), y(other.getY()), z(other.getZ()) {
+    Vector3(const Vector3 &other) : x(other.x), y(other.y), z(other.z) {
     }
 
     // adding
