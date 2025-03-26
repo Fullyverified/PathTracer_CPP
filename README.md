@@ -11,6 +11,7 @@ BVH Acceleration
 Multithreading  
 PBR Materials  
 Meshes and Primitives  
+Texture, roughness, metallic and emission maps
 Extended Reinhard Tone Mapping  
 Controls - WASD and Mouse  
 Scene and Material Editor  
@@ -21,7 +22,7 @@ Scene and Material Editor
 ~~Russian Roulette Termination~~  
 Pipeline: Restir + Restir GI + MIS  
 Denoising  
-Image textures, rougness maps, etc  
+~~Texture, roughness, metallic and emission maps~~  
 Temporal frame reconstruction using motion vectors  
 SIMD Instructions to find more paralellism  
 GPU Acceleration with Vulkan (maybe)  
