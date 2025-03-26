@@ -1,10 +1,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "Vector3.h"
+
 struct Config {
     // initial state
-    float resX = 1200;
-    float resY = 1200;
+    float resX = 1300;
+    float resY = 1300;
     float upScale = 4;
     float aspectX = 1;
     float aspectY = 1;
@@ -37,6 +39,7 @@ struct Config {
     float exposure = 1;
     float mouseSensitivity = 0.1f;
     bool sky = false;
+
 
     void increaeISO() {
         exposure += (exposure * 0.01f);

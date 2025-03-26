@@ -10,7 +10,7 @@
 class AABCubeCenter : public SceneObject {
 public:
     AABCubeCenter(Vector3 pos, Vector3 length, Material* material);
-    std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Intersection getIntersectionDistance(Ray &ray) const override;
     Vector3 samplePoint (float r1, float r2) const override;
     void updateFaceWeights();
     float getArea() const override;

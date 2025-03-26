@@ -13,11 +13,6 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
 }
 
 void MeshObject::getNormal(Ray &ray) const {
-
-    if (ray.getTriangle() == nullptr) {
-        ray.getNormal().set(1, 0, 0);
-        return;
-    }
     Vector3 bCoords = ray.getBCoords();
     const Triangle* triangle = ray.getTriangle();
 
@@ -25,7 +20,7 @@ void MeshObject::getNormal(Ray &ray) const {
     float v = bCoords.y;
     float w = bCoords.z;
 
-    ray.getNormal().set(triangle->n0 * w + triangle->n1 * u + triangle->n2 * v);
+    ray.getNormal().set((triangle->n0 * w + triangle->n1 * u + triangle->n2 * v));
     ray.getNormal().normalise();
 }
 
@@ -35,17 +30,14 @@ Vector3 MeshObject::getNormal(Vector3 sampledPos) const {
     return {1, 1, 1};
 }
 
-std::pair<float, float> MeshObject::getIntersectionDistance(Ray &ray) const {
-    Transform transform = {pos, dir, scale, this};
+Intersection MeshObject::getIntersectionDistance(Ray &ray) const {
+    Transform transform = {pos, dir, scale};
     transform.rayToObj(ray); // transform ray to object space
 
-    MeshObject::meshIntersection result = getMeshNode()->searchBVHTreeMesh(ray, transform);
+    meshIntersection result = getMeshNode()->searchBVHTreeMesh(ray, this);
     transform.rayToWorld(ray); // revert transformation
 
-    ray.setTriangle(result.triangle);
-    ray.getBCoords().set(result.bcoords);
-
-    return {result.close, result.far};
+    return {result.close, result.close, result.triangle, result.bcoords};
 }
 
 MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* leafNode) const {
@@ -104,12 +96,12 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
     }
 
     // return best intersection
-    if (bestT != std::numeric_limits<float>::infinity() && -std::numeric_limits<float>::infinity()) {
-        return {nullptr, bestT, 0.0f, bestTriangle, Vector3(bestU, bestV, 1.0f - bestU - bestV)};
+    if (bestTriangle != nullptr) {
+        return {nullptr, bestT, bestTriangle, Vector3(bestU, bestV, 1.0f - bestU - bestV)};
     }
 
     // no intersection
-    return {nullptr, -1.0f, -1.0f, nullptr};
+    return {nullptr, -1.0f, nullptr, {0}};
 
 }
 

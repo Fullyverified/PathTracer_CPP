@@ -92,7 +92,7 @@ Vector3 AABCubeBounds::getNormal(Vector3 sampledPoint) const {
     return normal;
 }
 
-std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
+Intersection AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     // recalculating all this is bad but I wanted the methods to be const so thread safe??
     // idk im knew i might change it
     // pre calculate inverse
@@ -109,7 +109,7 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     float tymax = (maxBounds.getY() - ray.getPos().getY()) * invDirY;
     if (tymin > tymax) std::swap(tymin, tymax);
 
-    if ((txmin > tymax) || (tymin > txmax)) return {-1.0f, -1.0f}; // early exit
+    if ((txmin > tymax) || (tymin > txmax)) return {-1.0f, -1.0f, nullptr}; // early exit
 
     if (tymin > txmin) txmin = tymin;
     if (tymax < txmax) txmax = tymax;
@@ -118,12 +118,12 @@ std::pair<float, float> AABCubeBounds::getIntersectionDistance(Ray &ray) const {
     float tzmax = (maxBounds.getZ() - ray.getPos().getZ()) * invDirZ;
     if (tzmin > tzmax) std::swap(tzmin, tzmax);
 
-    if ((txmin > tzmax) || (tzmin > txmax)) return {-1.0f, -1.0f};
+    if ((txmin > tzmax) || (tzmin > txmax)) return {-1.0f, -1.0f, nullptr};
 
     if (tzmin > txmin) txmin = tzmin;
     if (tzmax < txmax) txmax = tzmax;
 
-    return {txmin, txmax};
+    return {txmin, txmax, nullptr};
 }
 
 Vector3 AABCubeBounds::samplePoint(float r1, float r2) const {

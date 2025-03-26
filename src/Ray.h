@@ -49,6 +49,7 @@ public:
         hit = false;
         sceneObject = nullptr;
         triangle = nullptr;
+        internal = false;
     }
 
     void initialize(Ray other) {
@@ -57,6 +58,8 @@ public:
         dir = other.dir;
         normal = other.normal;
         bCoords = other.bCoords;
+        triangle = other.triangle;
+        internal = other.internal;
     }
 
 private:

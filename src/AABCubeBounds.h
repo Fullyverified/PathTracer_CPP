@@ -10,7 +10,7 @@
 class AABCubeBounds : public SceneObject {
 public:
     AABCubeBounds(Vector3 minBounds, Vector3 maxBounds, Material* material);
-    [[nodiscard]] std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    [[nodiscard]] Intersection getIntersectionDistance(Ray &ray) const override;
     Vector3 samplePoint (float r1, float r2) const override;
     void updateFaceWeights();
     [[nodiscard]] float getArea() const override;

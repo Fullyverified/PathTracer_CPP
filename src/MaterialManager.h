@@ -171,10 +171,6 @@ public:
 
         if (!hitObject->isMesh()) return new Material(mat->name, mat->colour, mat->roughness, mat->metallic, mat->IOR, mat->transmission, mat->emission);
 
-        if (ray.getTriangle() == nullptr) {
-            return new Material(mat->name, mat->colour, mat->roughness, mat->metallic, mat->IOR, mat->transmission, mat->emission);
-        }
-
         // Compute texture coordinates
         const Vector3 bCoords = ray.getBCoords();
 

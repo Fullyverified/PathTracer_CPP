@@ -45,7 +45,7 @@ std::pair<Vector3, Vector3> Sphere::getBounds() {
     return std::make_pair(min, max);
 }
 
-std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
+Intersection Sphere::getIntersectionDistance(Ray &ray) const {
     const Vector3 centerOrigin = ray.getPos() - pos;
     const float invXR = 1.0f / (scale.x * scale.x);
     const float invYR = 1.0f / (scale.y * scale.y);
@@ -61,7 +61,7 @@ std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
     float discriminant = (b * b) - (4 * (a * c));
 
     if (discriminant < 0) {
-        return {-1,-1};
+        return {-1.0f,-1.0f, nullptr};
     }
 
     float sqrtDiscriminant = std::sqrt(discriminant);
@@ -74,7 +74,7 @@ std::pair<float, float> Sphere::getIntersectionDistance(Ray &ray) const {
         sqrt2 = temp;
     }
 
-    return {sqrt1, sqrt2};
+    return {sqrt1, sqrt2, nullptr};
 }
 
 Vector3 Sphere::samplePoint(float r1, float r2) const {

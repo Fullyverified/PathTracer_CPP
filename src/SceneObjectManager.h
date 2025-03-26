@@ -97,6 +97,10 @@ public:
         companionCube->load("companionCube.obj");
         meshTypes["Companion Cube"] = companionCube;
 
+        LoadMesh* portalButton = new LoadMesh();
+        portalButton->load("portalButton.obj");
+        meshTypes["portalButton"] = portalButton;
+
         LoadMesh* lucy = new LoadMesh();
         lucy->load("lucyScaled.obj");
         meshTypes["Lucy"] = lucy;
@@ -147,9 +151,9 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 7), Vector3(14, 6, 1), materialManager->getMaterial("Green"))); // right wall wall
 
         // Objects of Interest
-        sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
+        //sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
         sceneObjects.emplace_back(new MeshObject(Vector3(4.5, -2.5, 8.75), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Companion Cube"], materialManager->getMaterial("Weighted Cube"))); // companion cube
-        //sceneObjects.emplace_back(new MeshObject(Vector3(4, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // diamond
+        sceneObjects.emplace_back(new MeshObject(Vector3(5, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["portalButton"], materialManager->getMaterial("Button"))); // companion cube
 
         // BOX 2
 

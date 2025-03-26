@@ -6,19 +6,20 @@
 #include "Vector3.h"
 #include "LoadMesh.h"
 
+class BVHNode;
+
 class MeshObject : public SceneObject {
 public:
 
     struct meshIntersection {
         BVHNode* node;
         float close;
-        float far;
         Triangle* triangle;
         Vector3 bcoords;
     };
 
     MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material);
-    std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Intersection getIntersectionDistance(Ray &ray) const override;
     Vector3 samplePoint (float r1, float r2) const override;
     float getArea() const override;
     void computeArea() override;
@@ -47,7 +48,6 @@ public:
         const Vector3& pos;
         const Vector3& dir;
         const Vector3& scale;
-        const MeshObject* meshObject;
 
         void rayToObj(Ray &ray) {
             ray.getPos().set(ray.getPos() - pos); // transform ray to object space

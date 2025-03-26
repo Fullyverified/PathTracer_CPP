@@ -8,7 +8,7 @@
 class Sphere : public SceneObject {
 public:
     Sphere(Vector3 pos, float radiusx, float radiusy, float radiusz, Material* material);
-    std::pair<float, float> getIntersectionDistance(Ray &ray) const override;
+    Intersection getIntersectionDistance(Ray &ray) const override;
     Vector3 samplePoint (float r1, float r2) const override;
     [[nodiscard]] float getArea() const override;
     void computeArea() override;

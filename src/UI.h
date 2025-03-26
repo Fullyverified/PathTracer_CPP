@@ -36,6 +36,7 @@ public:
 
     static bool ReSTIRGI;
 
+    // Denoising
     static bool denoise;
     static int denoiseIterations;
 
@@ -43,6 +44,7 @@ public:
 
     static int upscale;
 
+    // Camera
     static float fOV;
     static float exposure;
 
@@ -53,12 +55,16 @@ public:
     static int resX;
     static int resY;
 
+    static Vector3 camPos;
+    static Vector3 camDir;
+
     static bool camUpdate;
     static bool sceneUpdate;
     static bool upscalingUpdate;
     static bool resUpdate;
     static bool resizeBuffer;
 
+    // Material Editing
     static Vector3 colour;
     static float roughness;
     static float metallic;
@@ -70,6 +76,7 @@ public:
     static std::string materialKey;
     static std::string newMatName;
 
+    // Scene Editing
     static SceneObject* selectedObject;
 
     static SceneObjectManager* sceneObjectManager;

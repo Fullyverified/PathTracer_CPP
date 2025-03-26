@@ -3,15 +3,18 @@
 
 #include "BoundingBox.h"
 #include "MeshObject.h"
-#include "SceneObject.h"
 #include "Triangle.h"
+
+class SceneObject;
 
 class BVHNode {
 public:
     struct BVHResult {
-        BVHNode* node;
-        float close;
-        float far;
+        BVHNode* node = nullptr;
+        float close = -1.0f;
+        float far = -1.0f;
+        Triangle* triangle = nullptr;
+        Vector3 bCoords = {0};
     };
 
     // two constructors
@@ -22,8 +25,8 @@ public:
     ~BVHNode(); // deconstructor
 
     [[nodiscard]] int getNumChildren() const;
-    [[nodiscard]] struct BVHResult searchBVHTreeScene(Ray &ray);
-    [[nodiscard]] struct MeshObject::meshIntersection searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform);
+    [[nodiscard]] BVHResult searchBVHTreeScene(Ray &ray);
+    [[nodiscard]] MeshObject::meshIntersection searchBVHTreeMesh(Ray &ray, const MeshObject* meshObject);
     [[nodiscard]] float getArea() {return boundingBox->getArea();}
     std::pair<Vector3, Vector3> getBounds();
 

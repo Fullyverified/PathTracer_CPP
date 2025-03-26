@@ -10,6 +10,8 @@
 
 #include "SceneObjectManager.h"
 
+SceneObjectManager *UI::sceneObjectManager = nullptr;
+
 int UI::RaysPerSecond = 0;
 float UI::pathTracingTime = 0;
 float UI::denoisingTime = 0;
@@ -42,6 +44,9 @@ float UI::focalDistance = config.focalDistance;
 
 int UI::resX = config.resX;
 int UI::resY = config.resY;
+
+Vector3 UI::camPos;
+Vector3 UI::camDir;
 
 bool UI::camUpdate = false;
 bool UI::sceneUpdate = false;
@@ -231,8 +236,46 @@ void UI::renderSettings() {
     }
 
     ImGui::Separator();
-
+    camPos = sceneObjectManager->getCamera()->getPos();
+    camDir = sceneObjectManager->getCamera()->getDir();
     ImGui::Text("Camera Settings");
+    ImGui::Text("Position");
+    // X Axis
+    if (ImGui::InputFloat2("##CamPos X", &camPos.x, "X %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getPos().set(camPos);
+    }
+    ImGui::SameLine();
+    // Y Axis
+    if (ImGui::InputFloat2("##CamPos Y", &camPos.y, "Y %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getPos().set(camPos);
+    }
+    ImGui::SameLine();
+    // Z Axis
+    if (ImGui::InputFloat2("##CamPos Z", &camPos.z, "Z %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getPos().set(camPos);
+    }
+
+    ImGui::Text("Direction");
+    // X Axis
+    if (ImGui::InputFloat2("##CamDir X", &camDir.x, "X %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getDir().set(camDir);
+    }
+    ImGui::SameLine();
+    // Y Axis
+    if (ImGui::InputFloat2("##CamDir Y", &camDir.y, "Y %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getDir().set(camDir);
+    }
+    ImGui::SameLine();
+    // Z Axis
+    if (ImGui::InputFloat2("##CamDir Z", &camDir.z, "Z %.3f")) {
+        camUpdate = true;
+        sceneObjectManager->getCamera()->getDir().set(camDir);
+    }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::SliderFloat("##fOV", &fOV, 1, 180, "fOV %.3f")) {
@@ -405,8 +448,6 @@ void UI::materialEditor() {
 int UI::primativeSelection = 0;
 int UI::meshSelection = 0;
 
-SceneObjectManager *UI::sceneObjectManager = nullptr;
-
 void UI::sceneEditor() {
     ImGui::SetNextWindowSize(ImVec2(350, 400), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
@@ -469,12 +510,16 @@ void UI::sceneEditor() {
         ImGui::SameLine();
 
         if (ImGui::Button("Delete")) {
-            std::cout << "Calling delete method" << std::endl;
             sceneObjectManager->removeSceneObject(selectedObject);
             selectedObject = nullptr;
             sceneUpdate = true;
             camUpdate = true;
         }
+
+        // Camera Pos and Rotation
+
+
+
 
         if (selectedObject == nullptr) {
             ImGui::Text("No object selected");

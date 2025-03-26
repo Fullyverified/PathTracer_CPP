@@ -1,15 +1,23 @@
 #ifndef SCENEOBJECT_H
 #define SCENEOBJECT_H
 
+#include <string>
+
 #include "Vector3.h"
 #include "Ray.h"
 #include "Material.h"
-#include <string>
+
+struct Intersection {
+    float close = -1.0f;
+    float far = -1.0f;
+    Triangle* triangle = nullptr;
+    Vector3 bCoords = {0};
+};
 
 class SceneObject {
 public:
 
-    [[nodiscard]] virtual std::pair<float, float> getIntersectionDistance(Ray &ray) const = 0;
+    [[nodiscard]] virtual Intersection getIntersectionDistance(Ray &ray) const = 0;
     [[nodiscard]] virtual Vector3 samplePoint (float r1, float r2) const = 0; // Sample random point on an object for Restir GI
     [[nodiscard]] virtual float getArea() const = 0;
     virtual void computeArea() = 0;

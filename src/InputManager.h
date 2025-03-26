@@ -41,7 +41,7 @@ public:
                 if (!UI::isWindowHovered) {
                     std::cout<<"X: "<<event.button.x<<", Y: "<<event.button.y<<std::endl;
                     getClickedObject(event.button.x, event.button.y);
-                    //debugRay(event.button.x, event.button.y);
+                    debugRay(event.button.x, event.button.y);
                 }
             }
         }

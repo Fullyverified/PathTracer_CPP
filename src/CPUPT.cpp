@@ -298,11 +298,12 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             // -------------------------------------------------------------
             Vector3 finalColour(0.0f, 0.0f, 0.0f);
             Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
-            ray.setInternal(false);
 
             for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
                 // Intersect scene using BVH
                 BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
+                ray.setTriangle(leafNode.triangle);
+                ray.getBCoords().set(leafNode.bCoords);
                 if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
                     // Ray intersects nothing, break
                     if (sky) {
@@ -327,11 +328,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 ray.getOrigin().set(ray.getPos()); // Set new ray origin
                 ray.setHitObject(hitObject);
 
-                // Grab the material
-                Material *mat = hitObject->getMaterial();
                 // Compute material properties at the hitpoint (mesh objects)
-                Material* sampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
-                //Material* sampledMat = mat;
+                Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
 
                 if (currentBounce == 0) {
                     // primary ray only
@@ -339,8 +337,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     depthBuffer[y * internalResX + x] = leafNode.close;
                     normalBuffer[y * internalResX + x] = ray.getNormal();
                     // Denoising
-                    albedoBuffer[y * internalResX + x] = mat->colour;
-                    emissionBuffer[y * internalResX + x] = mat->emission;
+                    albedoBuffer[y * internalResX + x] = sampledMat->colour;
+                    emissionBuffer[y * internalResX + x] = sampledMat->emission;
                 }
 
                 // -------------------------------------------------------------
@@ -349,7 +347,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 if (currentBounce == 0 && config.ReSTIR) {
                     delete reservoirReSTIR[y * internalResX + x].hitMat;
-                    Material* ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+                    Material *ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
                     restirDirectLighting(ray, ReSTIRsampledMat, x, y);
                 }
 
@@ -358,8 +356,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
                 float randomSample = dist(rng);
-                float p_specular = mat->metallic;
-                float p_transmission = mat->transmission * (1.0f - mat->metallic);
+                float p_specular = sampledMat->metallic;
+                float p_transmission = sampledMat->transmission * (1.0f - sampledMat->metallic);
                 float p_diffuse = 1.0f - (p_specular + p_transmission);
                 // probabilites should add up to 1
 
@@ -466,7 +464,7 @@ void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) co
     }
 }
 
-void CPUPT::restirDirectLighting(Ray &ray, Material* sampledMat, int x, int y) const {
+void CPUPT::restirDirectLighting(Ray &ray, Material *sampledMat, int x, int y) const {
     Reservoir reservoir = {};
     reservoirReSTIR[y * internalResX + x] = reservoir;
     if (emissiveObjects.size() == 0) return;
@@ -536,7 +534,8 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
             if (config.ReSTIR) {
                 Reservoir currentReservoir = reservoirReSTIR[y * internalResX + x];
 
-                if (currentReservoir.hitMat != nullptr) { //
+                if (currentReservoir.hitMat != nullptr) {
+                    //
 
                     // Evaluate visibility for initial candidates
                     // Shadow ray test
@@ -624,7 +623,7 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                         float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
 
                         Vector3 finalContribution = BRDF_x * Le * G;
-                        float targetPDF =  Vector3::length(BRDF_x * Le * G);
+                        float targetPDF = Vector3::length(BRDF_x * Le * G);
                         float finalWeight = (currentReservoir.weightSum / currentReservoir.sampleCount) / targetPDF;
 
                         // Update un-normalised buffer
@@ -779,15 +778,25 @@ void CPUPT::debugRay(int screenX, int screenY) {
     std::cout << "----------------------------" << std::endl;
     std::cout << "New Ray:" << std::endl;
 
-    for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
+    for (int currentBounce = 0; currentBounce <= 6; currentBounce++) {
+        std::cout << "----------------------------" << std::endl;
+        std::cout << "Bounce: "<<currentBounce << std::endl;
         // Intersect scene using BVH
         BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
+        ray.setTriangle(leafNode.triangle);
+        ray.getBCoords().set(leafNode.bCoords);
         if (leafNode.node == nullptr || !leafNode.node->getLeaf()) {
             // Ray intersects nothing, break
             break;
         }
 
         // Move the ray to the exact hit point
+        if (ray.getInternal()) std::cout<<"Ray Internal"<<std::endl;
+        else std::cout<<"Ray External"<<std::endl;
+
+        std::cout<<"Distance Close: "<<leafNode.close<<std::endl;
+        std::cout<<"Distance Far: "<<leafNode.far<<std::endl;
+
         SceneObject *hitObject = leafNode.node->getSceneObject();
         if (!ray.getInternal()) {
             // outside of an object - march to entry
@@ -801,10 +810,11 @@ void CPUPT::debugRay(int screenX, int screenY) {
         ray.getOrigin().set(ray.getPos()); // Set new ray origin
         ray.setHitObject(hitObject);
 
-        // Grab the material
-        Material *mat = hitObject->getMaterial();
+        std::cout<<"Surface normal: ";
+        ray.getNormal().print();
+
         // Compute material properties at the hitpoint (mesh objects)
-        Material* sampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+        Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
 
         // -------------------------------------------------------------
         // ReSTIR Direct Illumination (first bounce only)
@@ -812,7 +822,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         if (currentBounce == 0 && config.ReSTIR) {
             delete reservoirReSTIR[y * internalResX + x].hitMat;
-            Material* ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, mat, hitObject);
+            Material *ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, sampledMat, hitObject);
             restirDirectLighting(ray, ReSTIRsampledMat, x, y);
         }
 
@@ -821,8 +831,8 @@ void CPUPT::debugRay(int screenX, int screenY) {
         // -------------------------------------------------------------
         // 1) Sample new direction: reflection or refraction and compute BRDF and PDF
         float randomSample = dist(rng);
-        float p_specular = mat->metallic;
-        float p_transmission = mat->transmission * (1.0f - mat->metallic);
+        float p_specular = sampledMat->metallic;
+        float p_transmission = sampledMat->transmission * (1.0f - sampledMat->metallic);
         float p_diffuse = 1.0f - (p_specular + p_transmission);
         // probabilites should add up to 1
 
@@ -880,7 +890,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
         throughput = throughput * newThroughput;
 
         // 3) Update colour
-        finalColour = finalColour + throughput * (mat->colour * mat->emission);
+        finalColour = finalColour + throughput * (sampledMat->colour * sampledMat->emission);
         finalColour.sanitize();
         delete sampledMat;
 

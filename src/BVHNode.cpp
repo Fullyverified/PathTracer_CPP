@@ -28,7 +28,7 @@ BVHNode::~BVHNode() {
     }
     if (nodeRight) {
         delete nodeRight;
-        nodeRight;
+        nodeRight = nullptr;
     }
     if (boundingBox) {
         delete boundingBox;
@@ -41,33 +41,33 @@ BVHNode::~BVHNode() {
     }
 }
 
-struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
+BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
 
     if (!isLeaf) {
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray); // check node bounding box
         if (!(bboxDistance.first <= bboxDistance.second && bboxDistance.second >= 0)) {
-            return {nullptr, -1.0f, -1.0f}; // ray does not intersect at all
+            return {nullptr, -1.0f, -1.0f, nullptr}; // ray does not intersect at all
         }
     }
     // only return the node if the ray actually points at the object itself
 
     if (isLeaf) {
         if (!sceneObject->isMesh()) { // skip final bounding box for primatives
-            std::pair<float, float> distanceObj = sceneObject->getIntersectionDistance(ray);
-            if (distanceObj.first <= distanceObj.second && distanceObj.second >= 0) {
-                return {this, distanceObj.first, distanceObj.second};
+            Intersection result = sceneObject->getIntersectionDistance(ray);
+            if (result.close <= result.far && result.far >= 0) {
+                return {this, result.close, result.far, nullptr, {0}};
             }
             return {nullptr, -1.0f, -1.0f}; // early exit
         }
 
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray); // check node bounding box for mesh objects
         if (!(bboxDistance.first <= bboxDistance.second && bboxDistance.second >= 0)) {
-            return {nullptr, -1.0f, -1.0f}; // ray does not intersect at all
+            return {nullptr, -1.0f, -1.0f, nullptr}; // ray does not intersect at all
         }
         if (sceneObject->isMesh()) {
-            std::pair<float, float> distanceObj = sceneObject->getIntersectionDistance(ray);
-            if (distanceObj.first <= distanceObj.second && distanceObj.second >= 0) {
-                return {this, distanceObj.first, distanceObj.second};
+            Intersection result = sceneObject->getIntersectionDistance(ray);
+            if (result.close >= 0) {
+                return {this, result.close, result.far, result.triangle, result.bCoords};
             }
             return {nullptr, -1.0f, -1.0f}; // early exit
         }
@@ -91,7 +91,7 @@ struct BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
     return (hitLeft.node != nullptr) ? hitLeft : hitRight; // one is null, return the other
 }
 
-struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObject::Transform &transform) {
+MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, const MeshObject* meshObject) {
 
     //std::cout<<"Searching Mesh Tree"<<std::endl;
 
@@ -100,23 +100,23 @@ struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObj
 
         if (!(bboxDistance.first <= bboxDistance.second && bboxDistance.second >= 0)) {
             //std::cout << "returning nullptr"<<std::endl;
-            return {nullptr, -1.0f, 1.0f}; // ray does not intersect at all
+            return {nullptr, -1.0f, nullptr, {0}}; // ray does not intersect at all
         }
     }
 
     if (isLeaf) {
         // only return the node if the ray actually points at the object itself
         //std::cout << "Is leaf"<<std::endl;
-        MeshObject::meshIntersection meshIntersection = transform.meshObject->intersectTriangles(ray, this);
+        MeshObject::meshIntersection meshIntersection = meshObject->intersectTriangles(ray, this);
         if (meshIntersection.close != -1.0f) {
-            return {this, meshIntersection.close, meshIntersection.close, meshIntersection.triangle, meshIntersection.bcoords};
+            return {this, meshIntersection.close, meshIntersection.triangle, meshIntersection.bcoords};
         }
-        return {nullptr, -1.0f, -1.0f}; // early exit
+        return {nullptr, -1.0f, nullptr, {0}}; // early exit
     }
 
     //std::cout <<"Determining left and right nodes"<<std::endl;
-    MeshObject::meshIntersection hitLeft = nodeLeft == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f) : nodeLeft->searchBVHTreeMesh(ray, transform);
-    MeshObject::meshIntersection hitRight = nodeRight == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, -1.0f) : nodeRight->searchBVHTreeMesh(ray, transform);
+    MeshObject::meshIntersection hitLeft = nodeLeft == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, nullptr, {1.0f}) : nodeLeft->searchBVHTreeMesh(ray, meshObject);
+    MeshObject::meshIntersection hitRight = nodeRight == nullptr ? MeshObject::meshIntersection(nullptr, -1.0f, nullptr, {1.0f}) : nodeRight->searchBVHTreeMesh(ray, meshObject);
 
     if (hitLeft.node != nullptr && hitRight.node != nullptr) {
         // both valid nodes
@@ -127,7 +127,7 @@ struct MeshObject::meshIntersection BVHNode::searchBVHTreeMesh(Ray &ray, MeshObj
     if (hitLeft.node == nullptr && hitRight.node == nullptr) {
         // both nullptr
         //std::cout <<"Both null"<<std::endl;
-        return {nullptr, -1.0f, -1.0f};
+        return {nullptr, -1.0f, nullptr, {0}};
     }
 
     //std::cout <<"One null, returning other"<<std::endl;
