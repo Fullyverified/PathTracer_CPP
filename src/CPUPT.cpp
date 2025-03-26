@@ -266,7 +266,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             Ray ray;
             ray.reset();
             // Camera (primary) ray origin:
-            ray.getOrigin().set(camera.getPos());
+            ray.getPos().set(camera.getPos());
             ray.getPos().set(camera.getPos());
 
             // Jitter the pixel position for MSAA effect
@@ -287,9 +287,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 float lensU = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
                 float lensV = ((static_cast<float>(rand()) / RAND_MAX) - 0.5f) * 2.0f * config.apertureRadius;
                 Vector3 lensOffset = camera.getRight() * lensU + camera.getUp() * lensV;
-                ray.getOrigin().set(camera.getPos() + lensOffset);
                 ray.getPos().set(camera.getPos() + lensOffset);
-                ray.getDir().set(focalPoint - ray.getOrigin());
+                ray.getPos().set(camera.getPos() + lensOffset);
+                ray.getDir().set(focalPoint - ray.getPos());
                 ray.getDir().normalise();
             }
 
@@ -325,7 +325,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 }
 
                 hitObject->getNormal(ray); // sets ray.getNormal()
-                ray.getOrigin().set(ray.getPos()); // Set new ray origin
+                //ray.getOrigin().set(ray.getPos()); // Set new ray origin
                 ray.setHitObject(hitObject);
 
                 // Compute material properties at the hitpoint (mesh objects)
@@ -437,7 +437,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 // Prepare for next bounce
                 ray.getDir().set(wi);
-                ray.updateOrigin(0.01);
+                ray.march(0.01);
             } // end for bounceDepth
 
             // -------------------------------------------------------------
@@ -535,10 +535,7 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                 Reservoir currentReservoir = reservoirReSTIR[y * internalResX + x];
 
                 if (currentReservoir.hitMat != nullptr) {
-                    //
-
                     // Evaluate visibility for initial candidates
-                    // Shadow ray test
                     Vector3 wi = currentReservoir.candidatePosition - currentReservoir.rayPos;
                     float distToLight = Vector3::length(wi);
                     Vector3::normalise(wi);
@@ -546,9 +543,28 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                     shadowRay.march(0.01f);
                     BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
                     if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || !(
-                            shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
+                            shadowResult.close < distToLight + 0.01f && shadowResult.close > distToLight - 0.01f)) {
                         // not visible
                         currentReservoir.weightSum = 0.0f;
+                    }
+
+                    //if (x == 161 && y == 129) {
+                    if (x == 124 && y == 131) {
+                        std::cout<<"---------------------"<<std::endl;
+                        std::cout<<"hitPos: ";
+                        currentReservoir.rayPos.print();
+                        std::cout<<"sampled Point: ";
+                        currentReservoir.candidatePosition.print();
+                        std::cout<<"direction: ";
+                        wi.print();
+                        std::cout<<"actual dist to light: "<<distToLight<<std::endl;
+                        std::cout<<"result close: "<<shadowResult.close<<", result far: "<<shadowResult.far<<std::endl;
+                        if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || !(
+                            shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) std::cout<<"Occluded"<<std::endl;
+                        else std::cout<<"Visible"<<std::endl;
+                        if (shadowResult.node != nullptr && shadowResult.node->getLeaf() && shadowResult.node->getSceneObject() != nullptr) {
+                            shadowResult.node->getSceneObject()->printType();
+                        }
                     }
 
                     // Temporal Resampling
@@ -720,7 +736,7 @@ SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
     ray.setDebugTrue(); // for debug
     // Camera (primary) ray origin:
 
-    ray.getOrigin().set(camera->getPos());
+    ray.getPos().set(camera->getPos());
     ray.getPos().set(camera->getPos());
 
     // Jitter the pixel position for MSAA
@@ -747,8 +763,15 @@ SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
 }
 
 void CPUPT::debugRay(int screenX, int screenY) {
+
     int x = screenX / upScale;
     int y = screenY / upScale;
+    std::cout<<"X: "<<x<<", Y: "<<y<<std::endl;
+
+    // print reservoir debuf info
+    Reservoir debugReservoir = reservoirReSTIR[y * internalResX + x];
+    std::cout<<"Normal in reservoir = ";
+    debugReservoir.n.print();
 
     // Ray cast to find clicked object
     Ray ray;
@@ -756,7 +779,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
     ray.setDebugTrue();
     // Camera (primary) ray origin:
 
-    ray.getOrigin().set(camera->getPos());
+    ray.getPos().set(camera->getPos());
     ray.getPos().set(camera->getPos());
 
     // Jitter the pixel position for MSAA
@@ -778,7 +801,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
     std::cout << "----------------------------" << std::endl;
     std::cout << "New Ray:" << std::endl;
 
-    for (int currentBounce = 0; currentBounce <= 6; currentBounce++) {
+    for (int currentBounce = 0; currentBounce <= 0; currentBounce++) {
         std::cout << "----------------------------" << std::endl;
         std::cout << "Bounce: "<<currentBounce << std::endl;
         // Intersect scene using BVH
@@ -807,7 +830,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
         }
 
         hitObject->getNormal(ray); // sets ray.getNormal()
-        ray.getOrigin().set(ray.getPos()); // Set new ray origin
+        ray.getPos().set(ray.getPos()); // Set new ray origin
         ray.setHitObject(hitObject);
 
         std::cout<<"Surface normal: ";
@@ -913,7 +936,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // Prepare for next bounce
         ray.getDir().set(wi);
-        ray.updateOrigin(0.01);
+        ray.march(0.01);
     } // end for bounceDepth
 
     // -------------------------------------------------------------

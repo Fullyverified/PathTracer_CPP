@@ -240,43 +240,16 @@ void UI::renderSettings() {
     camDir = sceneObjectManager->getCamera()->getDir();
     ImGui::Text("Camera Settings");
     ImGui::Text("Position");
-    // X Axis
-    if (ImGui::InputFloat2("##CamPos X", &camPos.x, "X %.3f")) {
+    if (ImGui::InputFloat3("##CamPos", &camPos.x, "%.3f")) {
         camUpdate = true;
         sceneObjectManager->getCamera()->getPos().set(camPos);
     }
-    ImGui::SameLine();
-    // Y Axis
-    if (ImGui::InputFloat2("##CamPos Y", &camPos.y, "Y %.3f")) {
-        camUpdate = true;
-        sceneObjectManager->getCamera()->getPos().set(camPos);
-    }
-    ImGui::SameLine();
-    // Z Axis
-    if (ImGui::InputFloat2("##CamPos Z", &camPos.z, "Z %.3f")) {
-        camUpdate = true;
-        sceneObjectManager->getCamera()->getPos().set(camPos);
-    }
-
     ImGui::Text("Direction");
     // X Axis
-    if (ImGui::InputFloat2("##CamDir X", &camDir.x, "X %.3f")) {
+    if (ImGui::InputFloat3("##CamDir", &camDir.x, "%.3f")) {
         camUpdate = true;
         sceneObjectManager->getCamera()->getDir().set(camDir);
     }
-    ImGui::SameLine();
-    // Y Axis
-    if (ImGui::InputFloat2("##CamDir Y", &camDir.y, "Y %.3f")) {
-        camUpdate = true;
-        sceneObjectManager->getCamera()->getDir().set(camDir);
-    }
-    ImGui::SameLine();
-    // Z Axis
-    if (ImGui::InputFloat2("##CamDir Z", &camDir.z, "Z %.3f")) {
-        camUpdate = true;
-        sceneObjectManager->getCamera()->getDir().set(camDir);
-    }
-
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x); // Set width to the available space
     if (ImGui::SliderFloat("##fOV", &fOV, 1, 180, "fOV %.3f")) {
         camUpdate = true;

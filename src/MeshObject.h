@@ -5,6 +5,7 @@
 #include "Triangle.h"
 #include "Vector3.h"
 #include "LoadMesh.h"
+#include "Matrix4x4.h"
 
 class BVHNode;
 
@@ -25,11 +26,11 @@ public:
     void computeArea() override;
     [[nodiscard]] MeshObject::meshIntersection intersectTriangles(Ray &ray, BVHNode* leafNode) const;
     [[nodiscard]] Vector3 getPos() const override {return pos;}
-    void setPos(Vector3 newPos) override {pos = newPos;}
+    void setPos(Vector3 newPos) override {pos = newPos; updateMatrix();}
     [[nodiscard]] Vector3 getDir() const override {return dir;}
-    void setDir(Vector3 newDir) override {dir = newDir;}
+    void setDir(Vector3 newDir) override {dir = newDir; updateMatrix();}
     [[nodiscard]] Vector3 getScale() const override {return scale;}
-    void setScale(Vector3 newScale) override {scale = newScale;}
+    void setScale(Vector3 newScale) override {scale = newScale; updateMatrix();}
     [[nodiscard]] Material* getMaterial() const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;
@@ -40,6 +41,13 @@ public:
     [[nodiscard]] int getObjID() const override;
     [[nodiscard]] bool isMesh() const override {return true;}
     [[nodiscard]] BVHNode* getMeshNode() const override {return loadedMesh->getRootNode();}
+
+    Matrix4x4 getInvTransform() const override {
+        //return invTransform;
+        return Matrix4x4();
+    };
+
+    void updateMatrix();
 
     MeshObject(const MeshObject& other) = delete; // disable copy constructor
     MeshObject& operator=(const MeshObject& other) = delete; // disable copy assignment
@@ -54,11 +62,6 @@ public:
             ray.getPos().set(ray.getPos() / scale);
             ray.getDir().set(ray.getDir() / scale);
         }
-        void rayToWorld(Ray &ray) {
-            ray.getDir().set(ray.getDir() * scale);
-            ray.getPos().set(ray.getPos() * scale);
-            ray.getPos().set(ray.getPos() + pos); // transform ray to world space
-        }
     };
 
 private:
@@ -68,6 +71,9 @@ private:
     std::pair<Vector3, Vector3> bounds;
     std::vector<Triangle*> triangles;
     LoadMesh* loadedMesh;
+
+    //Matrix4x4 transform;
+    //Matrix4x4 invTransform;
 };
 
 

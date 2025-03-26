@@ -32,8 +32,7 @@ public:
     [[nodiscard]] bool isMesh() const override {return false;}
     [[nodiscard]] BVHNode* getMeshNode() const override {return nullptr;}
 
-
-
+    Matrix4x4 getInvTransform() const override {return Matrix4x4();};
 
     void updateBounds();
 

@@ -29,6 +29,8 @@ public:
     [[nodiscard]] bool isMesh() const override {return false;}
     [[nodiscard]] BVHNode* getMeshNode() const override {return nullptr;}
 
+    Matrix4x4 getInvTransform() const override {return Matrix4x4();};
+
     Sphere(const Sphere& other) = delete; // disable copy constructor
     Sphere& operator=(const Sphere& other) = delete; // disable copy assignment
 

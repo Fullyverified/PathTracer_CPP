@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Vector3.h"
+#include "Matrix4x4.h"
 #include "Ray.h"
 #include "Material.h"
 
@@ -37,6 +38,8 @@ public:
     [[nodiscard]] virtual std::string getType() const = 0;
     [[nodiscard]] virtual bool isMesh() const = 0;
     [[nodiscard]] virtual BVHNode* getMeshNode() const = 0;
+
+    virtual Matrix4x4 getInvTransform() const = 0;
 
     virtual ~SceneObject() = default; // deconstructor
 private:

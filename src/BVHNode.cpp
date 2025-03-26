@@ -3,6 +3,7 @@
 #include "BoundingBox.h"
 #include "MeshObject.h"
 #include "SceneObject.h"
+#include "Matrix4x4.h"
 
 // leaf node for scene objects
 BVHNode::BVHNode(BoundingBox *boundingBox, SceneObject &sceneObject) : boundingBox(boundingBox), sceneObject(&sceneObject),
@@ -59,6 +60,12 @@ BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
             }
             return {nullptr, -1.0f, -1.0f}; // early exit
         }
+
+        // transform to object space HERE
+        // transform back out before returning
+        //Vector3 rayOriginOS = sceneObject->getInvTransform().MultiplyPoint(ray.getPos());
+        //Vector3 rayDirOS = sceneObject->getInvTransform().MultiplyVector(ray.getDir());
+        //Ray rayOS(rayOriginOS, rayDirOS);
 
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray); // check node bounding box for mesh objects
         if (!(bboxDistance.first <= bboxDistance.second && bboxDistance.second >= 0)) {

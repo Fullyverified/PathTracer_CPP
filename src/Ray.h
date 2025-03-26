@@ -19,8 +19,6 @@ public:
     void march(const float& distance);
     void updateOrigin(const float& distance);
     [[nodiscard]] Vector3& getPos() { return pos; }
-    [[nodiscard]] Vector3& getOrigin() { return origin; }
-    void setOrigin(Vector3& origin) {this->origin = origin;}
     [[nodiscard]] Vector3& getDir() { return dir; }
     [[nodiscard]] Vector3& getNormal() { return normal; }
     void setHitObject(SceneObject *hitObject) { this->sceneObject = hitObject; }
@@ -41,7 +39,6 @@ public:
     }
 
     void reset() {
-        origin = {0, 0, 0};
         pos = {0, 0, 0};
         dir = {0, 0, 0};
         normal = {0, 0, 0};
@@ -53,8 +50,7 @@ public:
     }
 
     void initialize(Ray other) {
-        origin = other.origin;
-        pos = other.origin;
+        pos = other.pos;
         dir = other.dir;
         normal = other.normal;
         bCoords = other.bCoords;
@@ -62,11 +58,11 @@ public:
         internal = other.internal;
     }
 
-private:
-    Vector3 origin, pos, dir, normal, bCoords;
+    Vector3 pos, dir, normal, bCoords;
     bool hit, internal, debug;
     SceneObject* sceneObject;
     Triangle* triangle;
+private:
 };
 
 

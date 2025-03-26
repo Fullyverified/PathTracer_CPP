@@ -39,7 +39,6 @@ public:
         if (event.type == SDL_MOUSEBUTTONUP) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!UI::isWindowHovered) {
-                    std::cout<<"X: "<<event.button.x<<", Y: "<<event.button.y<<std::endl;
                     getClickedObject(event.button.x, event.button.y);
                     debugRay(event.button.x, event.button.y);
                 }

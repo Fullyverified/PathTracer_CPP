@@ -10,6 +10,8 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
 
     triangles = loadedMesh->getTriangles();
     bounds = loadedMesh->getBounds();
+
+    //updateMatrix();
 }
 
 void MeshObject::getNormal(Ray &ray) const {
@@ -31,11 +33,15 @@ Vector3 MeshObject::getNormal(Vector3 sampledPos) const {
 }
 
 Intersection MeshObject::getIntersectionDistance(Ray &ray) const {
-    Transform transform = {pos, dir, scale};
-    transform.rayToObj(ray); // transform ray to object space
+    // Save original pos and dir
+    Vector3 rayDir = ray.dir;
+    Vector3 rayPos = ray.pos;
 
+    Transform transform = {pos, dir, scale};
+    //transform.rayToObj(ray); // transform ray to object space
     meshIntersection result = getMeshNode()->searchBVHTreeMesh(ray, this);
-    transform.rayToWorld(ray); // revert transformation
+    ray.dir = rayDir; // revert transformation
+    ray.pos = rayPos;
 
     return {result.close, result.close, result.triangle, result.bcoords};
 }
@@ -56,9 +62,11 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
         Vector3 v2 = triangle->v2;
 
         // Apply position and scale transformations
+        // Apply position and scale transformations
         v0 = (v0 + pos) / scale;
         v1 = (v1 + pos) / scale;
         v2 = (v2 + pos) / scale;
+
 
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
@@ -70,7 +78,7 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
         }
 
         float f = 1.0f / a;
-        Vector3 s = ray.getOrigin() - v0;
+        Vector3 s = ray.getPos() - v0;
         float u = f * s.dot(h);
 
         if (u < 0.0 || u > 1.0) {
@@ -140,6 +148,13 @@ void MeshObject::computeArea() {
         total += 0.5f * crossProduct.length();
     }
     area = total;
+}
+
+void MeshObject::updateMatrix() {
+    /*transform = Matrix4x4::translate(pos) *
+                      //Matrix4x4::rotateY(rot.y) *
+                      Matrix4x4::scale(scale);
+    invTransform = transform.inverse();*/
 }
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {

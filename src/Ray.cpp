@@ -3,30 +3,23 @@
 
 #include "SceneObject.h"
 
-Ray::Ray(Vector3 origin, Vector3 dir) : origin(origin), dir(dir), pos(origin), normal(0, 0, 0),
+Ray::Ray(Vector3 origin, Vector3 dir) : dir(dir), pos(origin), normal(0, 0, 0),
                                         hit(false), sceneObject(nullptr), bCoords(0,0,0), internal(false) {
 }
 
-Ray::Ray(Vector3 origin) : origin(origin), dir(0, 0, 0), pos(origin), normal(0, 0, 0), hit(false),
+Ray::Ray(Vector3 origin) : dir(0, 0, 0), pos(origin), normal(0, 0, 0), hit(false),
 sceneObject(nullptr), bCoords(0,0,0), internal(false) {
 
 }
 
-Ray::Ray():  origin(0,0,0), dir(0, 0, 0), pos(origin), normal(0, 0, 0), hit(false),
+Ray::Ray(): dir(0, 0, 0), pos(0, 0, 0), normal(0, 0, 0), hit(false),
 sceneObject(nullptr), bCoords(0,0,0), internal(false) {
 }
 
 void Ray::march(const float &distance) {
-    pos.setX(origin.getX() + (dir.getX() * distance));
-    pos.setY(origin.getY() + (dir.getY() * distance));
-    pos.setZ(origin.getZ() + (dir.getZ() * distance));
-}
-
-void Ray::updateOrigin(const float &distance) {
-    origin.setX(origin.getX() + (dir.getX() * distance));
-    origin.setY(origin.getY() + (dir.getY() * distance));
-    origin.setZ(origin.getZ() + (dir.getZ() * distance));
-    pos.set(origin);
+    pos.setX(pos.getX() + (dir.getX() * distance));
+    pos.setY(pos.getY() + (dir.getY() * distance));
+    pos.setZ(pos.getZ() + (dir.getZ() * distance));
 }
 
 //Vector3& Ray::getPos() { return pos; }
