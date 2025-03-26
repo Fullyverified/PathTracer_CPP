@@ -63,9 +63,9 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
         // Apply position and scale transformations
         // Apply position and scale transformations
-        v0 = (v0 + pos) / scale;
+        /*v0 = (v0 + pos) / scale;
         v1 = (v1 + pos) / scale;
-        v2 = (v2 + pos) / scale;
+        v2 = (v2 + pos) / scale;*/
 
 
         Vector3 edge1 = v1 - v0;
@@ -159,7 +159,7 @@ void MeshObject::updateMatrix() {
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
     auto bounds = loadedMesh->getBounds();
-    return {(bounds.first + pos) * scale, (bounds.second + pos) * scale};
+    return {bounds.first - pos, bounds.second - pos};
 }
 
 int MeshObject::getObjID() const {

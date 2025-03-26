@@ -548,25 +548,6 @@ void CPUPT::restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int
                         currentReservoir.weightSum = 0.0f;
                     }
 
-                    //if (x == 161 && y == 129) {
-                    if (x == 124 && y == 131) {
-                        std::cout<<"---------------------"<<std::endl;
-                        std::cout<<"hitPos: ";
-                        currentReservoir.rayPos.print();
-                        std::cout<<"sampled Point: ";
-                        currentReservoir.candidatePosition.print();
-                        std::cout<<"direction: ";
-                        wi.print();
-                        std::cout<<"actual dist to light: "<<distToLight<<std::endl;
-                        std::cout<<"result close: "<<shadowResult.close<<", result far: "<<shadowResult.far<<std::endl;
-                        if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || !(
-                            shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) std::cout<<"Occluded"<<std::endl;
-                        else std::cout<<"Visible"<<std::endl;
-                        if (shadowResult.node != nullptr && shadowResult.node->getLeaf() && shadowResult.node->getSceneObject() != nullptr) {
-                            shadowResult.node->getSceneObject()->printType();
-                        }
-                    }
-
                     // Temporal Resampling
                     // WIP
 

@@ -12,6 +12,7 @@ void BVH::constructBVHST(const std::vector<SceneObject *> &sceneObjectsList) {
         sceneObject->computeArea();
         std::pair<Vector3, Vector3> bounds = sceneObject->getBounds();
         BoundingBox *boundingBox = new BoundingBox(bounds.first, bounds.second);
+
         BVHNodes.emplace_back(new BVHNode(boundingBox, *sceneObject));
         BVHNodes.at(BVHNodes.size() - 1)->setLeaf(true);
     }

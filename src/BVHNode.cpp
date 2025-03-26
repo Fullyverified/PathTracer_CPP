@@ -61,18 +61,17 @@ BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
             return {nullptr, -1.0f, -1.0f}; // early exit
         }
 
-        // transform to object space HERE
-        // transform back out before returning
-        //Vector3 rayOriginOS = sceneObject->getInvTransform().MultiplyPoint(ray.getPos());
-        //Vector3 rayDirOS = sceneObject->getInvTransform().MultiplyVector(ray.getDir());
-        //Ray rayOS(rayOriginOS, rayDirOS);
 
         std::pair<float, float> bboxDistance = boundingBox->getIntersectionDistance(ray); // check node bounding box for mesh objects
         if (!(bboxDistance.first <= bboxDistance.second && bboxDistance.second >= 0)) {
             return {nullptr, -1.0f, -1.0f, nullptr}; // ray does not intersect at all
         }
         if (sceneObject->isMesh()) {
-            Intersection result = sceneObject->getIntersectionDistance(ray);
+            //Vector3 rayOriginOS = sceneObject->getInvTransform().MultiplyPoint(ray.getPos());
+            //Vector3 rayDirOS = sceneObject->getInvTransform().MultiplyVector(ray.getDir());
+            // transform to object space
+            Ray rayOS(ray.getPos() + sceneObject->getPos(), ray.getDir());
+            Intersection result = sceneObject->getIntersectionDistance(rayOS);
             if (result.close >= 0) {
                 return {this, result.close, result.far, result.triangle, result.bCoords};
             }

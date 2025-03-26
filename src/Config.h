@@ -13,9 +13,9 @@ struct Config {
     // Multiple Importance Sampling
     int raysPerPixel = 1;
     int minBounces = 0;
-    int maxBounces = 6;
+    int maxBounces = 0;
     // ReSTIR
-    bool ReSTIR = false;
+    bool ReSTIR = true;
     bool unbiased = true;
     int candidateSamples = 8;
     int sampleRadius = 2;
