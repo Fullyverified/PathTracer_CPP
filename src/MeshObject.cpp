@@ -5,6 +5,7 @@
 #include "BVHNode.h"
 #include "Vector3.h"
 #include "Ray.h"
+#include "Matrix3x3.h"
 
 MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material) :
 pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
@@ -18,14 +19,17 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
 
 void MeshObject::getNormal(Ray &ray) const {
 
-
-
     Vector3 bCoords = ray.getBCoords();
     const Triangle* triangle = ray.getTriangle();
     float u = bCoords.x;
     float v = bCoords.y;
     float w = bCoords.z;
 
+    Vector3 v0 = triangle->v0;
+    Vector3 v1 = triangle->v1;
+    Vector3 v2 = triangle->v2;
+    Vector3 edge1 = v1 - v0;
+    Vector3 edge2 = v2 - v0;
     if (material->normalMap != nullptr && loadedMesh->isTexCoords()) { // interpolate normal from triangle data
         // read normal from normal map
         Vector2 uv0 = triangle->uv0;
@@ -35,7 +39,7 @@ void MeshObject::getNormal(Ray &ray) const {
         Vector2 uvCoord = uv0 * w + uv1 * u + uv2 * v;
 
         SDL_Surface* normalMap = material->normalMap;
-        Vector3 normal;
+        Vector3 normalTS;
         int x = static_cast<int>(uvCoord.x * (normalMap->w - 1));
         int y = static_cast<int>((1.0f - uvCoord.y) * (normalMap->h - 1));
 
@@ -47,10 +51,27 @@ void MeshObject::getNormal(Ray &ray) const {
 
         Uint8 r, g, b;
         SDL_GetRGB(pixel, normalMap->format, &r, &g, &b);
-        normal = Vector3((int)r, (int)g, (int)b);
-        normal /= 255.0f;
-        normal = normal * 2.0f - 1.0f;
-        ray.getNormal().set(normal);
+        normalTS = Vector3((int)r, (int)g, (int)b);
+        normalTS /= 255.0f;
+        normalTS = normalTS * 2.0f - 1.0f;
+        // convert from tangent space to world space
+        // compute tangent and bitangent
+        Vector2 deltaUV1 = uv1 - uv0;
+        Vector2 deltaUV2 = uv2 - uv0;
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        Vector3 tangent = f * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
+        Vector3 bitangent = f * (-deltaUV2.x * edge1 + deltaUV1.x * edge2);
+        tangent.normalise();
+        bitangent.normalise();
+
+        // Compute normal from geometry
+        Vector3 faceNormal = edge1.cross(edge2);
+        faceNormal.normalise();
+
+        Matrix3x3 TBN(tangent, bitangent, faceNormal);
+
+        Vector3 normalWS = TBN * normalTS;
+        ray.getNormal().set(normalWS);
         ray.getNormal().normalise();
         return;
     }
@@ -61,9 +82,7 @@ void MeshObject::getNormal(Ray &ray) const {
         return;
     }
 
-    // fall back, compute normal from scratch
-    Vector3 edge1 = triangle->v1 - triangle->v0;
-    Vector3 edge2 = triangle->v2 -triangle->v0;
+    // fall back, use normal computed from face geometry// Compute normal from geometry
     Vector3 faceNormal = edge1.cross(edge2);
     faceNormal.normalise();
     ray.getNormal().set(faceNormal);

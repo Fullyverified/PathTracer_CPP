@@ -101,9 +101,12 @@ public:
         materials["RoughPlastic"] = new Material{"RoughPlastic", Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
         materials["RoughMetal"] = new Material{"RoughMetal", Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
 
+        // Mesh Object Textures
         materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Companion Cube"], nullptr, nullptr, emissive["Companion Cube"], nullptr};
         materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Weighted Cube"], nullptr, nullptr, emissive["Weighted Cube"], nullptr};
         materials["Button"] = new Material{"Button", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Button"]};
+        materials["Portal Gun"] = new Material{"Portal Gun", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Portal Gun"], roughness["Portal Gun"], metallic["Portal Gun"], nullptr, normal["Portal Gun"]};
+
     }
 
     void editMaterial(std::string& matName, Material& mat) {
@@ -154,6 +157,14 @@ public:
 
         emissive["Weighted Cube"] = createTexture("weighted_cube_emission.png");
         emissive["Companion Cube"] = createTexture("companion_cube_emission.png");
+
+        // portal gun
+        albedos["Portal Gun"] = createTexture("portal_gun_texture.png");
+        roughness["Portal Gun"] = createTexture("portal_gun_rough.png");
+        metallic["Portal Gun"] = createTexture("portal_gun_metallic.png");
+        emissive["Portal Gun"] = createTexture("portal_gun_emission.png");
+        normal["Portal Gun"] = createTexture("portal_gun_normal.png");
+
     }
 
     SDL_Surface* createTexture(std::string name) {
@@ -167,6 +178,7 @@ public:
         // Convert to a known pixel format (e.g. SDL_PIXELFORMAT_RGBA32)
         SDL_Surface* converted = SDL_ConvertSurfaceFormat(loaded, SDL_PIXELFORMAT_RGBA32, 0);
         SDL_FreeSurface(loaded); // Free the original loaded surface
+
         return converted;
     }
 
@@ -207,9 +219,9 @@ public:
             Uint32* pixels = (Uint32*)textureMap->pixels;
             Uint32 pixel = pixels[y * textureMap->w + x];
 
-            Uint8 r, g, b;
-            SDL_GetRGB(pixel, textureMap->format, &r, &g, &b);
-            texture = Vector3((int)r, (int)g, (int)b);
+            Uint8 r, g, b, a;
+            SDL_GetRGBA(pixel, textureMap->format, &r, &g, &b, &a);
+            texture = Vector3(r, g, b);
             texture /= 255.0f;
         }
 

@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, 10), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(4, 0, 10), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -112,6 +112,10 @@ public:
         stanfordDragon->load("StanfordDragon.obj");
         meshTypes["StanfordDragon"] = stanfordDragon;*/
 
+        LoadMesh* portalGun = new LoadMesh();
+        portalGun->load("portalGun.obj");
+        meshTypes["PortalGun"] = portalGun;
+
         refreshMeshNames();
     }
 
@@ -158,6 +162,7 @@ public:
         //sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
         sceneObjects.emplace_back(new MeshObject(Vector3(5, -2.5, 8.75), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Companion Cube"], materialManager->getMaterial("Weighted Cube"))); // companion cube
         sceneObjects.emplace_back(new MeshObject(Vector3(5, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["portalButton"], materialManager->getMaterial("Button"))); // companion cube
+        sceneObjects.emplace_back(new MeshObject(Vector3(5, -1.4, 8.45), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["PortalGun"], materialManager->getMaterial("Portal Gun"))); // companion cube
 
         // BOX 2
 

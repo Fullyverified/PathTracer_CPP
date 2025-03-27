@@ -105,6 +105,8 @@ add_executable(PathTracer_CPP
         src/ToneMapper.cpp
         src/ToneMapper.h
         src/Matrix4x4.h
+        src/Matrix3x3.h
+        src/Matrix3x3.h
 )
 
 # Link Vulkan and libraries
