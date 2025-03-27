@@ -11,7 +11,7 @@ BVH Acceleration
 Multithreading  
 PBR Materials  
 Meshes and Primitives  
-Texture, roughness, metallic and emission maps
+Normal, texture, roughness, metallic, emission maps  
 Extended Reinhard Tone Mapping  
 Controls - WASD and Mouse  
 Scene and Material Editor  
