@@ -16,6 +16,7 @@ struct Material {
     SDL_Surface* roughnessMap = nullptr;
     SDL_Surface* metallicMap = nullptr;
     SDL_Surface* emissionMap = nullptr;
+    SDL_Surface* normalMap = nullptr;
 };
 
 #endif //MATERIAL_H

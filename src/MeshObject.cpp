@@ -1,5 +1,7 @@
 #include "MeshObject.h"
 
+#include <algorithm>
+
 #include "BVHNode.h"
 #include "Vector3.h"
 #include "Ray.h"
@@ -15,15 +17,56 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
 }
 
 void MeshObject::getNormal(Ray &ray) const {
+
+
+
     Vector3 bCoords = ray.getBCoords();
     const Triangle* triangle = ray.getTriangle();
-
     float u = bCoords.x;
     float v = bCoords.y;
     float w = bCoords.z;
 
-    ray.getNormal().set((triangle->n0 * w + triangle->n1 * u + triangle->n2 * v));
-    ray.getNormal().normalise();
+    if (material->normalMap != nullptr && loadedMesh->isTexCoords()) { // interpolate normal from triangle data
+        // read normal from normal map
+        Vector2 uv0 = triangle->uv0;
+        Vector2 uv1 = triangle->uv1;
+        Vector2 uv2 = triangle->uv2;
+
+        Vector2 uvCoord = uv0 * w + uv1 * u + uv2 * v;
+
+        SDL_Surface* normalMap = material->normalMap;
+        Vector3 normal;
+        int x = static_cast<int>(uvCoord.x * (normalMap->w - 1));
+        int y = static_cast<int>((1.0f - uvCoord.y) * (normalMap->h - 1));
+
+        x = std::clamp(x, 0, normalMap->w - 1);
+        y = std::clamp(y, 0, normalMap->h - 1);
+
+        Uint32* pixels = (Uint32*)normalMap->pixels;
+        Uint32 pixel = pixels[y * normalMap->w + x];
+
+        Uint8 r, g, b;
+        SDL_GetRGB(pixel, normalMap->format, &r, &g, &b);
+        normal = Vector3((int)r, (int)g, (int)b);
+        normal /= 255.0f;
+        normal = normal * 2.0f - 1.0f;
+        ray.getNormal().set(normal);
+        ray.getNormal().normalise();
+        return;
+    }
+
+    if (loadedMesh->isVertexNormals()) { // interopolate normal from normal data stored in triangle
+        ray.getNormal().set((triangle->n0 * w + triangle->n1 * u + triangle->n2 * v));
+        ray.getNormal().normalise();
+        return;
+    }
+
+    // fall back, compute normal from scratch
+    Vector3 edge1 = triangle->v1 - triangle->v0;
+    Vector3 edge2 = triangle->v2 -triangle->v0;
+    Vector3 faceNormal = edge1.cross(edge2);
+    faceNormal.normalise();
+    ray.getNormal().set(faceNormal);
 }
 
 Vector3 MeshObject::getNormal(Vector3 sampledPos) const {
@@ -115,11 +158,9 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
 Vector3 MeshObject::samplePoint(float r1, float r2) const {
 
-    std::vector<Triangle*> tris = loadedMesh->getTriangles();
+    int triIndex = static_cast<int>(r1 * triangles.size());
 
-    int triIndex = static_cast<int>(r1 * tris.size());
-
-    Triangle* tri = tris[triIndex];
+    Triangle* tri = triangles[triIndex];
 
     float sqrtR = std::sqrt(r2);
     float u = 1.0f - sqrtR;
@@ -159,7 +200,7 @@ void MeshObject::updateMatrix() {
 
 std::pair<Vector3, Vector3> MeshObject::getBounds() {
     auto bounds = loadedMesh->getBounds();
-    return {bounds.first - pos, bounds.second - pos};
+    return {bounds.first + pos, bounds.second + pos};
 }
 
 int MeshObject::getObjID() const {

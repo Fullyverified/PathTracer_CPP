@@ -101,8 +101,8 @@ public:
         materials["RoughPlastic"] = new Material{"RoughPlastic", Vector3(1, 1, 1), 0.8, 0, 1, 0, 0};
         materials["RoughMetal"] = new Material{"RoughMetal", Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
 
-        materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Companion Cube"]};
-        materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Weighted Cube"]};
+        materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Companion Cube"], nullptr, nullptr, emissive["Companion Cube"], nullptr};
+        materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Weighted Cube"], nullptr, nullptr, emissive["Weighted Cube"], nullptr};
         materials["Button"] = new Material{"Button", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Button"]};
     }
 
@@ -151,6 +151,9 @@ public:
         albedos["Weighted Cube"] = createTexture("weighted_cube_texture.png");
         albedos["Companion Cube"] = createTexture("companion_cube_texture.png");
         albedos["Button"] = createTexture("button_texture.png");
+
+        emissive["Weighted Cube"] = createTexture("weighted_cube_emission.png");
+        emissive["Companion Cube"] = createTexture("companion_cube_emission.png");
     }
 
     SDL_Surface* createTexture(std::string name) {
@@ -281,6 +284,8 @@ private:
     std::unordered_map<std::string, SDL_Surface*> albedos;
     std::unordered_map<std::string, SDL_Surface*> roughness;
     std::unordered_map<std::string, SDL_Surface*> metallic;
+    std::unordered_map<std::string, SDL_Surface*> emissive;
+    std::unordered_map<std::string, SDL_Surface*> normal;
 
 };
 

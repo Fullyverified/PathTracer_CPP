@@ -12,7 +12,8 @@
 class LoadMesh {
 public:
 
-    LoadMesh() = default;
+    LoadMesh() : rootNode(nullptr), vertexNormals(false) {
+    }
 
     void load(const std::string& filename);
 
@@ -28,10 +29,15 @@ public:
     [[nodiscard]] BVHNode* getRootNode() {return rootNode;}
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds();
 
+    bool isVertexNormals();
+    bool isTexCoords();
+
 private:
     std::vector<Triangle*> triangles; // store the triangles
     Vector3 minBounds, maxBounds;
     BVHNode* rootNode;
+    bool vertexNormals;
+    bool texCoords;
 };
 
 #endif //LOADMESH_H

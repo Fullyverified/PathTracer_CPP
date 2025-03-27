@@ -24,6 +24,10 @@ void LoadMesh::load(const std::string &filename) {
         throw std::runtime_error(warn + err);
     }
 
+    // check vertex normals and tex coords
+    vertexNormals = !attrib.normals.empty();
+    texCoords = !attrib.texcoords.empty();
+
     // Process vertices, normals, and faces
     for (const auto &shape: shapes) {
         for (size_t f = 0; f < shape.mesh.indices.size() / 3; f++) {
@@ -265,4 +269,12 @@ void LoadMesh::numChildren(BVHNode* node, int &num) {
         //num++;
         numChildren(node->getNodeRight(), num);
     }
+}
+
+bool LoadMesh::isVertexNormals() {
+    return vertexNormals;
+}
+
+bool LoadMesh::isTexCoords() {
+    return texCoords;
 }

@@ -70,7 +70,7 @@ BVHNode::BVHResult BVHNode::searchBVHTreeScene(Ray &ray) {
             //Vector3 rayOriginOS = sceneObject->getInvTransform().MultiplyPoint(ray.getPos());
             //Vector3 rayDirOS = sceneObject->getInvTransform().MultiplyVector(ray.getDir());
             // transform to object space
-            Ray rayOS(ray.getPos() + sceneObject->getPos(), ray.getDir());
+            Ray rayOS(ray.getPos() - sceneObject->getPos(), ray.getDir());
             Intersection result = sceneObject->getIntersectionDistance(rayOS);
             if (result.close >= 0) {
                 return {this, result.close, result.far, result.triangle, result.bCoords};
