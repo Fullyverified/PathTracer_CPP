@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(4, 0, 10), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
