@@ -4,8 +4,9 @@ A CPU Path tracer.
 ![Colour Blending 3100 Rays MIS](https://github.com/user-attachments/assets/19cd37ab-0406-456b-93c2-407642312d4f)
 
 # Features  
-Multiple Importance Sampling (MIS)  
-ReSTIR (Temporal sampling to come)  
+BSDF Sampling  
+NEE (WIP)  
+ReSTIR (Temporal sampling to come) (WIP)  
 Russian Roulette Termination  
 BVH Acceleration  
 Multithreading  
