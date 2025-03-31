@@ -34,8 +34,6 @@ CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObje
     camera = systemManager->getSceneObjectManager()->getCamera();
 
     dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
-    spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
-    lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
 }
 
 void CPUPT::launchRenderThread() {
@@ -66,6 +64,8 @@ void CPUPT::renderLoop() {
     bvh.constructBVHST(sceneObjectsList);
     rootNode = bvh.getBVHNodes()[0];
     emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
+    spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
+    lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
 
     // render loop
     while (systemManager->getIsRunning()) {
@@ -436,7 +436,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // NEE Direct Lighting (every bounce, except ReSTIR bounces)
                 // -------------------------------------------------------------
 
-                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) finalColour += throughput * directLightingNEE(ray, sampledMat);;
+                //if (config.NEE && !(config.ReSTIR && currentBounce == 0)) finalColour += throughput * directLightingNEE(ray, sampledMat);
+                if (config.NEE) finalColour += throughput * directLightingNEE(ray, sampledMat);
 
                 delete sampledMat;
                 // -------------------------------------------------------------
@@ -466,6 +467,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 }
 
 Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
+
     if (emissiveObjects.size() == 0) return {0};
     Reservoir reservoir = {};
 
@@ -478,6 +480,7 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
     reservoir.hitMat = sampledMat;
 
     // M = config.lightSamples
+
     for (int i = 0; i < config.NEEsamples; i++) {
         reservoir.sampleCount++;
 
@@ -492,6 +495,7 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
         if (cosTheta_q == 0 || cosTheta_x == 0) continue; // light point is facing away or behind hit point
         // = hitBRDF * emission * (distance^2 * cosTheta)
         // Pq(x) = hitPoint BRDF
+
         Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(wo, wi, sampledMat, n);
         // G(x) = cosTheta(x) * (cosTheta(q) / (x - q)^2
         float G = (cosTheta_x * cosTheta_q) / (distToLight * distToLight);
@@ -526,6 +530,7 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
     if (reservoir.empty || reservoir.weightSum == 0) {
         return {0};
     }
+
 
     // Shadow ray test
     Vector3 wi = reservoir.candidatePosition - rayPos;
