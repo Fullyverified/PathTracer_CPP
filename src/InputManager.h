@@ -40,7 +40,7 @@ public:
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!UI::isWindowHovered) {
                     getClickedObject(event.button.x, event.button.y);
-                    debugRay(event.button.x, event.button.y);
+                    //debugRay(event.button.x, event.button.y);
                 }
             }
         }
@@ -67,7 +67,9 @@ public:
             lockMouse = true;
         }
 
-
+        if (inputState[SDL_SCANCODE_LSHIFT]) {
+            deltaTime *= 0.5f;
+        }
         if (inputState[SDL_SCANCODE_UP]) {
             config.increaeISO();
         }

@@ -9,7 +9,7 @@ void InputManager::getClickedObject(int x, int y) {
         UI::selectedObject = clickedObject;
         UI::materialKey = UI::selectedObject->getMaterial()->name;
     }
-    debugRay(x, y);
+    //debugRay(x, y);
 }
 
 void InputManager::debugRay(int x, int y) {

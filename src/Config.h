@@ -14,10 +14,13 @@ struct Config {
     int raysPerPixel = 1;
     int minBounces = 0;
     int maxBounces = 6;
+    bool BSDF = true;
+    bool NEE = true;
+    int NEEsamples = 3;
     // ReSTIR
     bool ReSTIR = false;
     bool unbiased = true;
-    int candidateSamples = 8;
+    int candidateSamples = 3;
     int sampleRadius = 2;
     int spatialSamplesK = 0;
     int temporalSampling = 0;

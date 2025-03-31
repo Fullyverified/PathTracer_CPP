@@ -32,6 +32,7 @@ public:
     [[nodiscard]] virtual Vector3 getNormal(Vector3 sampledPos) const = 0;
     [[nodiscard]] virtual std::pair<Vector3, Vector3> getBounds() = 0;
     [[nodiscard]] virtual Material* getMaterial() const = 0;
+    [[nodiscard]] virtual Material* getMaterial(Ray& ray) const = 0;
     virtual void setMaterial(Material* material) = 0;
     [[nodiscard]] virtual int getObjID() const = 0;
     virtual void printType() const = 0;

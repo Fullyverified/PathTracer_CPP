@@ -8,34 +8,32 @@ Vector3 DirectionSampler::RefractionDirection(Ray &ray, SceneObject &sceneObject
     Vector3 wi = ray.getDir();
     Vector3 N = ray.getNormal();
 
-    if (ray.getDebug()) {
+    /*if (ray.getDebug()) {
         std::cout<<"----------------------------"<<std::endl;
         std::cout<<"REFRACTION:"<<std::endl;
         std::cout<<"Ray Direction: ";
         wi.print();
         std::cout<<"Normal: ";
         N.print();
-    }
-
+    }*/
     float n1 = 1.0003f; // refractive index of air
-    float n2 = sceneObject.getMaterial()->IOR;
+    float n2 = sceneObject.getMaterial(ray)->IOR;
 
     if (ray.getInternal()) {
         // inside glass, flip normal, IOR, and dotProduct
         N = N * -1;
         std::swap(n1, n2);
 
-        if (ray.getDebug()) {
-            std::cout<<"Ray Internal, swapping N1, N2, and flipping N"<<std::endl;
-        }
+        //if (ray.getDebug()) std::cout<<"Ray Internal, swapping N1, N2, and flipping N"<<std::endl;
+
     }
 
-    if (ray.getDebug()) {
+    /*if (ray.getDebug()) {
         std::cout<<"N1: "<<n1<<std::endl;
         std::cout<<"N2: "<<n2<<std::endl;
         std::cout<<"Normal: ";
         N.print();
-    }
+    }*/
 
     float cosThetaI = -N.dot(wi);
 
@@ -43,22 +41,22 @@ Vector3 DirectionSampler::RefractionDirection(Ray &ray, SceneObject &sceneObject
     float sinTheta1 = std::sqrt(std::max(0.0f, 1.0f - cosThetaI * cosThetaI));
     float sinTheta2 = (n1 / n2) * sinTheta1;
 
-    if (ray.getDebug()) {
+    /*if (ray.getDebug()) {
         std::cout<<"CosThetaI: "<<cosThetaI<<std::endl;
         std::cout<<"sinTheta1: "<<sinTheta1<<std::endl;
         std::cout<<"sinTheta2: "<<sinTheta2<<std::endl;
-    }
+    }*/
 
     if (sinTheta2 >= 1) {
         // total internal reflection - bounce off object / bounce back inside object
         Vector3 reflection = wi.reflect(N);
         reflection.normalise();
 
-        if (ray.getDebug()) {
+        /*if (ray.getDebug()) {
             std::cout<<"SinTheta2 >= 1 - Total Internal Reflection"<<std::endl;
             std::cout<<"Reflection Direction:";
             reflection.print();
-        }
+        }*/
 
         return reflection;
     }
@@ -72,18 +70,18 @@ Vector3 DirectionSampler::RefractionDirection(Ray &ray, SceneObject &sceneObject
     // second refraction is always on exit - flips to false
     ray.flipInternal();
 
-    if (ray.getDebug()) {
+    /*if (ray.getDebug()) {
         std::cout<<"SinTheta2 < 1 - Refraction"<<std::endl;
         std::cout<<"CosTheta2: "<<cosTheta2<<std::endl;
         std::cout<<"Refraction Direction: ";
         refraction.print();
-    }
+    }*/
 
     return refraction;
 }
 
 Vector3 DirectionSampler::SpecularDirection(Ray &ray, const SceneObject &sceneObject, bool flipNormal) const {
-    const Material* mat = sceneObject.getMaterial();
+    const Material* mat = sceneObject.getMaterial(ray);
     float rough = std::max(mat->roughness, 0.001f);
     float alpha = rough * rough; // for GGX
 

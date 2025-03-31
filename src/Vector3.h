@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <string>
 
 class Vector3 {
 public:
@@ -200,7 +201,7 @@ public:
         return Vector3(x - n.x, y - n.y, z - n.z) * dotP * 2;
     }
 
-    static Vector3 normalOfHalfAngle(const Vector3 &wo, const Vector3 &wi) {
+    static Vector3 halfVector(const Vector3 &wo, const Vector3 &wi) {
         Vector3 h = wo + wi;
         h.normalise();
         return h;
@@ -261,6 +262,10 @@ public:
 
     void print() const {
         std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Vector3& vec) {
+        return os << "x: " << vec.x << ", y: " << vec.y << "z: " << vec.z;
     }
 
     void setX(float const &newX) { x = newX; }

@@ -8,13 +8,35 @@
 #include "Matrix3x3.h"
 
 MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, Material* material) :
-pos(pos), dir(dir), scale(scale), loadedMesh(mesh), material(material) {
+pos(pos), dir(dir), scale(scale), loadedMesh(mesh) {
+    objID = ++objectCounter;
+    materials.emplace_back(material);
+
+    setEmissiveTriangles();
+    computeArea();
+
+    triangles = loadedMesh->getTriangles();
+    bounds = loadedMesh->getBounds();
+
+
+    //updateMatrix();
+}
+
+MeshObject::MeshObject(Vector3 pos, Vector3 dir, Vector3 scale, LoadMesh* mesh, std::vector<Material*> materials) :
+pos(pos), dir(dir), scale(scale), loadedMesh(mesh), materials(materials) {
     objID = ++objectCounter;
 
     triangles = loadedMesh->getTriangles();
     bounds = loadedMesh->getBounds();
 
     //updateMatrix();
+}
+
+Material* MeshObject::getMaterial(Ray &ray) const {
+    if (ray.getTriangle()->mat > materials.size() || ray.getTriangle()->mat == -1) {
+        return materials[0];
+    }
+    return materials[ray.getTriangle()->mat];
 }
 
 void MeshObject::getNormal(Ray &ray) const {
@@ -30,7 +52,7 @@ void MeshObject::getNormal(Ray &ray) const {
     Vector3 v2 = triangle->v2;
     Vector3 edge1 = v1 - v0;
     Vector3 edge2 = v2 - v0;
-    if (material->normalMap != nullptr && loadedMesh->isTexCoords()) { // interpolate normal from triangle data
+    if (materials[ray.getTriangle()->mat]->normalMap != nullptr && loadedMesh->isTexCoords()) { // interpolate normal from triangle data
         // read normal from normal map
         Vector2 uv0 = triangle->uv0;
         Vector2 uv1 = triangle->uv1;
@@ -38,7 +60,7 @@ void MeshObject::getNormal(Ray &ray) const {
 
         Vector2 uvCoord = uv0 * w + uv1 * u + uv2 * v;
 
-        SDL_Surface* normalMap = material->normalMap;
+        SDL_Surface* normalMap = materials[ray.getTriangle()->mat]->normalMap;
         Vector3 normalTS;
         int x = static_cast<int>(uvCoord.x * (normalMap->w - 1));
         int y = static_cast<int>((1.0f - uvCoord.y) * (normalMap->h - 1));
@@ -123,13 +145,6 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
         Vector3 v1 = triangle->v1;
         Vector3 v2 = triangle->v2;
 
-        // Apply position and scale transformations
-        // Apply position and scale transformations
-        /*v0 = (v0 + pos) / scale;
-        v1 = (v1 + pos) / scale;
-        v2 = (v2 + pos) / scale;*/
-
-
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
 
@@ -177,7 +192,7 @@ MeshObject::meshIntersection MeshObject::intersectTriangles(Ray &ray, BVHNode* l
 
 Vector3 MeshObject::samplePoint(float r1, float r2) const {
 
-    int triIndex = static_cast<int>(r1 * triangles.size());
+    int triIndex = static_cast<int>(r1 * emissiveTriangles.size());
 
     Triangle* tri = triangles[triIndex];
 
@@ -208,6 +223,53 @@ void MeshObject::computeArea() {
         total += 0.5f * crossProduct.length();
     }
     area = total;
+}
+
+void MeshObject::setEmissiveTriangles() {
+    emissiveTriangles.clear();
+
+    float emission;
+    if (materials.size() == 1 && materials[0]->emissionMap == nullptr && materials[0]->emission > 0) {
+        emissiveTriangles = triangles; // every triangle is emissive
+        return;
+    }
+
+
+    for (Triangle* triangle : triangles) {
+
+        int matID = triangle->mat >= materials.size() ? 0 : triangle->mat;
+        SDL_Surface* emissionMap = materials[matID]->emissionMap;
+        if (emissionMap == nullptr) {
+            if (materials[matID]->emission > 0) {
+                emissiveTriangles.emplace_back(triangle);
+                continue;
+            }
+        }
+
+        Vector2 uv0 = triangle->uv0;
+        Vector2 uv1 = triangle->uv1;
+        Vector2 uv2 = triangle->uv2;
+
+        Vector2 uvCoord = (uv0 + uv1 + uv2) / 3.0f;
+
+        int x = static_cast<int>(uvCoord.x * (emissionMap->w - 1));
+        int y = static_cast<int>((1.0f - uvCoord.y) * (emissionMap->h - 1));
+
+        x = std::clamp(x, 0, emissionMap->w - 1);
+        y = std::clamp(y, 0, emissionMap->h - 1);
+
+        Uint32* pixels = (Uint32*)emissionMap->pixels;
+        Uint32 pixel = pixels[y * emissionMap->w + x];
+
+        Uint8 r, g, b;
+        SDL_GetRGB(pixel, emissionMap->format, &r, &g, &b);
+        emission = (int)r; // all channels should be equal (greyscale)
+        emission /= 255.0f;
+        emission *= materials[matID]->emission;
+        if (emission > 0) emissiveTriangles.emplace_back(triangle);
+    }
+
+
 }
 
 void MeshObject::updateMatrix() {

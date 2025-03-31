@@ -83,9 +83,11 @@ public:
     // traversal logic
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, bool sky, std::mutex &mutex) const;
 
-    // Computes resoivers
-    void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
+    // MIS - Next event estimation
+    Vector3 directLightingNEE(Ray& ray, Material* sampledMat) const;
 
+    // ReSTIR
+    void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
     void restirDirectLighting(Ray& ray, Material* sampledMat, int x, int y) const;
     // Computes direct lighting contribution using resoivers, spatiotemporaly
     void restirSpatioTemporal(int xstart, int xend, int ystart, int yend, int its, int currentRay, std::mutex &mutex) const;
@@ -154,6 +156,7 @@ private:
 
     mutable std::uniform_real_distribution<float> dist;
     mutable std::uniform_int_distribution<int> spatialDist;
+    mutable std::uniform_int_distribution<int> lightDist;
 };
 
 #endif //RENDER_H

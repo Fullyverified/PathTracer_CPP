@@ -102,8 +102,8 @@ public:
         materials["RoughMetal"] = new Material{"RoughMetal", Vector3(1, 1, 1), 0.8, 1, 1, 0, 0};
 
         // Mesh Object Textures
-        materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Companion Cube"], nullptr, nullptr, emissive["Companion Cube"], nullptr};
-        materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 1, albedos["Weighted Cube"], nullptr, nullptr, emissive["Weighted Cube"], nullptr};
+        materials["Companion Cube"] = new Material{"Companion Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Companion Cube"], nullptr, nullptr, nullptr, nullptr};
+        materials["Weighted Cube"] = new Material{"Weighted Cube", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Weighted Cube"], nullptr, nullptr, nullptr, nullptr};
         materials["Button"] = new Material{"Button", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Button"]};
         materials["Portal Gun"] = new Material{"Portal Gun", Vector3(1, 1, 1), 0.3, 0.1, 1, 0, 0, albedos["Portal Gun"], roughness["Portal Gun"], metallic["Portal Gun"], nullptr, normal["Portal Gun"]};
 

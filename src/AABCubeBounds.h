@@ -22,6 +22,7 @@ public:
     [[nodiscard]] Vector3 getScale() const override {return Vector3(1, 1, 1);}
     void setScale(Vector3 newScale) override {faceDist = std::discrete_distribution<int>(weights.begin(), weights.end());}
     [[nodiscard]] Material* getMaterial() const override {return material;}
+    [[nodiscard]] Material* getMaterial(Ray& ray) const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void getNormal(Ray &ray) const override;
     [[nodiscard]] Vector3 getNormal(Vector3 sampledPoint) const override;

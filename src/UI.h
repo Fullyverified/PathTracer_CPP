@@ -26,6 +26,9 @@ public:
     static int minBounces;
     static int maxBounces;
     static bool accumulateRays;
+    static bool BSDF;
+    static bool NEE;
+    static int NEEsamples;
 
     // ReSTIR
     static bool ReSTIR;

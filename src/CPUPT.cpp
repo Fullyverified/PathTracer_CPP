@@ -35,6 +35,7 @@ CPUPT::CPUPT(SystemManager *systemManager, std::vector<SceneObject *> &sceneObje
 
     dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
     spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
+    lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
 }
 
 void CPUPT::launchRenderThread() {
@@ -106,16 +107,21 @@ void CPUPT::renderLoop() {
                 hdr[i] = Vector3(0, 0, 0);
             }
 
+            config.BSDF = UI::BSDF;
+            config.NEE = UI::NEE;
             config.ReSTIR = UI::ReSTIR;
             config.ReSTIRGI = UI::ReSTIRGI;
             config.unbiased = UI::unbiased;
             config.candidateSamples = UI::candidateSamples;
             config.spatialSamplesK = UI::spatialSamplesK;
+            config.NEEsamples = UI::NEEsamples;
             UI::accumulatedRays = iterations * config.raysPerPixel;
             UI::camUpdate = false;
             camera->getCamMoved() = false;
             iterations = 0;
+            dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
             spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
+            lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
         }
 
         if (UI::upscalingUpdate) {
@@ -329,7 +335,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 ray.setHitObject(hitObject);
 
                 // Compute material properties at the hitpoint (mesh objects)
-                Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
+                Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(ray), hitObject);
 
                 if (currentBounce == 0) {
                     // primary ray only
@@ -347,7 +353,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 if (currentBounce == 0 && config.ReSTIR) {
                     delete reservoirReSTIR[y * internalResX + x].hitMat;
-                    Material *ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
+                    Material *ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(ray), hitObject);
                     restirDirectLighting(ray, ReSTIRsampledMat, x, y);
                 }
 
@@ -368,8 +374,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 Vector3 newThroughput;
 
                 // specular caused by IOR
-                float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-                float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, sampledMat->IOR); // reflection portion
+                Vector3 h = Vector3::halfVector(wo, wi);
+                float cosTheta_H = std::abs(Vector3::dot(wo, h));
+                float R0 = surfaceIntegrator->fresnelSchlickIOR(cosTheta_H, sampledMat->IOR); // reflection portion
                 float randomSample2 = dist(rng); // a second sample
                 // ----------------------
 
@@ -377,7 +384,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Refraction
                     // Continue refraction from previous bounce
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, true);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refrecation, true);
                 } else {
                     if (randomSample <= p_specular) {
                         // Specular (Metallic)
@@ -392,7 +399,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         } else {
                             // Refraction
                             wi = directionSampler->RefractionDirection(ray, *hitObject);
-                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, false);
+                            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refrecation, false);
                         }
                     } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                         if (randomSample2 < R0) {
@@ -409,13 +416,27 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         break;
                     }
                 }
-
+                /*if (newThroughput.x > 1.0f || newThroughput.y > 1.0f || newThroughput.z > 1.0f) {
+                    std::cout << "Large throughput at bounce " << currentBounce<<std::endl;
+                    std::cout << "Original throughput: ";
+                    throughput.print();
+                    std::cout << "newThroughput: ";
+                    newThroughput.print();
+                    std::cout << "throughput * newThroughput: ";
+                    (throughput * newThroughput).print();
+                    std::cout<<"---------------"<<std::endl;
+                }*/
                 // 2) Update throughput with BRDF and PDF
                 throughput = throughput * newThroughput;
 
                 // 3) Update colour
-                finalColour = finalColour + throughput * (sampledMat->colour * sampledMat->emission);
-                finalColour.sanitize();
+                if (config.BSDF) finalColour = finalColour + throughput * (sampledMat->colour * sampledMat->emission);
+
+                // -------------------------------------------------------------
+                // NEE Direct Lighting (every bounce, except ReSTIR bounces)
+                // -------------------------------------------------------------
+
+                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) finalColour += throughput * directLightingNEE(ray, sampledMat);;
 
                 delete sampledMat;
                 // -------------------------------------------------------------
@@ -426,11 +447,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 
                 // Ensure minimum number of bounces completed
                 if (currentBounce > config.minBounces) {
-                    if (dist(rng) > RR) {
-                        // Add the remaining contribution before termination
-                        //finalColour = finalColour + throughput * (mat->colour * mat->emission);
-                        break; // Terminate the ray path early
-                    }
+                    if (dist(rng) > RR) break; // Terminate the ray path early
                     // Scale the throughput to maintain an unbiased estimator
                     throughput = throughput / RR;
                 }
@@ -446,6 +463,99 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             hdr[y * internalResX + x] += finalColour;
         } // end x
     } // end y
+}
+
+Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
+    if (emissiveObjects.size() == 0) return {0};
+    Reservoir reservoir = {};
+
+    Vector3 rayPos = ray.getPos();
+    Vector3 n = ray.getNormal();
+    Vector3 wo = -ray.getDir();
+    reservoir.rayPos = rayPos;
+    reservoir.n = n;
+    reservoir.wo = wo;
+    reservoir.hitMat = sampledMat;
+
+    // M = config.lightSamples
+    for (int i = 0; i < config.NEEsamples; i++) {
+        reservoir.sampleCount++;
+
+        SceneObject *light = emissiveObjects[lightDist(rng)];
+        Material *lightMat = light->getMaterial(); // need to adjust to take into account the triangles specific material
+        Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
+        Vector3 wi = rayPos - lightPoint;
+        float distToLight = wi.length();
+        wi.normalise();
+        float cosTheta_q = std::max(0.0f, n.dot(-wi));
+        float cosTheta_x = std::max(0.0f, light->getNormal(lightPoint).dot(wi));
+        if (cosTheta_q == 0 || cosTheta_x == 0) continue; // light point is facing away or behind hit point
+        // = hitBRDF * emission * (distance^2 * cosTheta)
+        // Pq(x) = hitPoint BRDF
+        Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(wo, wi, sampledMat, n);
+        // G(x) = cosTheta(x) * (cosTheta(q) / (x - q)^2
+        float G = (cosTheta_x * cosTheta_q) / (distToLight * distToLight);
+        // Le(x) = emission of light point
+        Vector3 Le = lightMat->colour * lightMat->emission;
+
+        // PDF of light point = (1 / lightArea) * (1 / numLights)
+        float lightArea = light->getArea();
+        float lightPDF = (1.0f / lightArea) * (1.0f / emissiveObjects.size());
+        // (BRDF(q,x) * Le(x) * G(q,x)) / (1 / surfaceArea)
+        Vector3 contribution = BRDF_x * Le * G; // unshadowed path contribution
+
+        float targetPDF = Vector3::length(contribution);
+        float candidateWeight = targetPDF / lightPDF; // w_i = p̂(x_i)/p(x_i)
+
+        reservoir.weightSum += candidateWeight;
+        if (dist(rng) < candidateWeight / reservoir.weightSum) {
+            reservoir.candidatePosition = lightPoint;
+            reservoir.distToLight = distToLight;
+            // extra things im storing for now
+            reservoir.targetPDF = targetPDF;
+            reservoir.candidatePDF = lightPDF;
+            reservoir.candidateEmission = light->getMaterial()->emission;
+            reservoir.candidateNormal = light->getNormal(lightPoint);
+            reservoir.lightMat = lightMat;
+            reservoir.lightArea = lightArea;
+            reservoir.empty = false;
+        }
+    }
+
+    // Compute final contribution
+    if (reservoir.empty || reservoir.weightSum == 0) {
+        return {0};
+    }
+
+    // Shadow ray test
+    Vector3 wi = reservoir.candidatePosition - rayPos;
+    float distToLight = Vector3::length(wi);
+    if (distToLight < 0.01f) return {0};
+    Vector3::normalise(wi);
+
+    // Shadow test
+    Ray shadowRay(reservoir.rayPos + wi * 0.01f, wi);
+    distToLight -= 0.0f;
+    BVHNode::BVHResult shadowResult = rootNode->searchBVHTreeScene(shadowRay);
+    if (shadowResult.node == nullptr || !shadowResult.node->getLeaf() || shadowResult.node->getSceneObject()->getMaterial()->emission == 0 ||
+        !(shadowResult.close < distToLight + 0.05f && shadowResult.close > distToLight - 0.05f)) {
+        // occulsion
+        return {0};
+    }
+
+    float cosTheta_q = std::max(0.0f, reservoir.n.dot(wi));
+    float cosTheta_x = std::max(0.0f, reservoir.candidateNormal.dot(-wi));
+
+    float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
+    Vector3 BRDF_x = surfaceIntegrator->evaluateBRDF(reservoir.wo, wi, reservoir.hitMat, reservoir.n);
+    Vector3 Le = reservoir.lightMat->emission * reservoir.lightMat->colour;
+
+    float lightPDF = (1.0f / reservoir.lightArea) * (1.0f / emissiveObjects.size());
+
+    float candidateWeight = reservoir.targetPDF / reservoir.candidatePDF;
+    float weightAdjustment = reservoir.weightSum / (reservoir.sampleCount * candidateWeight);
+
+    return ((BRDF_x * Le * G) / lightPDF) * weightAdjustment;
 }
 
 void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) const {
@@ -484,7 +594,7 @@ void CPUPT::restirDirectLighting(Ray &ray, Material *sampledMat, int x, int y) c
         reservoir.sampleCount++;
 
         SceneObject *light = emissiveObjects[lightDist(rng)];
-        Material *lightMat = light->getMaterial();
+        Material *lightMat = light->getMaterial(); // need to adjust to take into account the triangles specific material
         Vector3 lightPoint = light->samplePoint(dist(rng), dist(rng));
         Vector3 wi = rayPos - lightPoint;
         float distToLight = wi.length();
@@ -710,6 +820,7 @@ void CPUPT::deleteObjects() {
 SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
     int x = screenX / upScale;
     int y = screenY / upScale;
+    debugPixelInfo(x, y);
 
     // Ray cast to find clicked object
     Ray ray;
@@ -744,14 +855,13 @@ SceneObject *CPUPT::getClickedObject(int screenX, int screenY) {
 }
 
 void CPUPT::debugRay(int screenX, int screenY) {
-
     int x = screenX / upScale;
     int y = screenY / upScale;
-    std::cout<<"X: "<<x<<", Y: "<<y<<std::endl;
+    std::cout << "X: " << x << ", Y: " << y << std::endl;
 
     // print reservoir debuf info
     Reservoir debugReservoir = reservoirReSTIR[y * internalResX + x];
-    std::cout<<"Normal in reservoir = ";
+    std::cout << "Normal in reservoir = ";
     debugReservoir.n.print();
 
     // Ray cast to find clicked object
@@ -784,7 +894,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
     for (int currentBounce = 0; currentBounce <= 0; currentBounce++) {
         std::cout << "----------------------------" << std::endl;
-        std::cout << "Bounce: "<<currentBounce << std::endl;
+        std::cout << "Bounce: " << currentBounce << std::endl;
         // Intersect scene using BVH
         BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
         ray.setTriangle(leafNode.triangle);
@@ -795,11 +905,11 @@ void CPUPT::debugRay(int screenX, int screenY) {
         }
 
         // Move the ray to the exact hit point
-        if (ray.getInternal()) std::cout<<"Ray Internal"<<std::endl;
-        else std::cout<<"Ray External"<<std::endl;
+        if (ray.getInternal()) std::cout << "Ray Internal" << std::endl;
+        else std::cout << "Ray External" << std::endl;
 
-        std::cout<<"Distance Close: "<<leafNode.close<<std::endl;
-        std::cout<<"Distance Far: "<<leafNode.far<<std::endl;
+        std::cout << "Distance Close: " << leafNode.close << std::endl;
+        std::cout << "Distance Far: " << leafNode.far << std::endl;
 
         SceneObject *hitObject = leafNode.node->getSceneObject();
         if (!ray.getInternal()) {
@@ -814,11 +924,11 @@ void CPUPT::debugRay(int screenX, int screenY) {
         ray.getPos().set(ray.getPos()); // Set new ray origin
         ray.setHitObject(hitObject);
 
-        std::cout<<"Surface normal: ";
+        std::cout << "Surface normal: ";
         ray.getNormal().print();
 
         // Compute material properties at the hitpoint (mesh objects)
-        Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(), hitObject);
+        Material *sampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(ray), hitObject);
 
         // -------------------------------------------------------------
         // ReSTIR Direct Illumination (first bounce only)
@@ -848,7 +958,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // specular caused by IOR
         float cosTheta = std::abs(ray.getDir().dot(ray.getNormal()));
-        float R0 = surfaceIntegrator->fresnelSchlickRefraction(cosTheta, sampledMat->IOR); // reflection portion
+        float R0 = surfaceIntegrator->fresnelSchlickIOR(cosTheta, sampledMat->IOR); // reflection portion
         float randomSample2 = dist(rng); // a second sample
         // ----------------------
 
@@ -857,7 +967,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
             // Refraction
             // Continue refraction from previous bounce
             wi = directionSampler->RefractionDirection(ray, *hitObject);
-            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, true);
+            newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refrecation, true);
         } else {
             if (randomSample <= p_specular) {
                 // Specular (Metallic)
@@ -872,7 +982,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
                 } else {
                     // Refraction
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refreaction, false);
+                    newThroughput = surfaceIntegrator->computeThroughput(wo, wi, sampledMat, n, R0, refrecation, false);
                 }
             } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                 if (randomSample2 < R0) {
@@ -895,7 +1005,7 @@ void CPUPT::debugRay(int screenX, int screenY) {
 
         // 3) Update colour
         finalColour = finalColour + throughput * (sampledMat->colour * sampledMat->emission);
-        finalColour.sanitize();
+        //finalColour.sanitize();
         delete sampledMat;
 
         // -------------------------------------------------------------

@@ -198,6 +198,7 @@ public:
         emissiveObjects.clear();
 
         for (SceneObject* sceneObject : sceneObjects) {
+            Ray ray;
             if (sceneObject->getMaterial()->emission > 0) {
                 emissiveObjects.emplace_back(sceneObject);
             }

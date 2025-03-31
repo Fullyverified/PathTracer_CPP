@@ -18,6 +18,9 @@ float UI::denoisingTime = 0;
 float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
+bool UI::BSDF = config.BSDF;
+bool UI::NEE = config.NEE;
+int UI::NEEsamples = config.NEEsamples;
 bool UI::ReSTIR = config.ReSTIR;
 bool UI::unbiased = config.unbiased;
 int UI::candidateSamples = config.candidateSamples;
@@ -135,6 +138,21 @@ void UI::renderSettings() {
         camUpdate = true;
     }
 
+    if (ImGui::Checkbox("BSDF Sampling", &BSDF)) {
+        camUpdate = true;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Checkbox("NEE Direct Lighting (Next Event Estimation)", &NEE)) {
+        camUpdate = true;
+    }
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (ImGui::SliderInt("##NEECandidateSamples", &NEEsamples, 1, 64, "Candidate Samples %i")) {
+        camUpdate = true;
+    }
+
     ImGui::Separator();
 
     // ReSTIR
@@ -149,7 +167,7 @@ void UI::renderSettings() {
     }
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (ImGui::SliderInt("##CandidateSamples", &candidateSamples, 1, 64, "Candidate Samples %i")) {
+    if (ImGui::SliderInt("##ReSTIRCandidateSamples", &candidateSamples, 1, 64, "Candidate Samples %i")) {
         camUpdate = true;
     }
 

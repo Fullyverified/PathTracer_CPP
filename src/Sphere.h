@@ -22,6 +22,7 @@ public:
     [[nodiscard]] Vector3 getNormal(Vector3 sampledPos) const override;
     [[nodiscard]] std::pair<Vector3, Vector3> getBounds() override;
     [[nodiscard]] Material* getMaterial() const override {return material;}
+    [[nodiscard]] Material* getMaterial(Ray& ray) const override {return material;}
     void setMaterial(Material* material) override {this->material = material;}
     void printType() const override;
     std::string getType() const override;

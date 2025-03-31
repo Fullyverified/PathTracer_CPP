@@ -16,7 +16,7 @@ struct ReservoirGI;
 enum SampleType {
     metallic,
     specularFresnel,    // specular caused by IOR
-    refreaction,
+    refrecation,
     diffuse
 };
 
@@ -33,15 +33,15 @@ public:
 
     float geometrySmithGGX(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness) const;
 
-    Vector3 fresnelSchlickSpecular(float cosTheta, Vector3 F0) const;
+    Vector3 fresnelSchlickMetallic(float cosTheta, Vector3 F0) const;
 
-    float fresnelSchlickRefraction(float cosTheta, float IOR) const;
+    float fresnelSchlickIOR(float cosTheta, float IOR) const;
 
     Vector3 computeMicrofacetBRDF(float D, Vector3& F0, float G, Vector3& n, Vector3& wo, Vector3& wi) const; // Specular
 
     float microfacetPDF(Vector3 &n, Vector3& wo, Vector3 &wi, float D, Vector3& h) const; // Specular
 
-    Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2) const; // Refraction
+    Vector3 computeRefractionBRDF(Vector3 col, float F, float n1, float n2, float cosThetaT) const; // Refraction
 
     float refractionPDF() const; // Refraction
 

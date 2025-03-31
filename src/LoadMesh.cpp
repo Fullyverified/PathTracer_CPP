@@ -97,7 +97,8 @@ void LoadMesh::load(const std::string &filename) {
                 );
             }
 
-            triangles.emplace_back(new Triangle(v0, v1, v2, n0, n1, n2, uv0, uv1, uv2));
+            int materialID = shape.mesh.material_ids[f] >= 0 ? shape.mesh.material_ids[f] : 0; // material index for this face
+            triangles.emplace_back(new Triangle(v0, v1, v2, n0, n1, n2, uv0, uv1, uv2, materialID));
         }
     }
     computeBounds();
