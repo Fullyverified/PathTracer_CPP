@@ -20,6 +20,12 @@ enum SampleType {
     diffuse
 };
 
+struct BRDF_PDF {
+    Vector3 throughput = {0.0f};
+    Vector3 BRDF = {0.0f};
+    float PDF = 0;
+};
+
 class SurfaceIntegrator {
 public:
     SurfaceIntegrator(MaterialManager* materialManager) : materialManager(materialManager) {}
@@ -49,14 +55,11 @@ public:
 
     float diffusePDF(float cosTheta) const; // Difuse
 
-    Vector3 computeThroughput(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, float R0, SampleType type, bool internal) const; // Final throughput
+    BRDF_PDF throughputBSDF(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, float R0, SampleType type, bool internal) const; // Final throughput
 
-    Vector3 evaluateBRDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
+    BRDF_PDF throughputNEE(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
 
     float evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
-
-    float computeApproxPDF(Reservoir& q, Reservoir& candidate) const;
-
 
 private:
     MaterialManager* materialManager;

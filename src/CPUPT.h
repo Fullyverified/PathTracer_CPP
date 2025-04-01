@@ -44,18 +44,6 @@ struct Reservoir {
     rayPos(Vector3(0.0f)), n(Vector3(0.0f)), wo(Vector3(0.0f)), distToLight(0.0f), lightMat(nullptr), hitMat(nullptr), lightArea(0.0f), empty(true) {}
 };
 
-struct ReservoirGI {
-    Vector3 candidatePosition;
-    Vector3 candidateEmission; // Selected indirect radiance
-    float PDF; // PDF of explicity sampled sample
-    float weightSum; // Sum of weights from all candidates considered
-    int sampleCount; // Number of samples seen
-
-    float distToLight;
-
-    ReservoirGI() : candidatePosition(Vector3(0, 0, 0)), candidateEmission(Vector3(0,0,0)), PDF(0.0f), weightSum(0.0f), sampleCount(0.0f), distToLight(0.0f) {}
-};
-
 struct MotionVector {
     float x, y;
 
@@ -85,6 +73,8 @@ public:
 
     // MIS - Next event estimation
     Vector3 directLightingNEE(Ray& ray, Material* sampledMat) const;
+
+    float powerHeuristic(float pdfA, float pdfB) const;
 
     // ReSTIR
     void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
@@ -127,7 +117,7 @@ private:
     mutable std::vector<Vector3> lum;   // pixel buffers
     mutable std::vector<Vector3> hdr;
     mutable std::vector<Reservoir> reservoirReSTIR; // ReSTIR Resoivers
-    mutable std::vector<ReservoirGI> reservoirReSTIRGI; // ReSTIR GI Resoivers
+    mutable std::vector<Reservoir> reservoirReSTIRGI; // ReSTIR GI Resoivers
     float maxLuminance, currentLuminance;
     mutable uint8_t* RGBBuffer;
 

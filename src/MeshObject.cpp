@@ -12,12 +12,11 @@ pos(pos), dir(dir), scale(scale), loadedMesh(mesh) {
     objID = ++objectCounter;
     materials.emplace_back(material);
 
-    setEmissiveTriangles();
-    computeArea();
-
     triangles = loadedMesh->getTriangles();
     bounds = loadedMesh->getBounds();
 
+    setEmissiveTriangles();
+    computeArea();
 
     //updateMatrix();
 }
@@ -233,8 +232,11 @@ void MeshObject::setEmissiveTriangles() {
         emissiveTriangles = triangles; // every triangle is emissive
         return;
     }
+    if (materials.size() == 1 && materials[0]->emissionMap == nullptr && materials[0]->emission == 0) {
+        return;
+    }
 
-
+    std::cout<<"searching triangles"<<std::endl;
     for (Triangle* triangle : triangles) {
 
         int matID = triangle->mat >= materials.size() ? 0 : triangle->mat;
