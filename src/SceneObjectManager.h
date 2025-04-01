@@ -51,27 +51,40 @@ public:
 
         if (primative == "Cube") {
             std::cout<<"Emplacing Cube"<<std::endl;
-            sceneObjects.emplace_back(new AABCubeCenter(Vector3(0, 0, 0), Vector3(1, 1, 1),materialManager->getMaterial("Default")));
+            toAdd.emplace_back(new AABCubeCenter(Vector3(0, 0, 0), Vector3(1, 1, 1),materialManager->getMaterial("Default")));
         }
         if (primative == "Sphere") {
-            sceneObjects.emplace_back(new Sphere(Vector3(0,0,0),1,1,1,materialManager->getMaterial("Default")));
+            toAdd.emplace_back(new Sphere(Vector3(0,0,0),1,1,1,materialManager->getMaterial("Default")));
         }
 
     }
 
     void addMesh(const char* primative) {
 
-        sceneObjects.emplace_back(new MeshObject(Vector3(0, 0, 0), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes[primative], materialManager->getMaterial("Default")));
+        toAdd.emplace_back(new MeshObject(Vector3(0, 0, 0), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes[primative], materialManager->getMaterial("Default")));
 
     }
 
     void removeSceneObject(SceneObject* sceneObject) {
-        // Remove the pointer from the vector
-        sceneObjects.erase(
-            std::remove(sceneObjects.begin(), sceneObjects.end(), sceneObject),
-            sceneObjects.end()
-        );
-        delete sceneObject;
+        toDelete.emplace_back(sceneObject);
+    }
+
+    void flushDeleteAddBuffers() {
+        for (SceneObject* object : toAdd) {
+            sceneObjects.emplace_back(object);
+        }
+
+        for (SceneObject* object : toDelete) {
+            // Remove the pointer from the vector
+            sceneObjects.erase(
+                std::remove(sceneObjects.begin(), sceneObjects.end(), object),
+                sceneObjects.end()
+            );
+            delete object;
+        }
+
+        toAdd.clear();
+        toDelete.clear();
     }
 
     void loadMeshes() {
@@ -215,6 +228,10 @@ private:
 
     std::vector<SceneObject*> sceneObjects; // Master list
     std::vector<SceneObject*> emissiveObjects; // List of emissive objects
+
+    std::vector<SceneObject*> toDelete; // buffer
+    std::vector<SceneObject*> toAdd; // buffer
+
 
     MaterialManager* materialManager;
 };

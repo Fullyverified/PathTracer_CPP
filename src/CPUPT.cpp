@@ -88,6 +88,7 @@ void CPUPT::renderLoop() {
             }
 
             if (UI::sceneUpdate) {
+                systemManager->getSceneObjectManager()->flushDeleteAddBuffers();
                 UI::sceneUpdate = false;
                 bvh.constructBVHST(sceneObjectsList);
                 rootNode = bvh.getBVHNodes()[0];
