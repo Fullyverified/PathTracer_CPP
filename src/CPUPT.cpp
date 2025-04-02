@@ -348,10 +348,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     }
                 }
 
-                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) {
-                    finalColour += throughput * directLightingNEE(ray, sampledMat).contribution;
-                }
-
                 // 2) Update throughput
                 throughput = throughput * bsdf_result.throughput;
 
@@ -359,12 +355,13 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // Multiple Importance Sampling
                 // -------------------------------------------------------------
 
-                // 3) Update colour
-
                 // -------------------------------------------------------------
                 // NEE Direct Lighting (every bounce, except ReSTIR bounces)
                 // -------------------------------------------------------------
 
+                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) {
+                    finalColour += throughput * directLightingNEE(ray, sampledMat).contribution;
+                }
                 // To make lights themselves visible for NEE or Restir
                 if (!config.BRDF && currentBounce == 0) finalColour += throughput * (sampledMat->colour * sampledMat->emission);
 
@@ -377,7 +374,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                         float distToLight = leafNode.close;
                         float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
                         float lightPDF_area = (1.0f / hitObject->getArea()) * (1.0f / static_cast<float>(emissiveObjects.size()));
-                        float lightPDF = lightPDF_area * G;
+                        float lightPDF = lightPDF_area / G;
                         float MISweight = powerHeuristic(bsdf_result.PDF, lightPDF);
                         finalColour += throughput * (sampledMat->colour * sampledMat->emission) * MISweight;
                     } else { // Only BRDF sampling
