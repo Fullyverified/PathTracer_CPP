@@ -17,7 +17,13 @@
 #include "MaterialManager.h"
 #include "ToneMapper.h"
 
+class BVH;
 class SystemManager;
+
+struct NEEResult {
+    Vector3 contribution = {0.0};
+    float G = 0.0f;
+};
 
 struct Reservoir {
     Vector3 candidatePosition;
@@ -72,7 +78,7 @@ public:
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, bool sky, std::mutex &mutex) const;
 
     // MIS - Next event estimation
-    Vector3 directLightingNEE(Ray& ray, Material* sampledMat) const;
+    NEEResult directLightingNEE(Ray& ray, Material* sampledMat) const;
 
     float powerHeuristic(float pdfA, float pdfB) const;
 
@@ -97,6 +103,7 @@ public:
     void debugRay(int screenX, int screenY);
     void debugPixelInfo(int screenX, int screenY);
 
+    void updateConfig(BVH& bvh);
 
 private:
 

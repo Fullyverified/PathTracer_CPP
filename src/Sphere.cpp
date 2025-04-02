@@ -97,7 +97,15 @@ float Sphere::getArea() const {
 }
 
 void Sphere::computeArea() {
-    area = 4.0f * std::numbers::pi * (std::pow(scale.x * scale.y, 1.6) + std::pow(scale.x * scale.z, 1.6) + std::pow(scale.y * scale.z, 1.6)) / 3;;
+    const float p = 1.6075f; // or 1.6075f for better precision
+    float term = (
+        std::pow(scale.x * scale.y, p) +
+        std::pow(scale.x * scale.z, p) +
+        std::pow(scale.y * scale.z, p)
+    ) / 3.0f;
+
+    area = 4.0f * std::numbers::pi * std::pow(term, 1.0f / p);
+    std::cout<<"Area: "<<area<<std::endl;
 }
 
 void Sphere::printType() const {

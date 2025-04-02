@@ -107,6 +107,8 @@ add_executable(PathTracer_CPP
         src/Matrix4x4.h
         src/Matrix3x3.h
         src/Matrix3x3.h
+        src/Plane.cpp
+        src/Plane.h
 )
 
 # Link Vulkan and libraries

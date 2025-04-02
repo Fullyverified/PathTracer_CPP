@@ -74,62 +74,7 @@ void CPUPT::renderLoop() {
         numThreads = config.threads > 0 ? config.threads : std::thread::hardware_concurrency();
         int segments = std::round(std::sqrt(numThreads));
 
-        if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
-            if (UI::camUpdate) {
-                config.fOV = UI::fOV;
-                config.exposure = UI::exposure;
-                config.DepthOfField = UI::depthOfField;
-                config.focalDistance = UI::focalDistance;
-                config.temporalSampling = UI::temporalSampling;
-                config.minBounces = UI::minBounces;
-                config.maxBounces = UI::maxBounces;
-                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
-                camera->reInitilize(); // fov changes
-            }
-
-            if (UI::sceneUpdate) {
-                systemManager->getSceneObjectManager()->flushDeleteAddBuffers();
-                UI::sceneUpdate = false;
-                bvh.constructBVHST(sceneObjectsList);
-                rootNode = bvh.getBVHNodes()[0];
-                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
-            }
-
-            if (UI::resUpdate) {
-                initialiseObjects(); // change buffer size
-                denoiser->resize(internalResX * internalResY);
-                UI::resUpdate = false;
-                UI::resizeBuffer = true;
-            }
-
-            // reset colour buffer
-            for (int i = 0; i < internalResX * internalResY; i++) {
-                lum[i] = Vector3(0, 0, 0);
-                hdr[i] = Vector3(0, 0, 0);
-            }
-
-            config.BSDF = UI::BSDF;
-            config.NEE = UI::NEE;
-            config.ReSTIR = UI::ReSTIR;
-            config.ReSTIRGI = UI::ReSTIRGI;
-            config.unbiased = UI::unbiased;
-            config.candidateSamples = UI::candidateSamples;
-            config.spatialSamplesK = UI::spatialSamplesK;
-            config.NEEsamples = UI::NEEsamples;
-            UI::accumulatedRays = iterations * config.raysPerPixel;
-            UI::camUpdate = false;
-            camera->getCamMoved() = false;
-            iterations = 0;
-            dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
-            spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
-            lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
-        }
-
-        if (UI::upscalingUpdate) {
-            config.upScale = UI::upscale;
-            updateUpscaling();
-            UI::upscalingUpdate = false;
-        }
+        updateConfig(bvh);
 
         std::chrono::duration<long long, std::ratio<1, 1000> > durationTimeRays;
 
@@ -138,10 +83,8 @@ void CPUPT::renderLoop() {
 
         for (int currentRay = 1; currentRay <= config.raysPerPixel; currentRay++) {
             ////////////////////////////////////////////////////////////////////////
-            // Path tracing - Multiple Importance Sampling + Direct Illumination
+            // Path tracing - Multiple Importance Sampling - BSDF + NEE
             ////////////////////////////////////////////////////////////////////////
-
-
             auto startTimeRays = std::chrono::high_resolution_clock::now();
 
             // Calculate number of screen segments
@@ -306,11 +249,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             Vector3 finalColour(0.0f);
             Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
 
-            Vector3 NEE(0.0f);
-            Vector3 BSDF(0.0f);
-
             for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
                 // Intersect scene using BVH
+                float cosTheta_q = currentBounce == 0 ? 1 : std::max(0.0f, ray.getNormal().dot(ray.getDir()));
                 BVHNode::BVHResult leafNode = rootNode->searchBVHTreeScene(ray);
                 ray.setTriangle(leafNode.triangle);
                 ray.getBCoords().set(leafNode.bCoords);
@@ -407,6 +348,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     }
                 }
 
+                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) {
+                    finalColour += throughput * directLightingNEE(ray, sampledMat).contribution;
+                }
+
                 // 2) Update throughput
                 throughput = throughput * bsdf_result.throughput;
 
@@ -415,13 +360,30 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
 
                 // 3) Update colour
-                if (config.BSDF) finalColour += throughput * (sampledMat->colour * sampledMat->emission);
-
 
                 // -------------------------------------------------------------
                 // NEE Direct Lighting (every bounce, except ReSTIR bounces)
                 // -------------------------------------------------------------
-                if (config.NEE && !(config.ReSTIR && currentBounce == 0)) finalColour += throughput * directLightingNEE(ray, sampledMat);
+
+                // To make lights themselves visible for NEE or Restir
+                if (!config.BRDF && currentBounce == 0) finalColour += throughput * (sampledMat->colour * sampledMat->emission);
+
+                // -------------------------------------------------------------
+                // BRDF (every bounce)
+                // -------------------------------------------------------------
+                if (config.BRDF && sampledMat->emission > 0) {
+                    if (config.NEE) { // Mix contributions with MIS weight
+                        float cosTheta_x = std::max(0.0f, ray.getNormal().dot(wi));
+                        float distToLight = leafNode.close;
+                        float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
+                        float lightPDF_area = (1.0f / hitObject->getArea()) * (1.0f / static_cast<float>(emissiveObjects.size()));
+                        float lightPDF = lightPDF_area * G;
+                        float MISweight = powerHeuristic(bsdf_result.PDF, lightPDF);
+                        finalColour += throughput * (sampledMat->colour * sampledMat->emission) * MISweight;
+                    } else { // Only BRDF sampling
+                        finalColour += throughput * (sampledMat->colour * sampledMat->emission);
+                    }
+                }
 
                 // -------------------------------------------------------------
                 // ReSTIR Direct Illumination (primary hit only)
@@ -459,8 +421,8 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
     } // end y
 }
 
-Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
-    if (emissiveObjects.size() == 0) return {0};
+NEEResult CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
+    if (emissiveObjects.size() == 0 || (sampledMat->metallic == 1 || sampledMat->transmission == 1 && sampledMat->roughness == 0)) return {0};
     Reservoir reservoir = {};
 
     Vector3 rayPos = ray.getPos();
@@ -472,8 +434,10 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
     reservoir.hitMat = sampledMat;
 
     // M = config.lightSamples
+    //std::cout<<"------------"<<std::endl;
 
     for (int i = 0; i < config.NEEsamples; i++) {
+        //std::cout<<"i: "<<i<<std::endl;
         reservoir.sampleCount++;
 
         SceneObject *light = emissiveObjects[lightDist(rng)];
@@ -496,12 +460,14 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
 
         // PDF of light point = (1 / lightArea) * (1 / numLights)
         float lightArea = light->getArea();
-        float lightPDF = (1.0f / lightArea) * (1.0f / emissiveObjects.size());
+        float lightPDF_area = (1.0f / lightArea) * (1.0f / emissiveObjects.size());
+        float lightPDF = lightPDF_area;
         // (BRDF(q,x) * Le(x) * G(q,x)) / (1 / surfaceArea)
         Vector3 contribution = BRDF_x * Le * G; // unshadowed path contribution
 
         float targetPDF = Vector3::length(contribution);
         float candidateWeight = targetPDF / lightPDF; // w_i = p̂(x_i)/p(x_i)
+        //std::cout<<"candidateWeight: "<<candidateWeight<<std::endl;
 
         reservoir.weightSum += candidateWeight;
         if (dist(rng) < candidateWeight / reservoir.weightSum) {
@@ -523,7 +489,7 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
         return {0};
     }
 
-
+    //std::cout<<"Shadow ray"<<std::endl;
     // Shadow ray test
     Vector3 wi = reservoir.candidatePosition - rayPos;
     float distToLight = Vector3::length(wi);
@@ -545,19 +511,36 @@ Vector3 CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
 
     float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
     BRDF_PDF brdf_pdf = surfaceIntegrator->throughputNEE(wo, wi, sampledMat, n);
-    Vector3 BRDF_x = brdf_pdf.BRDF;    Vector3 Le = reservoir.lightMat->emission * reservoir.lightMat->colour;
+    Vector3 BRDF_x = brdf_pdf.BRDF;
+    Vector3 Le = reservoir.lightMat->emission * reservoir.lightMat->colour;
 
-    float lightPDF = (1.0f / reservoir.lightArea) * (1.0f / emissiveObjects.size());
+    float lightPDF_area = (1.0f / reservoir.lightArea) * (1.0f / emissiveObjects.size());
+    /*std::cout<<"reservoir.lightArea: "<<reservoir.lightArea<<std::endl;
+    std::cout<<"emissiveObjects.size(): "<<emissiveObjects.size()<<std::endl;
+    std::cout<<"lightPDF_area: "<<lightPDF_area<<std::endl;*/
+    float lightPDF = lightPDF_area;
 
     float candidateWeight = reservoir.targetPDF / reservoir.candidatePDF;
-    float weightAdjustment = reservoir.weightSum / (static_cast<float>(reservoir.sampleCount) * candidateWeight);
+    float weightAdjustment = reservoir.weightSum / ((static_cast<float>(reservoir.sampleCount) * candidateWeight));
+    //std::cout<<"reservoir.weightSum: "<<reservoir.weightSum<<std::endl;
+    //std::cout<<"candidateWeight: "<<candidateWeight<<std::endl;
+    //std::cout<<"weightAdjustment: "<<weightAdjustment<<std::endl;
+    // if candidates is 1, weightAdjustment cancels to 1
 
-    float MISweight = powerHeuristic(lightPDF, brdf_pdf.PDF);
+    Vector3 contribution = ((BRDF_x * Le * G) / lightPDF) * weightAdjustment;
 
-    return ((BRDF_x * Le * G) / lightPDF) * weightAdjustment;
+    // Multiple Importance Sampling weight
+    float MISweight = config.BRDF ? powerHeuristic(lightPDF / G, brdf_pdf.PDF) : 1.0f;
+
+    NEEResult nee_result{};
+    nee_result.contribution = contribution * MISweight;
+    nee_result.G = G;
+    return nee_result;
 }
 
 float CPUPT::powerHeuristic(float pdfA, float pdfB) const {
+    pdfA = std::max(pdfA, 1e-6f);
+    pdfB = std::max(pdfB, 1e-6f);
     float a2 = pdfA * pdfA;
     float b2 = pdfB * pdfB;
     return a2 / (a2 + b2);
@@ -1051,6 +1034,65 @@ void CPUPT::debugPixelInfo(int screenX, int screenY) {
     hdr[screenY * internalResX + screenX].print();
     std::cout << "LUM: ";
     lum[screenY * internalResX + screenX].print();
+}
+
+void CPUPT::updateConfig(BVH& bvh) {
+    if (UI::camUpdate || camera->getCamMoved() || !UI::accumulateRays) {
+            if (UI::camUpdate) {
+                config.fOV = UI::fOV;
+                config.exposure = UI::exposure;
+                config.DepthOfField = UI::depthOfField;
+                config.focalDistance = UI::focalDistance;
+                config.temporalSampling = UI::temporalSampling;
+                config.minBounces = UI::minBounces;
+                config.maxBounces = UI::maxBounces;
+                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
+                camera->reInitilize(); // fov changes
+            }
+
+            if (UI::sceneUpdate) {
+                systemManager->getSceneObjectManager()->flushDeleteAddBuffers();
+                UI::sceneUpdate = false;
+                bvh.constructBVHST(sceneObjectsList);
+                rootNode = bvh.getBVHNodes()[0];
+                emissiveObjects = systemManager->getSceneObjectManager()->getEmmisiveObjects();
+            }
+
+            if (UI::resUpdate) {
+                initialiseObjects(); // change buffer size
+                denoiser->resize(internalResX * internalResY);
+                UI::resUpdate = false;
+                UI::resizeBuffer = true;
+            }
+
+            // reset colour buffer
+            for (int i = 0; i < internalResX * internalResY; i++) {
+                lum[i] = Vector3(0, 0, 0);
+                hdr[i] = Vector3(0, 0, 0);
+            }
+
+            config.BRDF = UI::BRDF;
+            config.NEE = UI::NEE;
+            config.ReSTIR = UI::ReSTIR;
+            config.ReSTIRGI = UI::ReSTIRGI;
+            config.unbiased = UI::unbiased;
+            config.candidateSamples = UI::candidateSamples;
+            config.spatialSamplesK = UI::spatialSamplesK;
+            config.NEEsamples = UI::NEEsamples;
+            UI::accumulatedRays = iterations * config.raysPerPixel;
+            UI::camUpdate = false;
+            camera->getCamMoved() = false;
+            iterations = 0;
+            dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+            spatialDist = std::uniform_int_distribution<int>(-config.sampleRadius, config.sampleRadius);
+            lightDist = std::uniform_int_distribution<int>(0, emissiveObjects.size() - 1);
+        }
+
+        if (UI::upscalingUpdate) {
+            config.upScale = UI::upscale;
+            updateUpscaling();
+            UI::upscalingUpdate = false;
+        }
 }
 
 std::pair<int, int> CPUPT::threadSegments(float start, float end, int &numThreads, int step) {

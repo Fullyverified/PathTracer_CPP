@@ -18,7 +18,7 @@ float UI::denoisingTime = 0;
 float UI::toneMappingTime = 0;
 float UI::frameTime = 0;
 int UI::accumulatedRays = 0;
-bool UI::BSDF = config.BSDF;
+bool UI::BRDF = config.BRDF;
 bool UI::NEE = config.NEE;
 int UI::NEEsamples = config.NEEsamples;
 bool UI::ReSTIR = config.ReSTIR;
@@ -138,13 +138,13 @@ void UI::renderSettings() {
         camUpdate = true;
     }
 
-    if (ImGui::Checkbox("BSDF Sampling", &BSDF)) {
+    if (ImGui::Checkbox("BSDF Sampling", &BRDF)) {
         camUpdate = true;
     }
 
     ImGui::SameLine();
 
-    if (ImGui::Checkbox("NEE Direct Lighting (Next Event Estimation)", &NEE)) {
+    if (ImGui::Checkbox("Next Event Estimation", &NEE)) {
         camUpdate = true;
     }
 
@@ -357,7 +357,6 @@ void UI::materialEditor() {
             Material newMaterial{newMatName, Vector3(1, 1, 1), 0, 0, 1, 0, 0};
             materialManager->createMaterial(newMatName, newMaterial);
             materialKey = newMatName;
-            sceneObjectManager->updateEmmisiveObjects();
         }
         std::cout << "A Material with the name already exists" << std::endl;
     }
@@ -431,6 +430,7 @@ void UI::materialEditor() {
         emission = emission < 0 ? 0 : emission;
         materialManager->editMaterialEmission(materialKey, emission);
         camUpdate = true;
+        sceneObjectManager->updateEmmisiveObjects();
     }
 
     ImGui::End();

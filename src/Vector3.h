@@ -139,7 +139,7 @@ public:
         return {y * second.z - z * second.y, z * second.x - x * second.z, x * second.y - y * second.x};
     }
 
-    Vector3 cross(const Vector3 &v1, const Vector3 &v2) {
+    static Vector3 cross(const Vector3 &v1, const Vector3 &v2) {
         return {v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x};
     }
 
@@ -268,6 +268,14 @@ public:
         return os << "x: " << vec.x << ", y: " << vec.y << "z: " << vec.z;
     }
 
+    float min(const Vector3& v) const {
+        return std::min(std::min(v.x, v.y), v.z);
+    }
+
+    float max(const Vector3& v) const {
+        return std::max(std::max(v.x, v.y), v.z);
+    }
+
     void setX(float const &newX) { x = newX; }
     void setY(float const &newY) { y = newY; }
     void setZ(float const &newZ) { z = newZ; }
@@ -298,5 +306,6 @@ inline Vector3 operator*(float scalar, const Vector3 &vec) {
 inline Vector3 operator/(float scalar, const Vector3 &vec) {
     return {scalar / vec.x, scalar / vec.y, scalar / vec.z};
 }
+
 
 #endif //VECTOR3_H

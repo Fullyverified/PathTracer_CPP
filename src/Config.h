@@ -5,8 +5,8 @@
 
 struct Config {
     // initial state
-    float resX = 1300;
-    float resY = 1300;
+    float resX = 1200;
+    float resY = 1200;
     float upScale = 4;
     float aspectX = 1;
     float aspectY = 1;
@@ -14,13 +14,13 @@ struct Config {
     int raysPerPixel = 1;
     int minBounces = 0;
     int maxBounces = 6;
-    bool BSDF = true;
+    bool BRDF = true;
     bool NEE = true;
     int NEEsamples = 3;
     // ReSTIR
     bool ReSTIR = false;
     bool unbiased = true;
-    int candidateSamples = 3;
+    int candidateSamples = 1;
     int sampleRadius = 2;
     int spatialSamplesK = 0;
     int temporalSampling = 0;

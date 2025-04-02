@@ -26,6 +26,7 @@ public:
 
         loadMeshes();
         defaultScene();
+        updateEmmisiveObjects();
     }
 
     ~SceneObjectManager() {
@@ -85,6 +86,7 @@ public:
 
         toAdd.clear();
         toDelete.clear();
+        updateEmmisiveObjects();
     }
 
     void loadMeshes() {
@@ -145,18 +147,19 @@ public:
         // BOX1
         sceneObjects.emplace_back(new Sphere(Vector3(5, 2.5, 0), 0.8, 0.1, 0.8, materialManager->getMaterial("Light"))); // light on ceiling
 
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // floor
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // roof
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, -3, 0), Vector3(14, 1, 7), materialManager->getMaterial("White"))); // floor
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(8, 0, 0), Vector3(1, 6, 7), materialManager->getMaterial("White"))); // back wall
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 3), Vector3(14, 6, 1), materialManager->getMaterial("Red"))); // left wall
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, -3), Vector3(14, 6, 1), materialManager->getMaterial("Green"))); // right wall wall
 
-        // Objects of Interest
+        // Objects of Interest#1#
         //sceneObjects.emplace_back(new MeshObject(Vector3(4.5, -1.7, 1.25), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // companion cube
         sceneObjects.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
-        sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor
+        sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor#1#
+
 
         // BOX 1
 
@@ -203,7 +206,6 @@ public:
 
     // For Restir DI
     std::vector<SceneObject*>& getEmmisiveObjects() {
-        updateEmmisiveObjects();
         return emissiveObjects;
     }
 
@@ -211,7 +213,6 @@ public:
         emissiveObjects.clear();
 
         for (SceneObject* sceneObject : sceneObjects) {
-            Ray ray;
             if (sceneObject->getMaterial()->emission > 0) {
                 emissiveObjects.emplace_back(sceneObject);
             }
