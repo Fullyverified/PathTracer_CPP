@@ -81,6 +81,7 @@ public:
     NEEResult directLightingNEE(Ray& ray, Material* sampledMat) const;
 
     float powerHeuristic(float pdfA, float pdfB) const;
+    float balanceHeuristic(float pdfA, float pdfB) const;
 
     // ReSTIR
     void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;

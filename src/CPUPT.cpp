@@ -248,7 +248,6 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             // -------------------------------------------------------------
             Vector3 finalColour(0.0f);
             Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
-
             for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
                 // Intersect scene using BVH
                 float cosTheta_q = currentBounce == 0 ? 1 : std::max(0.0f, ray.getNormal().dot(ray.getDir()));
@@ -368,8 +367,10 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // BRDF (every bounce)
                 // -------------------------------------------------------------
+                // Mix contributions with MIS weight
+                //&& !(sampledMat->roughness == 0.0f && sampledMat->metallic == 1.0f) || sampledMat->transmission != 1
                 if (config.BRDF && sampledMat->emission > 0) {
-                    if (config.NEE) { // Mix contributions with MIS weight
+                    if (config.NEE && currentBounce != 0) {
                         float cosTheta_x = std::max(0.0f, ray.getNormal().dot(wi));
                         float distToLight = leafNode.close;
                         float G = (cosTheta_q * cosTheta_x) / (distToLight * distToLight);
@@ -419,7 +420,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
 }
 
 NEEResult CPUPT::directLightingNEE(Ray &ray, Material *sampledMat) const {
-    if (emissiveObjects.size() == 0 || (sampledMat->metallic == 1 || sampledMat->transmission == 1 && sampledMat->roughness == 0)) return {0};
+    if (emissiveObjects.size() == 0 || (sampledMat->metallic == 1 && sampledMat->roughness == 0) || sampledMat->transmission == 1) return {0};
     Reservoir reservoir = {};
 
     Vector3 rayPos = ray.getPos();
@@ -541,6 +542,10 @@ float CPUPT::powerHeuristic(float pdfA, float pdfB) const {
     float a2 = pdfA * pdfA;
     float b2 = pdfB * pdfB;
     return a2 / (a2 + b2);
+}
+
+float CPUPT::balanceHeuristic(float pdfA, float pdfB) const {
+    return pdfA / (pdfA + pdfB);
 }
 
 void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) const {
