@@ -79,7 +79,7 @@ float SurfaceIntegrator::diffusePDF(float cosTheta) const {
     return cosTheta / std::numbers::pi;
 }
 
-BRDF_PDF SurfaceIntegrator::throughputBSDF(Vector3 &wo, Vector3 &wi, Material *mat, Vector3 &n, float R0, SampleType type, bool internal) const {
+BRDF_PDF SurfaceIntegrator::throughputBRDF(Vector3 &wo, Vector3 &wi, Material *mat, Vector3 &n, float R0, SampleType type, bool internal) const {
     // Compute common terms
     float p_specular = mat->metallic;
     float p_transmission = mat->transmission * (1 - mat->metallic);
@@ -133,7 +133,6 @@ BRDF_PDF SurfaceIntegrator::throughputBSDF(Vector3 &wo, Vector3 &wi, Material *m
 }
 
 BRDF_PDF SurfaceIntegrator::throughputNEE(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const {
-
     Vector3 h = Vector3::halfVector(wo, wi);
     float cosTheta_wo = std::abs(Vector3::dot(wo, n));
     float cosTheta_wi = std::abs(Vector3::dot(wi, n));
@@ -156,7 +155,7 @@ BRDF_PDF SurfaceIntegrator::throughputNEE(Vector3 wo, Vector3 wi, const Material
 
     float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
 
-    float effective_pdf_diffuse = (R0 * pdf_specular + (1 - R0) * pdf_diffuse) * p_diffuse; // diffuse branch
+    float effective_pdf_diffuse = pdf_diffuse * p_diffuse; // diffuse branch
     float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
 
     // BRDFs
@@ -180,15 +179,7 @@ BRDF_PDF SurfaceIntegrator::throughputNEE(Vector3 wo, Vector3 wi, const Material
     Vector3 brdf_refraction(0, 0, 0);
 
     // Combine based on material properties
-    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * (
-                                (R0) * brdf_specular_diffuse + ((1 - R0) * brdf_diffuse));
-
-    if (p_diffuse == 1.0f) {
-        combined_brdf = brdf_diffuse;
-    } else {
-        combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * (
-                                (R0) * brdf_specular_diffuse + ((1 - R0) * brdf_diffuse));
-    }
+    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * brdf_diffuse;
 
     //return combined_brdf;
     // External, include all PDFs
@@ -213,7 +204,7 @@ float SurfaceIntegrator::evaluatePDF(Vector3 wo, Vector3 wi, const Material *mat
     float effective_pdf_refraction = (R0 * pdf_specular + (1 - R0) * pdf_refraction) * p_transmission; // refraction branch
 
     float p_diffuse = 1 - (p_specular + p_transmission);
-    float effective_pdf_diffuse = (R0 * pdf_specular + (1 - R0) * pdf_diffuse) * p_diffuse; // diffuse branch
+    float effective_pdf_diffuse = pdf_diffuse * p_diffuse; // diffuse branch
 
     float effective_pdf = effective_pdf_specular + effective_pdf_refraction + effective_pdf_diffuse;
     return effective_pdf;

@@ -78,10 +78,11 @@ public:
     void traceRay(Camera camera, int xstart, int xend, int ystart, int yend, bool sky, std::mutex &mutex) const;
 
     // MIS - Next event estimation
-    NEEResult directLightingNEE(Ray& ray, Material* sampledMat) const;
+    Vector3 directLightingNEE(Ray& ray, Material* sampledMat) const;
 
     float powerHeuristic(float pdfA, float pdfB) const;
     float balanceHeuristic(float pdfA, float pdfB) const;
+    bool matIsSpecular(Material* mat) const;
 
     // ReSTIR
     void reservoirUpdate(Reservoir &r, Reservoir& candidate, float weight) const;
