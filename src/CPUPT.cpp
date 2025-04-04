@@ -249,6 +249,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
             Vector3 finalColour(0.0f);
             Vector3 throughput(1.0f, 1.0f, 1.0f); // Running throughput
 
+            bool MISSample = false;
             bool skipNEE;
             for (int currentBounce = 0; currentBounce <= config.maxBounces; currentBounce++) {
                 // Intersect scene using BVH
@@ -351,14 +352,16 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // NEE Direct Lighting (every bounce, except ReSTIR bounces)
                 if (config.NEE && !(config.ReSTIR && currentBounce == 0) && !skipNEE) {
                     finalColour += throughput * directLightingNEE(ray, sampledMat);
+                    MISSample = true;
                 }
 
                 // -------------------------------------------------------------
                 // ReSTIR Direct Illumination (primary hit only)
-                if (currentBounce == 0 && config.ReSTIR) {
+                if (currentBounce == 0 && config.ReSTIR && !skipNEE) {
                     delete reservoirReSTIR[y * internalResX + x].hitMat;
                     Material *ReSTIRsampledMat = materialManager->sampleMatFromHitPoint(ray, hitObject->getMaterial(ray), hitObject);
                     restirDirectLighting(ray, ReSTIRsampledMat, x, y);
+                    MISSample = true;
                 }
 
                 // -------------------------------------------------------------
@@ -368,29 +371,19 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 // -------------------------------------------------------------
                 // BRDF (every bounce)
                 if (config.BRDF && sampledMat->emission > 0) {
-                    if (!config.NEE || currentBounce == 0) { // Only BRDF sampling
+                    if (!MISSample) { // Only BRDF sampling
                         finalColour += throughput * (sampledMat->colour * sampledMat->emission);
-                        if (config.NEE && currentBounce == 0) break;
                     } else { // weight BRDF sample by NEE sample
-                        float cosTheta_x = currentBounce == 0 ? 1.0f : std::max(0.0f, ray.getNormal().dot(ray.getDir()));
+                        float cosTheta_x = currentBounce == 0 ? 1.0f : std::max(0.0f, ray.getNormal().dot(-ray.getDir()));
                         float distToLight = leafNode.close;
                         float lightPDF_area = (1.0f / hitObject->getArea()) * (1.0f / static_cast<float>(emissiveObjects.size()));
                         float lightPDF_solidangle = (lightPDF_area * (distToLight * distToLight)) / std::max(1e-6f, cosTheta_x);
                         float MISweight = powerHeuristic(bsdf_result.PDF, lightPDF_solidangle);
-                        /*if (currentBounce == 0) {
-                            std::cout<<"cosTheta_q: "<<cosTheta_q<<std::endl;
-                            std::cout<<"cosTheta_x: "<<cosTheta_x<<std::endl;
-                            std::cout<<"distToLight: "<<distToLight<<std::endl;
-                            std::cout<<"G: "<<G<<std::endl;
-                            std::cout<<"lightPDF_area: "<<lightPDF_area<<std::endl;
-                            std::cout<<"lightPDF: "<<lightPDF<<std::endl;
-                            std::cout<<"bsdf_result: "<<bsdf_result.PDF<<std::endl;
-                            std::cout<<"MISweight: "<<MISweight<<std::endl;
-                        }*/
                         finalColour += throughput * (sampledMat->colour * sampledMat->emission) * MISweight;
                     }
                 }
 
+                float emission = sampledMat->emission;
                 delete sampledMat;
                 // -------------------------------------------------------------
                 // Russian roulete termination
@@ -404,6 +397,7 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Scale the throughput to maintain an unbiased estimator
                     throughput = throughput / RR;
                 }
+                if (emission > 0) break; // Terminate ray if it hits a light
 
                 // Prepare for next bounce
                 ray.getDir().set(wi);
@@ -549,7 +543,7 @@ float CPUPT::balanceHeuristic(float pdfA, float pdfB) const {
 }
 
 bool CPUPT::matIsSpecular(Material *mat) const {
-    return (mat->emission > 0);
+    return (mat->emission > 0 || (mat->transmission == 1) || (mat->roughness < 0.4 && mat->metallic > 0.8));
 }
 
 void CPUPT::reservoirUpdate(Reservoir &r, Reservoir &candidate, float weight) const {

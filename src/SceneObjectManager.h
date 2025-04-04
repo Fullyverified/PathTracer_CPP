@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, -10), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -194,8 +194,11 @@ public:
 
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-10),Vector3(2,6,0.5),materialManager->getMaterial("GreenGlow"))); // middle
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-8.4),Vector3(2,6,0.5),materialManager->getMaterial("BlueGlow"))); // left
-        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right
+        sceneObjects.emplace_back(new AABCubeCenter(Vector3(7,0,-11.6),Vector3(2,6,0.5),materialManager->getMaterial("RedGlow"))); // right#1#*/
 
+        /*sceneObjects.emplace_back(new Sphere(Vector3(7,0,-10),1,1,0.8,materialManager->getMaterial("GreenGlow"))); // middle
+        sceneObjects.emplace_back(new Sphere(Vector3(7,0,-8.4),1,1,0.8,materialManager->getMaterial("BlueGlow"))); // left
+        sceneObjects.emplace_back(new Sphere(Vector3(7,0,-11.6),1,1,0.8,materialManager->getMaterial("RedGlow"))); // right*/
         // BOX 3
     }
 
