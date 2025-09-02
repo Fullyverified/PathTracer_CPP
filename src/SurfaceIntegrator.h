@@ -55,7 +55,7 @@ public:
 
     float diffusePDF(float cosTheta) const; // Difuse
 
-    BRDF_PDF throughputBRDF(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, float R0, SampleType type, bool internal) const; // Final throughput
+    BRDF_PDF throughputBRDF(Vector3& wo, Vector3& wi, Material* mat, Vector3& n, SampleType type, bool internal) const; // Final throughput
 
     BRDF_PDF throughputNEE(Vector3 wo, Vector3 wi, const Material *mat, Vector3 n) const;
 

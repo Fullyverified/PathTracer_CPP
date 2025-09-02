@@ -19,7 +19,7 @@ class SceneObjectManager {
 public:
     SceneObjectManager(MaterialManager* materialManager) : materialManager(materialManager) {
 
-        camera = new Camera(Vector3(-3, 0, -10), Vector3(1, 0, 0));
+        camera = new Camera(Vector3(-3, 0, 0), Vector3(1, 0, 0));
 
         primativeTypes.emplace_back("Cube");
         primativeTypes.emplace_back("Sphere");
@@ -155,7 +155,7 @@ public:
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, 3), Vector3(14, 6, 1), materialManager->getMaterial("Red"))); // left wall
         sceneObjects.emplace_back(new AABCubeCenter(Vector3(10, 0, -3), Vector3(14, 6, 1), materialManager->getMaterial("Green"))); // right wall wall
 
-        // Objects of Interest#1#
+        // Objects of Interest
         //sceneObjects.emplace_back(new MeshObject(Vector3(4.5, -1.7, 1.25), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["DiamondFlat"], materialManager->getMaterial("Diamond"))); // companion cube
         sceneObjects.emplace_back(new Sphere(Vector3(4.5,-1.7,1.25),0.8,0.8,0.8,materialManager->getMaterial("Metal"))); // left sphere on floor
         sceneObjects.emplace_back(new Sphere(Vector3(4.5, -1.7, -1.25), 0.8, 0.8, 0.8, materialManager->getMaterial("Glass"))); // right sphere on floor#1#
@@ -176,9 +176,9 @@ public:
 
         // Objects of Interest
         //sceneObjects.emplace_back(new MeshObject(Vector3(6, -2.7, 10), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Lucy"], materialManager->getMaterial("White"))); // statue left
-        sceneObjects.emplace_back(new MeshObject(Vector3(5, -2.5, 8.75), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Companion Cube"], materialManager->getMaterial("Weighted Cube"))); // companion cube
-        sceneObjects.emplace_back(new MeshObject(Vector3(5, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["portalButton"], materialManager->getMaterial("Button"))); // companion cube
-        sceneObjects.emplace_back(new MeshObject(Vector3(5, -1.4, 8.45), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["PortalGun"], materialManager->getMaterial("Portal Gun"))); // companion cube
+        sceneObjects.emplace_back(new MeshObject(Vector3(5.5, -2.5, 8.75), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["Companion Cube"], materialManager->getMaterial("Weighted Cube"))); // companion cube
+        sceneObjects.emplace_back(new MeshObject(Vector3(5.5, -2.5, 11), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["portalButton"], materialManager->getMaterial("Button"))); // companion cube
+        sceneObjects.emplace_back(new MeshObject(Vector3(5.5, -1.4, 8.45), Vector3(1, 1, 1), Vector3(1, 1, 1), meshTypes["PortalGun"], materialManager->getMaterial("Portal Gun"))); // companion cube
 
         // BOX 2
 
@@ -222,6 +222,8 @@ public:
         }
     }
 
+
+
 private:
     Camera* camera;
 
@@ -232,6 +234,8 @@ private:
 
     std::vector<SceneObject*> sceneObjects; // Master list
     std::vector<SceneObject*> emissiveObjects; // List of emissive objects
+
+    std::vector<const char*> sceneNames;
 
     std::vector<SceneObject*> toDelete; // buffer
     std::vector<SceneObject*> toAdd; // buffer

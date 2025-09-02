@@ -97,7 +97,7 @@ Vector3 DirectionSampler::SpecularDirection(Ray &ray, const SceneObject &sceneOb
 
     float phi = 2.0f * std::numbers::pi * r1;
     // "Smith" or "Heitz" form for cosTheta half
-    float cosTheta = std::sqrt((1.0f - r2) / (1.0f + (alpha * alpha - 1.0f) * r2));
+    float cosTheta = std::sqrt((1.0f - r2) / (1.0f + (alpha - 1.0f) * r2));
     float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
 
     // Half vector in local tangent space
@@ -125,19 +125,14 @@ Vector3 DirectionSampler::SpecularDirection(Ray &ray, const SceneObject &sceneOb
     );
     H.normalise();
 
+    if (H.dot(N) < 0.0f) H = H * -1.0f;
     // Reflect incoming dir around H to get outgoing direction
+    // Reflect the incoming direction about H
     Vector3 V = ray.getDir();
     V.normalise();
-
-    float dotVH = V.dot(H);
-    if (dotVH < 0.0f) {
-        H = H * -1;
-        dotVH = -dotVH;
-    }
-    Vector3 R = V - H * 2.0f * dotVH; // reflection direction in world space
-
+    if (V.dot(N) > 0.0f) V = V * -1.0f;  // ensure V is into the surface
+    Vector3 R = (V - H * 2.0f * V.dot(H));
     R.normalise();
-
     return R;
 }
 

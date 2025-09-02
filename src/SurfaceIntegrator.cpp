@@ -18,12 +18,11 @@ float SurfaceIntegrator::geometrySchlickGGX(float NdotV, float roughness) const 
 }
 
 float SurfaceIntegrator::geometrySmithGGX(const Vector3 &normal, const Vector3 &viewDir, const Vector3 &lightDir, float roughness) const {
-    roughness = std::max(roughness, 0.00001f);
     float alpha = roughness * roughness;
     float NdotV = std::max(normal.dot(viewDir), 0.0f);
     float NdotL = std::max(normal.dot(lightDir), 0.0f);
-    float ggxV = geometrySchlickGGX(NdotV, alpha);
-    float ggxL = geometrySchlickGGX(NdotL, alpha);
+    float ggxV = geometrySchlickGGX(NdotV, roughness);
+    float ggxL = geometrySchlickGGX(NdotL, roughness);
     return ggxV * ggxL;
 }
 
@@ -79,7 +78,7 @@ float SurfaceIntegrator::diffusePDF(float cosTheta) const {
     return cosTheta / std::numbers::pi;
 }
 
-BRDF_PDF SurfaceIntegrator::throughputBRDF(Vector3 &wo, Vector3 &wi, Material *mat, Vector3 &n, float R0, SampleType type, bool internal) const {
+BRDF_PDF SurfaceIntegrator::throughputBRDF(Vector3 &wo, Vector3 &wi, Material *mat, Vector3 &n, SampleType type, bool internal) const {
     // Compute common terms
     float p_specular = mat->metallic;
     float p_transmission = mat->transmission * (1 - mat->metallic);
@@ -96,7 +95,13 @@ BRDF_PDF SurfaceIntegrator::throughputBRDF(Vector3 &wo, Vector3 &wi, Material *m
         float PDF = microfacetPDF(n, wo, wi, D, h);
         //PDF *= type == metallic ? p_specular : R0 * p_transmission;
         if (PDF < 1e-6f) return {};
-        Vector3 F = type == metallic ? fresnelSchlickMetallic(cosTheta_wo, mat->colour) : fresnelSchlickIOR(cosTheta_wo, mat->IOR);
+
+        // metallic or specularFresnel
+        float selectP = type == metallic ? p_specular : p_transmission * fresnelSchlickIOR(std::abs(n.dot(wo)), mat->IOR);
+
+        PDF *= std::max(selectP, 1e-8f);
+
+        Vector3 F = type == metallic ? fresnelSchlickMetallic(cosTheta_H, mat->colour) : fresnelSchlickIOR(cosTheta_H, mat->IOR);
         float G = geometrySmithGGX(n, wo, wi, mat->roughness);
         Vector3 brdf_specular = computeMicrofacetBRDF(D, F, G, n, wo, wi);
         return {(brdf_specular * cosTheta_wi) / PDF, brdf_specular, PDF};
@@ -105,6 +110,7 @@ BRDF_PDF SurfaceIntegrator::throughputBRDF(Vector3 &wo, Vector3 &wi, Material *m
     if (type == refrecation) {
         float PDF = refractionPDF();
         if (PDF < 1e-6f) return {};
+        PDF *= p_transmission * (1.0f - fresnelSchlickIOR(std::abs(n.dot(wo)), mat->IOR));
         float N1, N2;
         if (!internal) {
             N1 = 1.0003;
@@ -179,8 +185,8 @@ BRDF_PDF SurfaceIntegrator::throughputNEE(Vector3 wo, Vector3 wi, const Material
     Vector3 brdf_refraction(0, 0, 0);
 
     // Combine based on material properties
-    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * ((R0) * brdf_specular_diffuse + ((1 - R0) * brdf_refraction)) + p_diffuse * brdf_diffuse;
-
+    // R0 is already included in the F term
+    Vector3 combined_brdf = p_specular * brdf_metallic + p_transmission * brdf_specular_diffuse + p_diffuse * brdf_diffuse;
     //return combined_brdf;
     // External, include all PDFs
     return {0, combined_brdf, effective_pdf};

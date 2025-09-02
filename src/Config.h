@@ -7,7 +7,7 @@ struct Config {
     // initial state
     float resX = 1200;
     float resY = 1200;
-    float upScale = 4;
+    float upScale = 2;
     float aspectX = 1;
     float aspectY = 1;
     // Multiple Importance Sampling

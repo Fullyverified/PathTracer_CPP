@@ -20,11 +20,6 @@
 class BVH;
 class SystemManager;
 
-struct NEEResult {
-    Vector3 contribution = {0.0};
-    float G = 0.0f;
-};
-
 struct Reservoir {
     Vector3 candidatePosition;
     float weightSum; // Sum of weights from all candidates considered

@@ -308,9 +308,9 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                 Vector3 n = ray.getNormal();
                 BRDF_PDF bsdf_result{};
                 // specular caused by IOR
-                Vector3 h = Vector3::halfVector(wo, wi);
-                float cosTheta_H = std::abs(Vector3::dot(wo, h));
-                float R0 = surfaceIntegrator->fresnelSchlickIOR(cosTheta_H, sampledMat->IOR); // reflection portion
+                float cosTheta_i = std::abs(Vector3::dot(n, wo));
+                float F = surfaceIntegrator->fresnelSchlickIOR(cosTheta_i, sampledMat->IOR);
+
                 float randomSample2 = dist(rng); // a second sample
                 // ----------------------
 
@@ -318,27 +318,27 @@ void CPUPT::traceRay(Camera camera, int xstart, int xend, int ystart, int yend, 
                     // Refraction
                     // Continue refraction from previous bounce
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, refrecation, true);
+                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, refrecation, true);
                 } else {
                     if (randomSample <= p_specular) {
                         // Specular (Metallic)
                         wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                        bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, metallic, false);
+                        bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, metallic, false);
                     } else if (randomSample <= p_specular + p_transmission) {
                         // Blend in the possibility of refraction based on (transmission * (1 - metallic))
-                        if (randomSample2 < R0) {
+                        if (randomSample2 < F) {
                             // Specular (Glass)
                             wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, specularFresnel, false);
+                            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, specularFresnel, false);
                         } else {
                             // Refraction
                             wi = directionSampler->RefractionDirection(ray, *hitObject);
-                            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, refrecation, false);
+                            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, refrecation, false);
                         }
                     } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                         // Diffuse
                         wi = directionSampler->DiffuseDirection(ray, *hitObject, false);
-                        bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, diffuse, false);
+                        bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, diffuse, false);
                     } else {
                         std::cout << "Probabilities dont add up: " << randomSample << std::endl;
                         break;
@@ -953,37 +953,36 @@ void CPUPT::debugRay(int screenX, int screenY) {
         float randomSample2 = dist(rng); // a second sample
         // ----------------------
 
-        bool isMesh = hitObject->isMesh();
         if (ray.getInternal()) {
             // Refraction
             // Continue refraction from previous bounce
             wi = directionSampler->RefractionDirection(ray, *hitObject);
-            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, refrecation, true);
+            bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, refrecation, true);
         } else {
             if (randomSample <= p_specular) {
                 // Specular (Metallic)
                 wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, metallic, false);
+                bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, metallic, false);
             } else if (randomSample <= p_specular + p_transmission) {
                 // Blend in the possibility of refraction based on (transmission * (1 - metallic))
                 if (randomSample2 < R0) {
                     // Specular (Glass)
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, specularFresnel, false);
+                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, specularFresnel, false);
                 } else {
                     // Refraction
                     wi = directionSampler->RefractionDirection(ray, *hitObject);
-                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, refrecation, false);
+                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, refrecation, false);
                 }
             } else if (randomSample <= p_specular + p_transmission + p_diffuse) {
                 if (randomSample2 < R0) {
                     // Specular Diffuse
                     wi = directionSampler->SpecularDirection(ray, *hitObject, false);
-                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, specularFresnel, false);
+                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, specularFresnel, false);
                 } else {
                     // Dielectric reflection
                     wi = directionSampler->DiffuseDirection(ray, *hitObject, false); // sample direction
-                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, R0, diffuse, false);
+                    bsdf_result = surfaceIntegrator->throughputBRDF(wo, wi, sampledMat, n, diffuse, false);
                 }
             } else {
                 std::cout << "Probabilities dont add up: " << randomSample << std::endl;
